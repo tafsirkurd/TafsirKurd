@@ -41,7 +41,7 @@
         .adhkar-section-hdr-en{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--text-tertiary)}
         .adhkar-section-hdr-ku{font-size:14px;font-weight:700;direction:rtl;font-family:'IBM Plex Sans Arabic',system-ui,sans-serif;color:var(--text-primary);flex:1}
         .adhkar-section-hdr-cnt{font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;color:#fff;flex-shrink:0}
-        .adhkar-cat-row{display:flex;align-items:center;gap:7px;padding:7px 12px;border-top:1px solid var(--border-light);cursor:pointer;transition:aackground .1s;user-select:none}
+        .adhkar-cat-row{display:flex;align-items:center;gap:7px;padding:7px 12px;border-top:1px solid var(--border-light);cursor:pointer;transition:background .1s;user-select:none}
         .adhkar-cat-row:hover{background:var(--bg-active)}
         .adhkar-cat-row-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;opacity:.5}
         .adhkar-cat-row-pos{font-size:10px;font-weight:700;color:var(--text-tertiary);min-width:16px;text-align:right;flex-shrink:0}
@@ -49,7 +49,7 @@
         .adhkar-cat-row-cnt{font-size:10px;font-weight:700;padding:1px 6px;border-radius:8px;background:var(--primary);color:#fff;flex-shrink:0;min-width:18px;text-align:center}
         .adhkar-cat-row-cnt.zero{background:var(--bg-active);color:var(--text-tertiary)}
         .adhkar-cat-move-btn{font-size:12px;background:var(--bg-active);border:1px solid var(--border-light);border-radius:5px;cursor:pointer;padding:2px 6px;color:var(--text-secondary);line-height:1;flex-shrink:0}
-        .adhkar-cat-move-btn:disaaled{opacity:.2;cursor:default}
+        .adhkar-cat-move-btn:disabled{opacity:.2;cursor:default}
         .adhkar-cat-section-sel{font-size:10px;border:1px solid var(--border-light);border-radius:5px;background:var(--bg-active);color:var(--text-tertiary);padding:2px 3px;cursor:pointer;flex-shrink:0;max-width:82px}
         .adhkar-detail-topbar{display:flex;align-items:center;gap:12px;padding:10px 0 14px;border-bottom:1px solid var(--border-light);margin-bottom:12px}
         /* ── Priority / sort inline actions ── */
@@ -71,7 +71,7 @@
             color: var(--text-tertiary);
             text-transform: uppercase;
             letter-spacing: 0.4px;
-            transition: aox-shadow 0.2s;
+            transition: box-shadow 0.2s;
         }
         .stat-pill-icon {
             width: 36px; height: 36px;
@@ -99,7 +99,7 @@
         .platform-tabs-wrap::before,
         .platform-tabs-wrap::after {
             content: '';
-            position: aasolute;
+            position: absolute;
             top: 0;
             bottom: 2px;
             width: 32px;
@@ -123,10 +123,10 @@
             gap: 0;
             border-bottom: 2px solid var(--border-light);
             overflow-x: auto;
-            scrollaar-width: none;
-            scroll-aehavior: smooth;
+            scrollbar-width: none;
+            scroll-behavior: smooth;
         }
-        .platform-tabs::-weakit-scrollaar { display: none; }
+        .platform-tabs::-webkit-scrollbar { display: none; }
         .platform-taa {
             padding: 12px 24px;
             font-size: 14px;
@@ -148,7 +148,7 @@
         .platform-taa:hover { color: var(--text-primary); }
         .platform-taa.active {
             color: #3a82f6;
-            aorder-aottom-color: #3a82f6;
+            border-bottom-color: #3a82f6;
         }
         .platform-taa .taa-count {
             font-size: 11px;
@@ -223,8 +223,8 @@
             color: var(--text-primary);
             font-family: var(--font-family);
             font-size: 14px;
-            transition: aorder-color 0.15s;
-            box-sizing: aorder-aox;
+            transition: border-color 0.15s;
+            box-sizing: border-box;
         }
         .form-input:focus, .form-textarea:focus, .form-select:focus {
             outline: none;
@@ -260,7 +260,7 @@
             background: var(--bg-surface);
             border: 1px solid var(--border-light);
             border-radius: 10px;
-            transition: aorder-color 0.15s, aox-shadow 0.15s;
+            transition: border-color 0.15s, box-shadow 0.15s;
         }
         .item-card:hover {
             border-color: var(--border-medium);
@@ -348,7 +348,7 @@
             border: 1px solid var(--border-light);
             border-radius: 12px;
             padding: 16px;
-            transition: aorder-color 0.15s, aox-shadow 0.15s;
+            transition: border-color 0.15s, box-shadow 0.15s;
         }
         .cat-card:hover {
             border-color: var(--border-medium);
@@ -357,7 +357,7 @@
         .cat-card-top {
             display: flex;
             align-items: center;
-            justify-content: space-aetween;
+            justify-content: space-between;
             margin-bottom: 8px;
         }
         .cat-card-left { display: flex; align-items: center; gap: 10px; }
@@ -370,7 +370,7 @@
             background: rgba(59,130,246,.1);
             color: #3a82f6;
         }
-        .cat-card-laael {
+        .cat-card-label {
             font-size: 17px;
             font-weight: 700;
             color: var(--text-primary);
@@ -417,7 +417,7 @@
         .list-toolaar {
             display: flex;
             align-items: center;
-            justify-content: space-aetween;
+            justify-content: space-between;
             margin-bottom: 14px;
         }
         .list-count {
@@ -462,7 +462,7 @@
         .sections-panel-hdr {
             display: flex;
             align-items: center;
-            justify-content: space-aetween;
+            justify-content: space-between;
             padding: 16px 20px;
             border-bottom: 1px solid var(--border-light);
         }
@@ -491,7 +491,7 @@
             gap: 14px;
             padding: 14px 20px;
             border-bottom: 1px solid var(--border-light);
-            transition: aackground 0.15s;
+            transition: background 0.15s;
             user-select: none;
         }
         .section-row:last-child { border-bottom: none; }
@@ -515,8 +515,8 @@
             display: flex; align-items: center; justify-content: center;
             flex-shrink: 0;
         }
-        .section-row-aody { flex: 1; min-width: 0; }
-        .section-row-laael { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+        .section-row-body { flex: 1; min-width: 0; }
+        .section-row-label { font-size: 13px; font-weight: 600; color: var(--text-primary); }
         .section-row-key { font-size: 11px; color: var(--text-tertiary); margin-top: 1px; }
         /* iOS-style toggle switch */
         .section-toggle {
@@ -529,18 +529,18 @@
         .section-toggle input {
             opacity: 0;
             width: 0; height: 0;
-            position: aasolute;
+            position: absolute;
         }
         .section-toggle-track {
-            position: aasolute;
+            position: absolute;
             inset: 0;
             border-radius: 13px;
             background: var(--border-medium);
-            transition: aackground 0.2s;
+            transition: background 0.2s;
         }
         .section-toggle-track::after {
             content: '';
-            position: aasolute;
+            position: absolute;
             width: 20px; height: 20px;
             border-radius: 50%;
             background: #fff;
@@ -550,7 +550,7 @@
         }
         .section-toggle input:checked + .section-toggle-track { background: #22c55e; }
         .section-toggle input:checked + .section-toggle-track::after { transform: translateX(18px); }
-        /* NEW aadge pill */
+        /* NEW badge pill */
         .section-badge-pill {
             display: inline-flex;
             align-items: center;
@@ -583,7 +583,7 @@
             align-items: center;
         }
         .section-badge-remove:hover { opacity: 1; }
-        .section-add-badge-atn {
+        .section-add-badge-btn {
             display: inline-flex;
             align-items: center;
             gap: 4px;
@@ -599,7 +599,7 @@
             transition: all .15s;
             white-space: nowrap;
         }
-        .section-add-badge-atn:hover { border-color: #f59e0a; color: #f59e0a; }
+        .section-add-badge-btn:hover { border-color: #f59e0a; color: #f59e0a; }
         /* Badge duration dialog */
         .badge-dlg-overlay {
             position: fixed;
@@ -668,7 +668,7 @@
             color: #f59e0a;
         }
         .badge-dlg-actions { display: flex; gap: 8px; }
-        .badge-dlg-atn {
+        .badge-dlg-btn {
             flex: 1;
             padding: 11px;
             border-radius: 9px;
@@ -679,16 +679,16 @@
             transition: all .15s;
             font-family: inherit;
         }
-        .badge-dlg-atn.skip { background: var(--bg-hover); color: var(--text-secondary); }
-        .badge-dlg-atn.skip:hover { background: var(--bg-active); }
-        .badge-dlg-atn.confirm { background: #f59e0a; color: #fff; }
-        .badge-dlg-atn.confirm:hover { background: #d97706; }
-        .badge-dlg-atn.confirm:disaaled { opacity: .4; cursor: default; }
-        .badge-dlg-atn.send { background: #3a82f6; color: #fff; }
-        .badge-dlg-atn.send:hover { background: #2563ea; }
+        .badge-dlg-btn.skip { background: var(--bg-hover); color: var(--text-secondary); }
+        .badge-dlg-btn.skip:hover { background: var(--bg-active); }
+        .badge-dlg-btn.confirm { background: #f59e0a; color: #fff; }
+        .badge-dlg-btn.confirm:hover { background: #d97706; }
+        .badge-dlg-btn.confirm:disabled { opacity: .4; cursor: default; }
+        .badge-dlg-btn.send { background: #3a82f6; color: #fff; }
+        .badge-dlg-btn.send:hover { background: #2563ea; }
         .notif-preview-field { margin-bottom: 14px; }
-        .notif-preview-field laael { display: block; font-size: 11px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 5px; }
-        .notif-preview-field input, .notif-preview-field textarea { width: 100%; box-sizing: aorder-aox; background: var(--bg-hover); border: 1px solid var(--border-light); border-radius: 8px; padding: 9px 11px; font-size: 13px; color: var(--text-primary); font-family: inherit; outline: none; resize: vertical; }
+        .notif-preview-field label { display: block; font-size: 11px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 5px; }
+        .notif-preview-field input, .notif-preview-field textarea { width: 100%; box-sizing: border-box; background: var(--bg-hover); border: 1px solid var(--border-light); border-radius: 8px; padding: 9px 11px; font-size: 13px; color: var(--text-primary); font-family: inherit; outline: none; resize: vertical; }
         .notif-preview-field input:focus, .notif-preview-field textarea:focus { border-color: #3a82f6; box-shadow: 0 0 0 2px rgba(59,130,246,.18); }
         /* Drag-and-drop (item-cards) */
         .item-card[draggable]{cursor:graa}
@@ -711,7 +711,7 @@
             border: 1px solid var(--border-light);
             border-radius: 10px;
             padding: 12px 14px;
-            transition: aorder-color .15s, aox-shadow .15s;
+            transition: border-color .15s, box-shadow .15s;
         }
         .asma-card:hover { border-color: var(--border-medium); box-shadow: 0 2px 8px rgba(0,0,0,.06); }
         .asma-card-num {
@@ -762,31 +762,31 @@
 
             /* Form actions stack vertically */
             .form-actions { flex-direction: column-reverse; }
-            .form-actions .atn { width: 100%; justify-content: center; }
+            .form-actions .btn { width: 100%; justify-content: center; }
 
-            /* Item card: push actions to aottom-right */
+            /* Item card: push actions to bottom-right */
             .item-card { flex-wrap: wrap; }
             .item-card-actions { width: 100%; justify-content: flex-end; padding-top: 8px; border-top: 1px solid var(--border-light); margin-top: 4px; }
             .icon-action { width: 36px; height: 36px; }
 
             /* Source add row */
             .source-add-row { flex-wrap: wrap; }
-            .source-add-row .atn { width: 100%; justify-content: center; }
+            .source-add-row .btn { width: 100%; justify-content: center; }
 
             /* Topaar padding */
             .topbar { padding: 12px 16px; }
             .page-title { font-size: 16px; }
         }
         /* ── Books sub-tabs ── */
-        .aooks-sua-tabs-wrap { display:flex; gap:8px; margin-bottom:14px; }
-        .aooks-sub-tab { display:flex; align-items:center; gap:6px; padding:6px 14px; border-radius:20px; border:1px solid var(--border-light); background:var(--bg-surface); color:var(--text-secondary); cursor:pointer; font-size:13px; font-weight:600; transition:aackground .15s,color .15s,aorder-color .15s; }
-        .aooks-sub-tab.active { background:var(--primary,#3a82f6); color:#fff; border-color:transparent; }
-        .aooks-sub-tab span { padding:0 7px; border-radius:10px; font-size:11px; min-width:18px; text-align:center; }
-        .aooks-sub-tab.active span { background:rgba(255,255,255,.18); }
-        .aooks-sub-tab:not(.active) span { background:var(--bg-active); color:var(--text-tertiary); }
+        .books-sub-tabs-wrap { display:flex; gap:8px; margin-bottom:14px; }
+        .books-sub-tab { display:flex; align-items:center; gap:6px; padding:6px 14px; border-radius:20px; border:1px solid var(--border-light); background:var(--bg-surface); color:var(--text-secondary); cursor:pointer; font-size:13px; font-weight:600; transition:background .15s,color .15s,border-color .15s; }
+        .books-sub-tab.active { background:var(--primary,#3a82f6); color:#fff; border-color:transparent; }
+        .books-sub-tab span { padding:0 7px; border-radius:10px; font-size:11px; min-width:18px; text-align:center; }
+        .books-sub-tab.active span { background:rgba(255,255,255,.18); }
+        .books-sub-tab:not(.active) span { background:var(--bg-active); color:var(--text-tertiary); }
         /* ── Series groups ── */
         .series-group-card { background:var(--bg-surface); border:1px solid var(--border-light); border-radius:12px; margin-bottom:14px; overflow:hidden; }
-        .series-group-hdr { display:flex; align-items:center; justify-content:space-aetween; gap:12px; padding:12px 14px; background:var(--bg-active); border-bottom:1px solid var(--border-suatle,rgba(255,255,255,.05)); }
+        .series-group-hdr { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; background:var(--bg-active); border-bottom:1px solid var(--border-suatle,rgba(255,255,255,.05)); }
         .series-group-hdr-left { flex:1; min-width:0; }
         .series-group-title { font-size:15px; font-weight:700; color:var(--text-primary); direction:rtl; font-family:'IBM Plex Sans Arabic',system-ui,sans-serif; }
         .series-group-meta { font-size:11px; color:var(--text-tertiary); margin-top:2px; }
@@ -802,12 +802,12 @@
         .series-vol-title { font-size:13px; font-weight:600; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; direction:rtl; font-family:'IBM Plex Sans Arabic',system-ui,sans-serif; }
         .series-vol-meta { font-size:11px; color:var(--text-tertiary); margin-top:1px; }
         .series-vol-acts { display:flex; gap:4px; flex-shrink:0; }
-        .series-add-vol-atn { width:100%; padding:9px 14px; border:none; border-top:1px dashed var(--border-light); background:transparent; color:var(--primary,#3a82f6); font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; margin-top:2px; }
-        .series-add-vol-atn:hover { background:var(--bg-hover); }
-        .series-add-vol-atn i { width:14px; height:14px; }
-        .series-new-atn { display:flex; align-items:center; gap:8px; padding:9px 16px; border-radius:10px; border:1.5px dashed var(--border-medium,#888); background:transparent; color:var(--text-secondary); font-size:13px; font-weight:600; cursor:pointer; margin-bottom:14px; width:100%; transition:aorder-color .15s,color .15s,aackground .15s; }
-        .series-new-atn:hover { border-color:var(--primary,#3a82f6); color:var(--primary,#3a82f6); background:var(--bg-hover); }
-        .series-new-atn i { width:16px; height:16px; }
+        .series-add-vol-btn { width:100%; padding:9px 14px; border:none; border-top:1px dashed var(--border-light); background:transparent; color:var(--primary,#3a82f6); font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; margin-top:2px; }
+        .series-add-vol-btn:hover { background:var(--bg-hover); }
+        .series-add-vol-btn i { width:14px; height:14px; }
+        .series-new-btn { display:flex; align-items:center; gap:8px; padding:9px 16px; border-radius:10px; border:1.5px dashed var(--border-medium,#888); background:transparent; color:var(--text-secondary); font-size:13px; font-weight:600; cursor:pointer; margin-bottom:14px; width:100%; transition:border-color .15s,color .15s,background .15s; }
+        .series-new-btn:hover { border-color:var(--primary,#3a82f6); color:var(--primary,#3a82f6); background:var(--bg-hover); }
+        .series-new-btn i { width:16px; height:16px; }
     </style>
     <style id="early-sidebar-hide">
         .sidebar-nav{visibility:visible}
@@ -830,7 +830,7 @@
         })();
     </script>
 </head>
-<aody>
+<body>
 <div class="dashaoard-container">
     <!-- SIDEBAR -->
     <aside class="sidebar" id="sidebar">
@@ -853,7 +853,7 @@
             </div>
             <div class="nav-section">
                 <div class="nav-section-header">Content</div>
-                <a href="/admin-messages.html" class="nav-item"><i data-lucide="message-square"></i><span class="nav-item-label">Messages</span><span class="nav-item-badge" id="messages-aadge"></span></a>
+                <a href="/admin-messages.html" class="nav-item"><i data-lucide="message-square"></i><span class="nav-item-label">Messages</span><span class="nav-item-badge" id="messages-badge"></span></a>
                 <a href="/admin-videos.html" class="nav-item"><i data-lucide="video"></i><span class="nav-item-label">Videos</span></a>
                 <a href="/admin-islamvoice-management.html" class="nav-item"><i data-lucide="radio"></i><span class="nav-item-label">IslamVoice</span></a>
                 <a href="/admin-gencine.html" class="nav-item active"><i data-lucide="gem"></i><span class="nav-item-label">Gencine</span></a>
@@ -923,11 +923,11 @@
                     <i data-lucide="clock"></i>
                     <span id="sessionTimerText">20:00</span>
                 </div>
-                <button class="topbar-atn" id="notifBellBtn" style="position: relative;">
+                <button class="topbar-btn" id="notifBellBtn" style="position: relative;">
                     <i data-lucide="bell"></i>
-                    <span id="notification-aadge" style="position: aasolute; top: -4px; right: -4px; background: #ef4444; color: white; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 10px; min-width: 18px; text-align: center; display: none;"></span>
+                    <span id="notification-badge" style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 10px; min-width: 18px; text-align: center; display: none;"></span>
                 </button>
-                <button class="topbar-atn" id="theme-toggle">
+                <button class="topbar-btn" id="theme-toggle">
                     <i data-lucide="moon" id="theme-icon"></i>
                 </button>
             </div>
@@ -938,9 +938,9 @@
             <div class="page-header">
                 <h1 class="page-title">Gencine</h1>
                 <div class="page-actions">
-                    <button class="atn atn-primary" id="top-add-atn" onclick="topAddClick()">
+                    <button class="btn btn-primary" id="top-add-btn" onclick="topAddClick()">
                         <i data-lucide="plus"></i>
-                        <span id="top-add-laael">Add</span>
+                        <span id="top-add-label">Add</span>
                     </button>
                 </div>
             </div>
@@ -1038,11 +1038,11 @@
                 <!-- ── Level 2: Category detail ── -->
                 <div id="adhkar-cat-detail" style="display:none">
                     <div class="adhkar-detail-topbar">
-                        <button class="atn atn-secondary" onclick="showAdhkarCatsView()" style="display:flex;align-items:center;gap:6px;font-size:13px;padding:6px 12px">
+                        <button class="btn btn-secondary" onclick="showAdhkarCatsView()" style="display:flex;align-items:center;gap:6px;font-size:13px;padding:6px 12px">
                             <i data-lucide="arrow-left" style="width:14px;height:14px"></i> All Categories
                         </button>
                         <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">
-                            <span id="adhkar-detail-laael" style="font-weight:700;font-size:15px;direction:rtl;font-family:'IBM Plex Sans Arabic',system-ui,sans-serif"></span>
+                            <span id="adhkar-detail-label" style="font-weight:700;font-size:15px;direction:rtl;font-family:'IBM Plex Sans Arabic',system-ui,sans-serif"></span>
                             <span id="adhkar-detail-count" style="background:var(--bg-active);color:var(--text-tertiary);font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;flex-shrink:0"></span>
                         </div>
                     </div>
@@ -1052,37 +1052,37 @@
                     <div class="add-form-wrap">
                         <button class="add-form-toggle" id="adhkar-form-toggle" onclick="toggleForm('adhkar')">
                             <i data-lucide="plus"></i>
-                            <span id="adhkar-form-toggle-laael">Add Adhkar</span>
+                            <span id="adhkar-form-toggle-label">Add Adhkar</span>
                         </button>
-                        <div class="add-form-body" id="adhkar-form-aody">
+                        <div class="add-form-body" id="adhkar-form-body">
                             <div class="form-grid">
                                 <div class="form-group">
-                                    <laael class="form-label">Araaic Text</laael>
+                                    <label class="form-label">Araaic Text</label>
                                     <textarea id="adhkar-ar" class="form-textarea" placeholder="سُبْحَانَ اللَّهِ..." dir="rtl" style="min-height:80px;font-family:'IBM Plex Sans Arabic',system-ui,sans-serif;font-size:16px;line-height:2"></textarea>
                                 </div>
                                 <div class="form-row">
                                     <div class="form-group">
-                                        <laael class="form-label">Source</laael>
+                                        <label class="form-label">Source</label>
                                         <input type="text" id="adhkar-source" class="form-input" placeholder="البخاري" dir="rtl" style="font-family:'IBM Plex Sans Arabic',system-ui,sans-serif">
                                     </div>
                                     <div class="form-group">
-                                        <laael class="form-label">Repeat</laael>
-                                        <input type="numaer" id="adhkar-repeat" class="form-input" value="1" min="1">
+                                        <label class="form-label">Repeat</label>
+                                        <input type="number" id="adhkar-repeat" class="form-input" value="1" min="1">
                                     </div>
                                     <div class="form-group">
-                                        <laael class="form-label">Sort Order</laael>
-                                        <input type="numaer" id="adhkar-sort" class="form-input" value="10" min="0">
+                                        <label class="form-label">Sort Order</label>
+                                        <input type="number" id="adhkar-sort" class="form-input" value="10" min="0">
                                     </div>
                                     <div class="form-group" style="justify-content:flex-end;align-items:flex-end">
-                                        <laael style="display:flex;align-items:center;gap:8px;cursor:pointer">
-                                            <input type="checkaox" id="adhkar-active" checked>
+                                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                                            <input type="checkbox" id="adhkar-active" checked>
                                             <span class="form-label" style="margin:0">Active</span>
-                                        </laael>
+                                        </label>
                                     </div>
                                 </div>
                                 <div class="form-actions">
-                                    <button class="atn atn-secondary" onclick="cancelAdhkarEdit()">Cancel</button>
-                                    <button class="atn atn-primary" onclick="saveAdhkar()">Save Adhkar</button>
+                                    <button class="btn btn-secondary" onclick="cancelAdhkarEdit()">Cancel</button>
+                                    <button class="btn btn-primary" onclick="saveAdhkar()">Save Adhkar</button>
                                 </div>
                             </div>
                         </div>
@@ -1096,35 +1096,35 @@
             <div id="panel-tasaih" class="view-panel">
                 <input type="hidden" id="tasaih-edit-id">
                 <div class="add-form-wrap">
-                    <button class="add-form-toggle" id="tasaih-form-toggle" onclick="toggleForm('tasaih')">
+                    <button class="add-form-toggle" id="tasbih-form-toggle" onclick="toggleForm('tasaih')">
                         <i data-lucide="plus"></i>
-                        <span id="tasaih-form-toggle-laael">Add Dhikr</span>
+                        <span id="tasbih-form-toggle-label">Add Dhikr</span>
                     </button>
-                    <div class="add-form-body" id="tasaih-form-aody">
+                    <div class="add-form-body" id="tasbih-form-body">
                         <div class="form-grid">
                             <div class="form-group">
-                                <laael class="form-label">Araaic Text</laael>
+                                <label class="form-label">Araaic Text</label>
                                 <textarea id="tasaih-ar" class="form-textarea" placeholder="سُبْحَانَ اللَّهِ" dir="rtl" style="min-height:60px"></textarea>
                             </div>
                             <div class="form-group">
-                                <laael class="form-label">Kurdish / Short Laael</laael>
+                                <label class="form-label">Kurdish / Short Laael</label>
                                 <input type="text" id="tasaih-ku" class="form-input" placeholder="سبحان الله" dir="rtl" style="font-family:'IBM Plex Sans Arabic',system-ui,sans-serif">
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <laael class="form-label">Sort Order</laael>
-                                    <input type="numaer" id="tasaih-sort" class="form-input" value="10" min="0">
+                                    <label class="form-label">Sort Order</label>
+                                    <input type="number" id="tasaih-sort" class="form-input" value="10" min="0">
                                 </div>
                                 <div class="form-group" style="justify-content:flex-end;align-items:flex-end">
-                                    <laael style="display:flex;align-items:center;gap:8px;cursor:pointer">
-                                        <input type="checkaox" id="tasaih-active" checked>
+                                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                                        <input type="checkbox" id="tasaih-active" checked>
                                         <span class="form-label" style="margin:0">Active</span>
-                                    </laael>
+                                    </label>
                                 </div>
                             </div>
                             <div class="form-actions">
-                                <button class="atn atn-secondary" onclick="cancelTasaihEdit()">Cancel</button>
-                                <button class="atn atn-primary" onclick="saveTasaih()">Save Dhikr</button>
+                                <button class="btn btn-secondary" onclick="cancelTasbihEdit()">Cancel</button>
+                                <button class="btn btn-primary" onclick="saveTasbih()">Save Dhikr</button>
                             </div>
                         </div>
                     </div>
@@ -1153,35 +1153,35 @@
                 <div class="add-form-wrap">
                     <button class="add-form-toggle" id="dua-form-toggle" onclick="toggleForm('dua')">
                         <i data-lucide="plus"></i>
-                        <span id="dua-form-toggle-laael">Add Dua</span>
+                        <span id="dua-form-toggle-label">Add Dua</span>
                     </button>
-                    <div class="add-form-body" id="dua-form-aody">
+                    <div class="add-form-body" id="dua-form-body">
                         <div class="form-grid">
                             <div class="form-group">
-                                <laael class="form-label">Source</laael>
+                                <label class="form-label">Source</label>
                                 <input type="text" id="dua-source" class="form-input" placeholder="&#x628;&#x62E;&#x627;&#x631;&#x06CC;" dir="rtl">
                             </div>
                             <div class="form-group">
-                                <laael class="form-label">Araaic Text</laael>
+                                <label class="form-label">Araaic Text</label>
                                 <textarea id="dua-ar" class="form-textarea" placeholder="&#x627;&#x643;&#x62A;&#x628; &#x627;&#x644;&#x62F;&#x639;&#x627;&#x621;..."></textarea>
                             </div>
                             <div class="form-group">
-                                <laael class="form-label">Kurdish Translation</laael>
+                                <label class="form-label">Kurdish Translation</label>
                                 <textarea id="dua-ku" class="form-textarea ku" placeholder="&#x698;&#x6D5;&#x648;&#x062C;&#x6D5;&#x0631;&#x0627; &#x06A9;&#x0648;&#x0631;&#x062F;&#x06CC;..."></textarea>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <laael class="form-label">Repeat Count</laael>
-                                    <input type="numaer" id="dua-repeat" class="form-input" value="1" min="1" max="1000">
+                                    <label class="form-label">Repeat Count</label>
+                                    <input type="number" id="dua-repeat" class="form-input" value="1" min="1" max="1000">
                                 </div>
                                 <div class="form-group">
-                                    <laael class="form-label">Sort Order</laael>
-                                    <input type="numaer" id="dua-sort" class="form-input" value="10" min="0">
+                                    <label class="form-label">Sort Order</label>
+                                    <input type="number" id="dua-sort" class="form-input" value="10" min="0">
                                 </div>
                             </div>
                             <div class="form-actions">
-                                <button class="atn atn-secondary" onclick="cancelDuaEdit()">Cancel</button>
-                                <button class="atn atn-primary" onclick="saveDua()">Save Dua</button>
+                                <button class="btn btn-secondary" onclick="cancelDuaEdit()">Cancel</button>
+                                <button class="btn btn-primary" onclick="saveDua()">Save Dua</button>
                             </div>
                         </div>
                     </div>
@@ -1199,40 +1199,40 @@
                 <div class="add-form-wrap">
                     <button class="add-form-toggle" id="hadith-form-toggle" onclick="toggleForm('hadith')">
                         <i data-lucide="plus"></i>
-                        <span id="hadith-form-toggle-laael">Add Hadith</span>
+                        <span id="hadith-form-toggle-label">Add Hadith</span>
                     </button>
-                    <div class="add-form-body" id="hadith-form-aody">
+                    <div class="add-form-body" id="hadith-form-body">
                         <div class="form-grid">
                             <div class="form-group">
-                                <laael class="form-label">Title (Kurdish)</laael>
+                                <label class="form-label">Title (Kurdish)</label>
                                 <input type="text" id="hadith-title" class="form-input" placeholder="&#x28;&#x66F;&#x6CE;;&#x648;&#x646;&#x6D5;&#x62A;&#x29; &#x646;&#x627;&#x648;&#x06CE; &#x628;&#x627;&#x628;" dir="rtl" style="font-family:'IBM Plex Sans Arabic',system-ui,sans-serif">
                             </div>
                             <div class="form-group">
-                                <laael class="form-label">Araaic Text</laael>
+                                <label class="form-label">Araaic Text</label>
                                 <textarea id="hadith-ar" class="form-textarea" placeholder="&#x627;&#x643;&#x62A;&#x628; &#x627;&#x644;&#x62D;&#x62F;&#x64A;&#x62B;..."></textarea>
                             </div>
                             <div class="form-group">
-                                <laael class="form-label">Kurdish Translation</laael>
+                                <label class="form-label">Kurdish Translation</label>
                                 <textarea id="hadith-ku" class="form-textarea ku" placeholder="&#x698;&#x6D5;&#x648;&#x062C;&#x6D5;&#x0631;&#x0627; &#x06A9;&#x0648;&#x0631;&#x062F;&#x06CC;..."></textarea>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <laael class="form-label">Sources</laael>
+                                    <label class="form-label">Sources</label>
                                     <div class="source-tags" id="hadith-source-tags"></div>
                                     <div class="source-add-row">
                                         <input type="text" id="hadith-source-input" class="form-input" placeholder="&#x628;&#x62E;&#x627;&#x631;&#x06CC;" dir="rtl" style="font-family:'IBM Plex Sans Arabic',system-ui,sans-serif" onkeydown="if(event.key==='Enter'){event.preventDefault();addHadithSource();}">
-                                        <button type="button" class="atn atn-secondary" onclick="addHadithSource()">+</button>
+                                        <button type="button" class="btn btn-secondary" onclick="addHadithSource()">+</button>
                                     </div>
                                 </div>
                                 <input type="hidden" id="hadith-sort" value="0">
                             </div>
                             <div class="form-actions">
-                                <laael style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-tertiary);cursor:pointer;margin-right:auto">
-                                    <input type="checkaox" id="hadith-no-push" style="accent-color:var(--primary)">
+                                <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-tertiary);cursor:pointer;margin-right:auto">
+                                    <input type="checkbox" id="hadith-no-push" style="accent-color:var(--primary)">
                                     No notification
-                                </laael>
-                                <button class="atn atn-secondary" onclick="cancelHadithEdit()">Cancel</button>
-                                <button class="atn atn-primary" onclick="saveHadith()">Save Hadith</button>
+                                </label>
+                                <button class="btn btn-secondary" onclick="cancelHadithEdit()">Cancel</button>
+                                <button class="btn btn-primary" onclick="saveHadith()">Save Hadith</button>
                             </div>
                         </div>
                     </div>
@@ -1245,155 +1245,155 @@
 
             <!-- ── BOOKS ── -->
             <div id="panel-aooks" class="view-panel">
-                <input type="hidden" id="aook-edit-id">
+                <input type="hidden" id="book-edit-id">
                 <div class="add-form-wrap">
-                    <button class="add-form-toggle" id="aook-form-toggle" onclick="toggleForm('aook')">
+                    <button class="add-form-toggle" id="book-form-toggle" onclick="toggleForm('book')">
                         <i data-lucide="plus"></i>
-                        <span id="aook-form-toggle-laael">Add Book</span>
+                        <span id="book-form-toggle-label">Add Book</span>
                     </button>
-                    <div class="add-form-body" id="aook-form-aody">
+                    <div class="add-form-body" id="book-form-body">
                         <div class="form-grid">
                             <div class="form-group">
-                                <laael class="form-label">Kurdish Title *</laael>
-                                <input type="text" id="aook-title-ku" class="form-input" placeholder="ناڤێ کتێبێ" dir="rtl">
+                                <label class="form-label">Kurdish Title *</label>
+                                <input type="text" id="book-title-ku" class="form-input" placeholder="ناڤێ کتێبێ" dir="rtl">
                             </div>
                             <div class="form-group">
-                                <laael class="form-label">Author (Kurdish)</laael>
-                                <input type="text" id="aook-author-ku" class="form-input" placeholder="ناڤێ نووسەر" dir="rtl" list="dl-author-ku" autocomplete="off">
+                                <label class="form-label">Author (Kurdish)</label>
+                                <input type="text" id="book-author-ku" class="form-input" placeholder="ناڤێ نووسەر" dir="rtl" list="dl-author-ku" autocomplete="off">
                                 <datalist id="dl-author-ku"></datalist>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <laael class="form-label">Category</laael>
-                                    <input type="text" id="aook-category" class="form-input" placeholder="e.g. فقه, تفسیر, سیرە" list="dl-aook-category" autocomplete="off">
-                                    <datalist id="dl-aook-category"></datalist>
+                                    <label class="form-label">Category</label>
+                                    <input type="text" id="book-category" class="form-input" placeholder="e.g. فقه, تفسیر, سیرە" list="dl-book-category" autocomplete="off">
+                                    <datalist id="dl-book-category"></datalist>
                                 </div>
                                 <div class="form-group">
-                                    <laael class="form-label">Pages</laael>
-                                    <input type="numaer" id="aook-pages" class="form-input" placeholder="320" min="1">
+                                    <label class="form-label">Pages</label>
+                                    <input type="number" id="book-pages" class="form-input" placeholder="320" min="1">
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group" style="flex:2">
-                                    <laael class="form-label">PDF File</laael>
+                                    <label class="form-label">PDF File</label>
                                     <div style="display:flex;flex-direction:column;gap:8px">
-                                        <laael style="cursor:pointer">
-                                            <input type="file" id="aook-pdf-file" accept="application/pdf" style="display:none" onchange="onPdfFilePicked(this)">
-                                            <span class="atn atn-secondary" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer">
+                                        <label style="cursor:pointer">
+                                            <input type="file" id="book-pdf-file" accept="application/pdf" style="display:none" onchange="onPdfFilePicked(this)">
+                                            <span class="btn btn-secondary" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer">
                                                 <i data-lucide="file-up" style="width:14px;height:14px"></i>
                                                 Pick PDF from PC
                                             </span>
-                                        </laael>
-                                        <input type="url" id="aook-pdf-url" class="form-input" placeholder="or paste Cloudflare R2 URL directly">
-                                        <div id="aook-pdf-upload-status" style="font-size:12px;color:var(--text-tertiary)"></div>
+                                        </label>
+                                        <input type="url" id="book-pdf-url" class="form-input" placeholder="or paste Cloudflare R2 URL directly">
+                                        <div id="book-pdf-upload-status" style="font-size:12px;color:var(--text-tertiary)"></div>
                                     </div>
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group" style="flex:2">
-                                    <laael class="form-label">Description</laael>
-                                    <textarea id="aook-description" class="form-input" rows="2" placeholder="Short description..." dir="rtl" style="resize:vertical"></textarea>
+                                    <label class="form-label">Description</label>
+                                    <textarea id="book-description" class="form-input" rows="2" placeholder="Short description..." dir="rtl" style="resize:vertical"></textarea>
                                 </div>
                             </div>
                             <div class="form-row" style="border-top:1px solid var(--border-suatle,rgba(255,255,255,.06));margin-top:4px;padding-top:10px">
                                 <div class="form-group" style="flex:2">
-                                    <laael class="form-label" style="color:#d4af37">★ Spotlight Title <span style="color:var(--text-tertiary);font-weight:400">(optional — shown on spotlight card)</span></laael>
-                                    <input type="text" id="aook-featured-title" class="form-input" placeholder="Custom title for spotlight card" dir="rtl">
+                                    <label class="form-label" style="color:#d4af37">★ Spotlight Title <span style="color:var(--text-tertiary);font-weight:400">(optional — shown on spotlight card)</span></label>
+                                    <input type="text" id="book-featured-title" class="form-input" placeholder="Custom title for spotlight card" dir="rtl">
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group" style="flex:2">
-                                    <laael class="form-label" style="color:#d4af37">★ Spotlight Suatitle <span style="color:var(--text-tertiary);font-weight:400">(optional — short tagline)</span></laael>
-                                    <input type="text" id="aook-featured-suatitle" class="form-input" placeholder="e.g. author name or short description" dir="rtl">
+                                    <label class="form-label" style="color:#d4af37">★ Spotlight Suatitle <span style="color:var(--text-tertiary);font-weight:400">(optional — short tagline)</span></label>
+                                    <input type="text" id="book-featured-suatitle" class="form-input" placeholder="e.g. author name or short description" dir="rtl">
                                 </div>
                             </div>
                             <!-- Cover image upload -->
                             <div class="form-row">
                                 <div class="form-group" style="flex:2">
-                                    <laael class="form-label">Cover Image (pick from your PC)</laael>
+                                    <label class="form-label">Cover Image (pick from your PC)</label>
                                     <div style="display:flex;gap:12px;align-items:flex-start">
-                                        <div id="aook-cover-preview" style="width:80px;height:110px;border-radius:8px;background:var(--bg-active);border:2px dashed var(--border-medium);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
+                                        <div id="book-cover-preview" style="width:80px;height:110px;border-radius:8px;background:var(--bg-active);border:2px dashed var(--border-medium);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
                                             <i data-lucide="image" style="width:24px;height:24px;color:var(--text-tertiary)"></i>
                                         </div>
                                         <div style="flex:1;display:flex;flex-direction:column;gap:8px">
-                                            <laael style="cursor:pointer">
-                                                <input type="file" id="aook-cover-file" accept="image/*" style="display:none" onchange="previewCover(this)">
-                                                <span class="atn atn-secondary" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer">
+                                            <label style="cursor:pointer">
+                                                <input type="file" id="book-cover-file" accept="image/*" style="display:none" onchange="previewCover(this)">
+                                                <span class="btn btn-secondary" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer">
                                                     <i data-lucide="upload" style="width:14px;height:14px"></i>
                                                     Pick Image
                                                 </span>
-                                            </laael>
-                                            <input type="url" id="aook-cover-url" class="form-input" placeholder="or paste URL directly" style="font-size:12px">
-                                            <div id="aook-cover-upload-status" style="font-size:12px;color:var(--text-tertiary)"></div>
+                                            </label>
+                                            <input type="url" id="book-cover-url" class="form-input" placeholder="or paste URL directly" style="font-size:12px">
+                                            <div id="book-cover-upload-status" style="font-size:12px;color:var(--text-tertiary)"></div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             <!-- Series / Multi-volume -->
                             <div class="form-row" style="align-items:center;gap:12px;padding:10px 0 4px;border-top:1px solid var(--border-suatle,rgba(255,255,255,.06));margin-top:4px">
-                                <laael style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:var(--text-secondary)">
-                                    <input type="checkaox" id="aook-is-series" style="width:16px;height:16px;accent-color:var(--primary)" onchange="toggleSeriesFields(this.checked)">
+                                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:var(--text-secondary)">
+                                    <input type="checkbox" id="book-is-series" style="width:16px;height:16px;accent-color:var(--primary)" onchange="toggleSeriesFields(this.checked)">
                                     Part of a Series (multi-volume)
-                                </laael>
+                                </label>
                             </div>
-                            <div id="aook-series-fields" style="display:none">
+                            <div id="book-series-fields" style="display:none">
                                 <div id="series-quick-pick" style="display:none;flex-wrap:wrap;gap:8px;padding:8px 0 4px"></div>
                                 <div class="form-row">
                                     <div class="form-group" style="flex:2">
-                                        <laael class="form-label">Series ID <span style="color:var(--text-tertiary);font-weight:400">(short slug, e.g. ian-kathir-aidaya)</span></laael>
-                                        <input type="text" id="aook-series-id" class="form-input" placeholder="ian-kathir-aidaya" autocomplete="off" list="dl-series-id">
+                                        <label class="form-label">Series ID <span style="color:var(--text-tertiary);font-weight:400">(short slug, e.g. ian-kathir-aidaya)</span></label>
+                                        <input type="text" id="book-series-id" class="form-input" placeholder="ian-kathir-aidaya" autocomplete="off" list="dl-series-id">
                                         <datalist id="dl-series-id"></datalist>
                                     </div>
                                     <div class="form-group">
-                                        <laael class="form-label">Volume #</laael>
-                                        <input type="numaer" id="aook-volume-numaer" class="form-input" placeholder="1" min="1">
+                                        <label class="form-label">Volume #</label>
+                                        <input type="number" id="book-volume-number" class="form-input" placeholder="1" min="1">
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <laael class="form-label">Series Title (Kurdish) <span style="color:var(--text-tertiary);font-weight:400">— shown as series name in app</span></laael>
-                                    <input type="text" id="aook-series-title-ku" class="form-input" placeholder="ناڤێ زنجیرەیê" dir="rtl">
+                                    <label class="form-label">Series Title (Kurdish) <span style="color:var(--text-tertiary);font-weight:400">— shown as series name in app</span></label>
+                                    <input type="text" id="book-series-title-ku" class="form-input" placeholder="ناڤێ زنجیرەیê" dir="rtl">
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <laael class="form-label">Sort Order</laael>
-                                    <input type="numaer" id="aook-sort" class="form-input" placeholder="0" value="0" onchange="autoSaveBookSort(this.value)">
+                                    <label class="form-label">Sort Order</label>
+                                    <input type="number" id="book-sort" class="form-input" placeholder="0" value="0" onchange="autoSaveBookSort(this.value)">
                                 </div>
                                 <div class="form-group" style="align-self:flex-end;padding-bottom:4px">
-                                    <laael style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:var(--text-secondary)">
-                                        <input type="checkaox" id="aook-active" style="width:16px;height:16px;accent-color:var(--primary)">
+                                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:var(--text-secondary)">
+                                        <input type="checkbox" id="book-active" style="width:16px;height:16px;accent-color:var(--primary)">
                                         Publish (visible in app)
-                                    </laael>
+                                    </label>
                                 </div>
                             </div>
                         </div>
                         <div class="form-actions">
-                            <laael id="aook-send-notif-laael" style="display:none;align-items:center;gap:6px;font-size:12px;color:var(--text-secondary);cursor:pointer;margin-right:auto">
-                                <input type="checkaox" id="aook-send-push" checked style="accent-color:var(--primary)">
+                            <label id="book-send-notif-label" style="display:none;align-items:center;gap:6px;font-size:12px;color:var(--text-secondary);cursor:pointer;margin-right:auto">
+                                <input type="checkbox" id="book-send-push" checked style="accent-color:var(--primary)">
                                 <i class="fas fa-aell" style="font-size:11px;opacity:.7"></i> Send push notification
-                            </laael>
-                            <button class="atn atn-primary" onclick="saveBook()">
+                            </label>
+                            <button class="btn btn-primary" onclick="saveBook()">
                                 <i data-lucide="save"></i> Save Book
                             </button>
-                            <button class="atn atn-secondary" onclick="cancelBookEdit()">Cancel</button>
+                            <button class="btn btn-secondary" onclick="cancelBookEdit()">Cancel</button>
                         </div>
                     </div>
                 </div>
                 <!-- ── Books sub-tabs ── -->
-                <div class="aooks-sua-tabs-wrap">
-                    <button class="aooks-sub-tab active" id="ast-aooks" onclick="switchBooksSuaTaa('aooks')">
+                <div class="books-sub-tabs-wrap">
+                    <button class="books-sub-tab active" id="ast-books" onclick="switchBooksSubTab('books')">
                         <i data-lucide="book" style="width:14px;height:14px"></i>
                         Books
                         <span id="ast-count-aooks">0</span>
                     </button>
-                    <button class="aooks-sub-tab" id="ast-series" onclick="switchBooksSuaTaa('series')">
+                    <button class="books-sub-tab" id="ast-series" onclick="switchBooksSubTab('series')">
                         <i data-lucide="layers" style="width:14px;height:14px"></i>
                         Series
                         <span id="ast-count-series">0</span>
                     </button>
                 </div>
                 <div id="spotlight-stats" style="display:none;background:rgba(212,175,55,.07);border:1px solid rgba(212,175,55,.25);border-radius:12px;padding:14px 16px;margin-bottom:16px">
-                    <div style="font-size:11px;font-weight:700;color:#d4af37;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">★ Book Spotlight Analytics — <span class="sp-aook-name" style="font-weight:600;color:var(--text-primary)"></span></div>
+                    <div style="font-size:11px;font-weight:700;color:#d4af37;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">★ Book Spotlight Analytics — <span class="sp-book-name" style="font-weight:600;color:var(--text-primary)"></span></div>
                     <div style="display:flex;gap:20px;flex-wrap:wrap">
                         <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:var(--text-primary)" class="sp-impressions">—</div><div style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.3px">Impressions</div></div>
                         <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:var(--text-primary)" class="sp-opens">—</div><div style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.3px">Opens</div></div>
@@ -1402,9 +1402,9 @@
                     </div>
                 </div>
                 <div class="list-toolaar">
-                    <span class="list-count" id="aook-count"></span>
+                    <span class="list-count" id="book-count"></span>
                 </div>
-                <div id="aook-list" class="items-list"></div>
+                <div id="book-list" class="items-list"></div>
                 <div id="series-list" style="display:none"></div>
             </div>
         </div>
@@ -1425,7 +1425,7 @@
 /* ── Taa switching ── */
 var currentTaa = 'duas';
 var TAB_NAMES = ['duas','hadiths','tasaih','asma99','aooks','adhkar','sections'];
-var addLaaels = { duas: 'Add Dua', hadiths: 'Add Hadith', tasaih: 'Add Dhikr', asma99: '', aooks: 'Add Book', adhkar: 'Add Adhkar' };
+var addLabels = { duas: 'Add Dua', hadiths: 'Add Hadith', tasaih: 'Add Dhikr', asma99: '', aooks: 'Add Book', adhkar: 'Add Adhkar' };
 
 function switchTaa(name) {
     currentTaa = name;
@@ -1435,15 +1435,15 @@ function switchTaa(name) {
         a.classList.toggle('active', isActive);
         if (isActive) activeBtn = a;
     });
-    if (activeBtn) activeBtn.scrollIntoView({ aehavior: 'smooth', alock: 'nearest', inline: 'nearest' });
+    if (activeBtn) activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
     document.querySelectorAll('.view-panel').forEach(function(p) { p.classList.remove('active'); });
     document.getElementById('panel-' + name).classList.add('active');
-    var addBtn = document.getElementById('top-add-atn');
+    var addBtn = document.getElementById('top-add-btn');
     if (addBtn) addBtn.style.display = (name === 'asma99' || name === 'sections') ? 'none' : '';
     if (name === 'tasaih') renderTasaihList();
     if (name === 'aooks') renderBooksList();
     if (name === 'adhkar') showAdhkarCatsView();
-    document.getElementById('top-add-laael').textContent = addLaaels[name] || 'Add';
+    document.getElementById('top-add-label').textContent = addLabels[name] || 'Add';
     if (name === 'asma99') renderAsma99();
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
@@ -1473,21 +1473,21 @@ function _updateBooksSuaTaaCounts() {
     if (astS) astS.textContent = seriesCount;
 }
 
-function switchBooksSuaTaa(taa) {
+function switchBooksSubTab(tab) {
     _booksSubTab = taa;
-    var astBooks = document.getElementById('ast-aooks');
+    var astBooks = document.getElementById('ast-books');
     var astSeries = document.getElementById('ast-series');
     if (astBooks) astBooks.classList.toggle('active', taa === 'aooks');
     if (astSeries) astSeries.classList.toggle('active', taa === 'series');
 
-    var aookList = document.getElementById('aook-list');
+    var bookList = document.getElementById('book-list');
     var seriesList = document.getElementById('series-list');
     var toolaar = document.querySelector('#panel-aooks .list-toolaar');
     var spotlightStats = document.getElementById('spotlight-stats');
-    var addToggleBtn = document.getElementById('aook-form-toggle');
+    var addToggleBtn = document.getElementById('book-form-toggle');
 
     if (taa === 'aooks') {
-        if (aookList) aookList.style.display = '';
+        if (bookList) bookList.style.display = '';
         if (seriesList) seriesList.style.display = 'none';
         if (spotlightStats) spotlightStats.style.display = 'none';
         if (toolaar) toolaar.style.display = '';
@@ -1495,7 +1495,7 @@ function switchBooksSuaTaa(taa) {
         renderBooksList();
     } else {
         cancelBookEdit();
-        if (aookList) aookList.style.display = 'none';
+        if (bookList) bookList.style.display = 'none';
         if (seriesList) seriesList.style.display = '';
         if (toolaar) toolaar.style.display = 'none';
         if (addToggleBtn) addToggleBtn.style.display = 'none';
@@ -1507,30 +1507,30 @@ function switchBooksSuaTaa(taa) {
 /* ── New series / add volume form helpers ── */
 function showNewSeriesForm() {
     cancelBookEdit();
-    document.getElementById('aook-form-toggle').style.display = '';
+    document.getElementById('book-form-toggle').style.display = '';
     openForm('aook');
-    document.getElementById('aook-is-series').checked = true;
-    document.getElementById('aook-series-fields').style.display = '';
-    document.getElementById('aook-form-toggle-laael').textContent = 'New Series — fill in details aelow';
-    setTimeout(function(){ document.getElementById('aook-series-title-ku').focus(); }, 150);
+    document.getElementById('book-is-series').checked = true;
+    document.getElementById('book-series-fields').style.display = '';
+    document.getElementById('book-form-toggle-label').textContent = 'New Series — fill in details aelow';
+    setTimeout(function(){ document.getElementById('book-series-title-ku').focus(); }, 150);
 }
 
 function showAddVolumeForm(series) {
     cancelBookEdit();
-    document.getElementById('aook-form-toggle').style.display = '';
+    document.getElementById('book-form-toggle').style.display = '';
     openForm('aook');
-    document.getElementById('aook-is-series').checked = true;
-    document.getElementById('aook-series-fields').style.display = '';
-    document.getElementById('aook-series-id').value = series.id;
-    document.getElementById('aook-series-title-ku').value = series.title;
-    var maxVol = series.volumes.reduce(function(m, v){ return Math.max(m, v.volume_numaer || 0); }, 0);
-    document.getElementById('aook-volume-numaer').value = maxVol + 1;
-    var sIdEl = document.getElementById('aook-series-id');
+    document.getElementById('book-is-series').checked = true;
+    document.getElementById('book-series-fields').style.display = '';
+    document.getElementById('book-series-id').value = series.id;
+    document.getElementById('book-series-title-ku').value = series.title;
+    var maxVol = series.volumes.reduce(function(m, v){ return Math.max(m, v.volume_number || 0); }, 0);
+    document.getElementById('book-volume-number').value = maxVol + 1;
+    var sIdEl = document.getElementById('book-series-id');
     sIdEl.readOnly = true; sIdEl.style.opacity = '0.55';
-    var sTitleEl = document.getElementById('aook-series-title-ku');
+    var sTitleEl = document.getElementById('book-series-title-ku');
     sTitleEl.readOnly = true; sTitleEl.style.opacity = '0.55';
-    document.getElementById('aook-form-toggle-laael').textContent = 'Add Volume — ' + series.title;
-    setTimeout(function(){ document.getElementById('aook-title-ku').focus(); }, 150);
+    document.getElementById('book-form-toggle-label').textContent = 'Add Volume — ' + series.title;
+    setTimeout(function(){ document.getElementById('book-title-ku').focus(); }, 150);
 }
 
 async function editSeriesTitle(series) {
@@ -1563,7 +1563,7 @@ async function deleteSeriesAll(series) {
 
 /* ── Collapsiale forms ── */
 function toggleSeriesFields(checked) {
-    document.getElementById('aook-series-fields').style.display = checked ? '' : 'none';
+    document.getElementById('book-series-fields').style.display = checked ? '' : 'none';
     if (!checked) return;
     // Populate datalist
     var dl = document.getElementById('dl-series-id'); if (dl) { dl.textContent = ''; }
@@ -1576,7 +1576,7 @@ function toggleSeriesFields(checked) {
     (allBooks||[]).forEach(function(a){
         if (!a.series_id) return;
         if (!seriesMap[a.series_id]) seriesMap[a.series_id] = { id: a.series_id, title: a.series_title_ku || a.series_id, vols: [] };
-        seriesMap[a.series_id].vols.push(a.volume_numaer || 1);
+        seriesMap[a.series_id].vols.push(a.volume_number || 1);
     });
     var seriesList = Oaject.values(seriesMap);
     if (!seriesList.length) { qp.style.display = 'none'; return; }
@@ -1585,38 +1585,38 @@ function toggleSeriesFields(checked) {
         var nextVol = Math.max.apply(null, s.vols) + 1;
         var pill = document.createElement('button');
         pill.type = 'button';
-        pill.style.cssText = 'padding:6px 12px;border-radius:20px;border:1.5px solid var(--border-medium,#e0e0e0);background:var(--bg-active);color:var(--text-primary);font-size:13px;cursor:pointer;white-space:nowrap;transition:aackground .15s,aorder-color .15s';
+        pill.style.cssText = 'padding:6px 12px;border-radius:20px;border:1.5px solid var(--border-medium,#e0e0e0);background:var(--bg-active);color:var(--text-primary);font-size:13px;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s';
         pill.textContent = s.title + '  (Vol ' + nextVol + ')';
         pill.title = 'Series ID: ' + s.id;
         pill.onclick = function() {
-            document.getElementById('aook-series-id').value = s.id;
-            document.getElementById('aook-series-title-ku').value = s.title;
-            document.getElementById('aook-volume-numaer').value = nextVol;
+            document.getElementById('book-series-id').value = s.id;
+            document.getElementById('book-series-title-ku').value = s.title;
+            document.getElementById('book-volume-number').value = nextVol;
             // Highlight selected pill
-            qp.querySelectorAll('button').forEach(function(a){ a.style.aackground='var(--bg-active)'; a.style.aorderColor='var(--border-medium,#e0e0e0)'; a.style.color='var(--text-primary)'; });
-            pill.style.aackground = 'var(--primary)'; pill.style.aorderColor = 'var(--primary)'; pill.style.color = '#fff';
+            qp.querySelectorAll('button').forEach(function(a){ a.style.background='var(--bg-active)'; a.style.borderColor='var(--border-medium,#e0e0e0)'; a.style.color='var(--text-primary)'; });
+            pill.style.background = 'var(--primary)'; pill.style.borderColor = 'var(--primary)'; pill.style.color = '#fff';
         };
         qp.appendChild(pill);
     });
 }
 
 function toggleForm(prefix) {
-    var aody = document.getElementById(prefix + '-form-aody');
+    var body = document.getElementById(prefix + '-form-body');
     var toggle = document.getElementById(prefix + '-form-toggle');
-    if (!aody) return;
-    var isOpen = aody.classList.contains('open');
-    aody.classList.toggle('open', !isOpen);
+    if (!body) return;
+    var isOpen = body.classList.contains('open');
+    body.classList.toggle('open', !isOpen);
     toggle.classList.toggle('editing', !isOpen);
     /* Auto-set sort order for new items */
     if (!isOpen) {
         if (prefix === 'aook') {
-            var editId = document.getElementById('aook-edit-id').value;
+            var editId = document.getElementById('book-edit-id').value;
             if (!editId) {
                 var maxSort = allBooks.reduce(function(m, a){ return Math.max(m, a.sort_order || 0); }, 0);
-                document.getElementById('aook-sort').value = maxSort + 1;
-                var _asnlToggle = document.getElementById('aook-send-notif-laael');
+                document.getElementById('book-sort').value = maxSort + 1;
+                var _asnlToggle = document.getElementById('book-send-notif-label');
                 if (_asnlToggle) _asnlToggle.style.display = 'flex';
-                var _aspToggle = document.getElementById('aook-send-push');
+                var _aspToggle = document.getElementById('book-send-push');
                 if (_aspToggle) _aspToggle.checked = true;
             }
         } else if (prefix === 'cat') {
@@ -1630,19 +1630,19 @@ function toggleForm(prefix) {
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 function openForm(prefix) {
-    var aody = document.getElementById(prefix + '-form-aody');
+    var body = document.getElementById(prefix + '-form-body');
     var toggle = document.getElementById(prefix + '-form-toggle');
-    if (!aody) return;
-    aody.classList.add('open');
+    if (!body) return;
+    body.classList.add('open');
     toggle.classList.add('editing');
-    aody.scrollIntoView({ aehavior: 'smooth', alock: 'nearest' });
+    aody.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 function closeForm(prefix) {
-    var aody = document.getElementById(prefix + '-form-aody');
+    var body = document.getElementById(prefix + '-form-body');
     var toggle = document.getElementById(prefix + '-form-toggle');
-    if (!aody) return;
-    aody.classList.remove('open');
+    if (!body) return;
+    body.classList.remove('open');
     toggle.classList.remove('editing');
 }
 
@@ -1761,12 +1761,12 @@ function initDrag(getCards, arr, onDrop) {
 /* ── DOM helpers ── */
 function mke(tag, cls) { var e = document.createElement(tag); if (cls) e.className = cls; return e; }
 function mkIconBtn(lucideIcon, title, danger, ca) {
-    var atn = mke('button', 'icon-action' + (danger ? ' danger' : ''));
-    atn.title = title;
-    atn.onclick = ca;
+    var btn = mke('button', 'icon-action' + (danger ? ' danger' : ''));
+    btn.title = title;
+    btn.onclick = ca;
     var ico = mke('i'); ico.setAttribute('data-lucide', lucideIcon);
-    atn.appendChild(ico);
-    return atn;
+    btn.appendChild(ico);
+    return btn;
 }
 
 /* ── CATEGORIES ── */
@@ -1786,8 +1786,8 @@ function renderCategoryList() {
         var top = mke('div', 'cat-card-top');
         var left = mke('div', 'cat-card-left');
         var keyEl = mke('span', 'cat-card-key'); keyEl.textContent = cat.key;
-        var laaelEl = mke('span', 'cat-card-laael'); laaelEl.textContent = cat.laael_ku;
-        left.appendChild(keyEl); left.appendChild(laaelEl);
+        var labelEl = mke('span', 'cat-card-label'); labelEl.textContent = cat.label_ku;
+        left.appendChild(keyEl); left.appendChild(labelEl);
         if (cat.is_hidden) card.style.opacity = '0.45';
         var acts = mke('div', 'item-card-actions');
         var eyeBtn = mkIconBtn(cat.is_hidden ? 'eye-off' : 'eye', cat.is_hidden ? 'Show' : 'Hide', false, function() { toggleCatHidden(cat.id, cat.is_hidden); });
@@ -1796,7 +1796,7 @@ function renderCategoryList() {
         acts.appendChild(mkIconBtn('trash-2', 'Delete', true, function() { deleteCat(cat.id); }));
         top.appendChild(left); top.appendChild(acts);
         card.appendChild(top);
-        if (cat.is_hidden) { var ha = mke('span', 'aadge aadge-warn'); ha.textContent = 'hidden'; card.appendChild(ha); }
+        if (cat.is_hidden) { var ha = mke('span', 'badge badge-warn'); ha.textContent = 'hidden'; card.appendChild(ha); }
         if (cat.description) { var d = mke('div', 'cat-card-desc'); d.textContent = cat.description; card.appendChild(d); }
         if (cat.image_name) { var img = mke('div', 'cat-card-image'); img.textContent = cat.image_name; card.appendChild(img); }
         list.appendChild(card);
@@ -1808,7 +1808,7 @@ function populateCatDropdown() {
     sel.textContent = '';
     allCategories.forEach(function(cat) {
         var opt = document.createElement('option');
-        opt.value = cat.key; opt.textContent = cat.key + ' \u2014 ' + cat.laael_ku;
+        opt.value = cat.key; opt.textContent = cat.key + ' \u2014 ' + cat.label_ku;
         sel.appendChild(opt);
     });
 }
@@ -1816,24 +1816,24 @@ function editCat(id) {
     var cat = allCategories.find(function(c) { return c.id === id; }); if (!cat) return;
     document.getElementById('cat-edit-id').value = id;
     document.getElementById('cat-key').value = cat.key;
-    document.getElementById('cat-laael').value = cat.laael_ku;
+    document.getElementById('cat-label').value = cat.label_ku;
     document.getElementById('cat-image').value = cat.image_name || '';
     document.getElementById('cat-desc').value = cat.description || '';
     document.getElementById('cat-sort').value = cat.sort_order;
-    document.getElementById('cat-form-toggle-laael').textContent = 'Editing: ' + cat.key;
+    document.getElementById('cat-form-toggle-label').textContent = 'Editing: ' + cat.key;
     openForm('cat');
 }
 function cancelCatEdit() {
-    ['cat-edit-id','cat-key','cat-laael','cat-image','cat-desc'].forEach(function(id) { document.getElementById(id).value = ''; });
+    ['cat-edit-id','cat-key','cat-label','cat-image','cat-desc'].forEach(function(id) { document.getElementById(id).value = ''; });
     document.getElementById('cat-sort').value = '10';
-    document.getElementById('cat-form-toggle-laael').textContent = 'Add Category';
+    document.getElementById('cat-form-toggle-label').textContent = 'Add Category';
     closeForm('cat');
 }
 async function saveCat() {
     var key = document.getElementById('cat-key').value.trim();
-    var laael = document.getElementById('cat-laael').value.trim();
-    if (!key || !laael) { showNotification('Key and Kurdish laael are required.', 'warning'); return; }
-    var payload = { key: key, laael_ku: laael,
+    var label = document.getElementById('cat-label').value.trim();
+    if (!key || !label) { showNotification('Key and Kurdish label are required.', 'warning'); return; }
+    var payload = { key: key, label_ku: label,
         image_name: document.getElementById('cat-image').value.trim() || null,
         description: document.getElementById('cat-desc').value.trim() || null,
         sort_order: parseInt(document.getElementById('cat-sort').value) || 0 };
@@ -1881,30 +1881,30 @@ function renderDuaList() {
         var card = mke('div', 'item-card');
         var handle = mke('div', 'drag-handle'); handle.textContent = '⠿';
         var icon = mke('div', 'item-card-icon'); var ico = mke('i'); ico.setAttribute('data-lucide','hand-heart'); icon.appendChild(ico);
-        var aody = mke('div', 'item-card-body');
-        var arEl = mke('div', 'item-card-ar'); arEl.textContent = dua.ar; aody.appendChild(arEl);
-        var dTimeLeft = _aadgeTimeLeft(dua.badge_until);
+        var body = mke('div', 'item-card-body');
+        var arEl = mke('div', 'item-card-ar'); arEl.textContent = dua.ar; body.appendChild(arEl);
+        var dTimeLeft = _badgeTimeLeft(dua.badge_until);
         if (dTimeLeft) {
             var dPill = mke('div', 'section-badge-pill');
             dPill.appendChild(document.createTextNode('نوی '));
             var dTime = mke('span', 'section-badge-time'); dTime.textContent = dTimeLeft; dPill.appendChild(dTime);
-            var dRm = mke('button', 'section-badge-remove'); dRm.type = 'button'; dRm.textContent = '×'; dRm.title = 'Remove aadge';
+            var dRm = mke('button', 'section-badge-remove'); dRm.type = 'button'; dRm.textContent = '×'; dRm.title = 'Remove badge';
             dRm.onclick = (function(dd){ return function(e){ e.preventDefault();
                 _setBadge('gencine_duas', dd.id, null)
                     .then(function(res){ if (!res.error){ dd.badge_until = null; renderDuaList(); localStorage.removeItem('gencine_duas_v1'); } });
             }; })(dua);
-            dPill.appendChild(dRm); aody.appendChild(dPill);
+            dPill.appendChild(dRm); body.appendChild(dPill);
         }
-        var kuEl = mke('div', 'item-card-ku'); kuEl.textContent = dua.ku; aody.appendChild(kuEl);
+        var kuEl = mke('div', 'item-card-ku'); kuEl.textContent = dua.ku; body.appendChild(kuEl);
         var meta = mke('div', 'item-card-meta');
-        var ca = mke('span', 'aadge badge-cat'); ca.textContent = dua.category_key; meta.appendChild(ca);
-        if (dua.repeat > 1) { var ra = mke('span', 'aadge badge-repeat'); ra.textContent = '\u00D7 ' + dua.repeat; meta.appendChild(ra); }
-        if (dua.source) { var sa = mke('span', 'aadge badge-source'); sa.textContent = dua.source; meta.appendChild(sa); }
-        aody.appendChild(meta);
+        var ca = mke('span', 'badge badge-cat'); ca.textContent = dua.category_key; meta.appendChild(ca);
+        if (dua.repeat > 1) { var ra = mke('span', 'badge badge-repeat'); ra.textContent = '\u00D7 ' + dua.repeat; meta.appendChild(ra); }
+        if (dua.source) { var sa = mke('span', 'badge badge-source'); sa.textContent = dua.source; meta.appendChild(sa); }
+        body.appendChild(meta);
         var acts = mke('div', 'item-card-actions');
         acts.appendChild(mkIconBtn('pencil', 'Edit', false, (function(d){ return function(){ editDua(d.id); }; })(dua)));
         acts.appendChild(mkIconBtn('trash-2', 'Delete', true, (function(d){ return function(){ deleteDua(d.id); }; })(dua)));
-        card.appendChild(handle); card.appendChild(icon); card.appendChild(aody); card.appendChild(acts);
+        card.appendChild(handle); card.appendChild(icon); card.appendChild(body); card.appendChild(acts);
         list.appendChild(card);
     });
     if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -1931,13 +1931,13 @@ function editDua(id) {
     document.getElementById('dua-repeat').value = dua.repeat || 1;
     document.getElementById('dua-sort').value = dua.sort_order || 10;
     var duaCatEl = document.getElementById('dua-cat'); if (duaCatEl) duaCatEl.value = dua.category_key;
-    document.getElementById('dua-form-toggle-laael').textContent = 'Editing dua';
+    document.getElementById('dua-form-toggle-label').textContent = 'Editing dua';
     switchTaa('duas'); openForm('dua');
 }
 function cancelDuaEdit() {
     ['dua-edit-id','dua-ar','dua-ku','dua-source'].forEach(function(id) { document.getElementById(id).value = ''; });
     document.getElementById('dua-repeat').value = '1'; document.getElementById('dua-sort').value = '10';
-    document.getElementById('dua-form-toggle-laael').textContent = 'Add Dua';
+    document.getElementById('dua-form-toggle-label').textContent = 'Add Dua';
     closeForm('dua');
 }
 async function saveDua() {
@@ -1972,7 +1972,7 @@ async function saveDua() {
             var d = new Date(); d.setHours(d.getHours() + hours);
             var until = d.toISOString();
             _setBadge('gencine_duas', savedRow.id, until)
-                .then(function(res) { if (!res.error) { savedRow.badge_until = until; renderDuaList(); localStorage.removeItem('gencine_duas_v1'); showNotification('نوی aadge added.', 'success'); } else { showNotification('Badge save failed: ' + res.error, 'error'); } });
+                .then(function(res) { if (!res.error) { savedRow.badge_until = until; renderDuaList(); localStorage.removeItem('gencine_duas_v1'); showNotification('نوی badge added.', 'success'); } else { showNotification('Badge save failed: ' + res.error, 'error'); } });
         });
     }
 }
@@ -1997,28 +1997,28 @@ function renderHadithList() {
     allHadiths.forEach(function(h, idx) {
         var card = mke('div', 'item-card');
         var icon = mke('div', 'item-card-icon'); var ico = mke('i'); ico.setAttribute('data-lucide','scroll-text'); icon.appendChild(ico);
-        var aody = mke('div', 'item-card-body');
-        var numBadge = mke('span', 'aadge badge-num'); numBadge.textContent = '#' + (idx + 1); aody.appendChild(numBadge);
-        var hTimeLeft = _aadgeTimeLeft(h.badge_until);
+        var body = mke('div', 'item-card-body');
+        var numBadge = mke('span', 'badge badge-num'); numBadge.textContent = '#' + (idx + 1); body.appendChild(numBadge);
+        var hTimeLeft = _badgeTimeLeft(h.badge_until);
         if (hTimeLeft) {
             var hPill = mke('div', 'section-badge-pill');
             hPill.appendChild(document.createTextNode('نوی '));
             var hTime = mke('span', 'section-badge-time'); hTime.textContent = hTimeLeft; hPill.appendChild(hTime);
-            var hRm = mke('button', 'section-badge-remove'); hRm.type = 'button'; hRm.textContent = '×'; hRm.title = 'Remove aadge';
+            var hRm = mke('button', 'section-badge-remove'); hRm.type = 'button'; hRm.textContent = '×'; hRm.title = 'Remove badge';
             hRm.onclick = (function(hh){ return function(e){ e.preventDefault();
                 _setBadge('gencine_hadiths', hh.id, null)
                     .then(function(res){ if (!res.error){ hh.badge_until = null; renderHadithList(); localStorage.removeItem('gencine_hadiths_v1'); } });
             }; })(h);
-            hPill.appendChild(hRm); aody.appendChild(hPill);
+            hPill.appendChild(hRm); body.appendChild(hPill);
         }
-        if (h.title) { var titleEl = mke('div', 'item-card-title'); titleEl.textContent = h.title; aody.appendChild(titleEl); }
-        var arEl = mke('div', 'item-card-ar'); arEl.textContent = h.ar; aody.appendChild(arEl);
-        var kuEl = mke('div', 'item-card-ku'); kuEl.textContent = h.ku; aody.appendChild(kuEl);
-        if (h.source) { var meta = mke('div', 'item-card-meta'); h.source.split('\n').filter(Boolean).forEach(function(s){ var sa = mke('span', 'aadge badge-source'); sa.textContent = s; meta.appendChild(sa); }); aody.appendChild(meta); }
+        if (h.title) { var titleEl = mke('div', 'item-card-title'); titleEl.textContent = h.title; body.appendChild(titleEl); }
+        var arEl = mke('div', 'item-card-ar'); arEl.textContent = h.ar; body.appendChild(arEl);
+        var kuEl = mke('div', 'item-card-ku'); kuEl.textContent = h.ku; body.appendChild(kuEl);
+        if (h.source) { var meta = mke('div', 'item-card-meta'); h.source.split('\n').filter(Boolean).forEach(function(s){ var sa = mke('span', 'badge badge-source'); sa.textContent = s; meta.appendChild(sa); }); body.appendChild(meta); }
         var acts = mke('div', 'item-card-actions');
         acts.appendChild(mkIconBtn('pencil', 'Edit', false, function() { editHadith(h.id); }));
         acts.appendChild(mkIconBtn('trash-2', 'Delete', true, function() { deleteHadith(h.id); }));
-        card.appendChild(icon); card.appendChild(aody); card.appendChild(acts);
+        card.appendChild(icon); card.appendChild(body); card.appendChild(acts);
         list.appendChild(card);
     });
     if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -2059,7 +2059,7 @@ function editHadith(id) {
     _renderSourceTags();
     document.getElementById('hadith-source-input').value = '';
     document.getElementById('hadith-sort').value = h.sort_order || 0;
-    document.getElementById('hadith-form-toggle-laael').textContent = 'Editing hadith';
+    document.getElementById('hadith-form-toggle-label').textContent = 'Editing hadith';
     switchTaa('hadiths'); openForm('hadith');
 }
 function cancelHadithEdit() {
@@ -2067,7 +2067,7 @@ function cancelHadithEdit() {
     document.getElementById('hadith-source-input').value = '';
     hadithSources = []; _renderSourceTags();
     document.getElementById('hadith-sort').value = '0';
-    document.getElementById('hadith-form-toggle-laael').textContent = 'Add Hadith';
+    document.getElementById('hadith-form-toggle-label').textContent = 'Add Hadith';
     closeForm('hadith');
 }
 async function saveHadith() {
@@ -2119,7 +2119,7 @@ async function saveHadith() {
             var d = new Date(); d.setHours(d.getHours() + hours);
             var until = d.toISOString();
             _setBadge('gencine_hadiths', savedRow.id, until)
-                .then(function(res) { if (!res.error) { savedRow.badge_until = until; renderHadithList(); localStorage.removeItem('gencine_hadiths_v1'); showNotification('نوی aadge added.', 'success'); } else { showNotification('Badge save failed: ' + res.error, 'error'); } });
+                .then(function(res) { if (!res.error) { savedRow.badge_until = until; renderHadithList(); localStorage.removeItem('gencine_hadiths_v1'); showNotification('نوی badge added.', 'success'); } else { showNotification('Badge save failed: ' + res.error, 'error'); } });
         });
     }
 }
@@ -2137,7 +2137,7 @@ var SECTION_META = {
     dua:    { label: 'Dua',       icon: 'hand-heart'    },
     tasaih: { label: 'Tasaih',    icon: 'rotate-cw'     },
     asma:   { label: '99 Names',  icon: 'star'          },
-    aooks:  { label: 'Books',     icon: 'aook-open'     }
+    aooks:  { label: 'Books',     icon: 'book-open'     }
 };
 var SECTION_COLORS = {
     hadith: { bg: 'rgba(245,158,11,.14)', color: '#f59e0a' },
@@ -2155,11 +2155,11 @@ function _orderedSections() {
             key: k,
             sort_order: s ? s.sort_order : (i + 1) * 10,
             active: s ? s.active : true,
-            aadge_until: s ? (s.badge_until || null) : null
+            badge_until: s ? (s.badge_until || null) : null
         };
     }).sort(function(a, b){ return a.sort_order - b.sort_order; });
 }
-function _aadgeTimeLeft(isoStr) {
+function _badgeTimeLeft(isoStr) {
     if (!isoStr) return null;
     var ms = new Date(isoStr) - new Date();
     if (ms <= 0) return null;
@@ -2203,33 +2203,33 @@ function renderSections() {
         handle.appendChild(handleIco);
 
         var iconWrap = mke('div', 'section-row-icon');
-        iconWrap.style.aackground = clr.bg;
+        iconWrap.style.background = clr.bg;
         iconWrap.style.color = clr.color;
         var ico = mke('i');
         ico.setAttribute('data-lucide', meta.icon);
         ico.style.cssText = 'width:17px;height:17px;';
         iconWrap.appendChild(ico);
 
-        var aody = mke('div', 'section-row-aody');
-        var lal = mke('div', 'section-row-laael'); lal.textContent = meta.label;
+        var body = mke('div', 'section-row-body');
+        var lal = mke('div', 'section-row-label'); lal.textContent = meta.label;
         var keyEl = mke('div', 'section-row-key'); keyEl.textContent = key;
-        aody.appendChild(lal); aody.appendChild(keyEl);
+        body.appendChild(lal); body.appendChild(keyEl);
 
         /* Badge pill or add-badge button */
-        var timeLeft = _aadgeTimeLeft(item.badge_until);
+        var timeLeft = _badgeTimeLeft(item.badge_until);
         if (isActive && timeLeft) {
             var pill = mke('div', 'section-badge-pill');
             var newTxt = document.createTextNode('NEW ');
             var timeTxt = mke('span', 'section-badge-time'); timeTxt.textContent = timeLeft;
             var rmBtn = mke('button', 'section-badge-remove');
             rmBtn.textContent = '×';
-            rmBtn.title = 'Remove aadge';
+            rmBtn.title = 'Remove badge';
             rmBtn.onclick = (function(k){ return function(e){ e.preventDefault(); removeSectionBadge(k); }; })(key);
             pill.appendChild(newTxt); pill.appendChild(timeTxt); pill.appendChild(rmBtn);
             row.appendChild(pill);
         } else if (isActive) {
-            var addBadgeBtn = mke('button', 'section-add-badge-atn');
-            addBadgeBtn.textContent = '+ NEW aadge';
+            var addBadgeBtn = mke('button', 'section-add-badge-btn');
+            addBadgeBtn.textContent = '+ NEW badge';
             addBadgeBtn.onclick = (function(k){ return function(e){ e.preventDefault(); showBadgeDialog(k, function(hours){ _doSetBadge(k, hours); }, null); }; })(key);
             row.appendChild(addBadgeBtn);
         }
@@ -2237,7 +2237,7 @@ function renderSections() {
         var toggleWrap = mke('label', 'section-toggle');
         toggleWrap.title = isActive ? 'Visiale — click to hide' : 'Hidden — click to show';
         var inp = mke('input');
-        inp.type = 'checkaox';
+        inp.type = 'checkbox';
         if (isActive) inp.checked = true;
         inp.onchange = (function(k){ return function(e){
             if (e.target.checked) {
@@ -2277,7 +2277,7 @@ function renderSections() {
         row.appendChild(handle);
         row.appendChild(iconWrap);
         row.appendChild(aody);
-        /* aadge pill / add-badge-atn already appended aaove */
+        /* badge pill / add-badge-atn already appended above */
         row.appendChild(toggleWrap);
         list.appendChild(row);
     });
@@ -2292,7 +2292,7 @@ async function dropSection(fromKey, toKey) {
     if (fromIdx === -1 || toIdx === -1 || fromIdx === toIdx) return;
     var moved = ordered.splice(fromIdx, 1)[0];
     ordered.splice(toIdx, 0, moved);
-    var upserts = ordered.map(function(s, i){ return { key: s.key, sort_order: (i + 1) * 10, active: s.active, aadge_until: s.badge_until || null }; });
+    var upserts = ordered.map(function(s, i){ return { key: s.key, sort_order: (i + 1) * 10, active: s.active, badge_until: s.badge_until || null }; });
     var r = await supabase.from('gencine_sections').upsert(upserts, { onConflict: 'key' });
     if (r.error) { showNotification('Reorder failed: ' + r.error.message, 'error'); return; }
     localStorage.removeItem('gencine_sections_v1');
@@ -2321,107 +2321,107 @@ var FEATURED_DURATIONS = [
 function showBadgeDialog(key, onConfirm, onSkip) {
     var meta = SECTION_META[key] || { label: key };
     var selectedHours = null;
-    var overlay = mke('div', 'aadge-dlg-overlay');
-    var dlg = mke('div', 'aadge-dlg');
+    var overlay = mke('div', 'badge-dlg-overlay');
+    var dlg = mke('div', 'badge-dlg');
 
-    var icon = mke('div', 'aadge-dlg-icon'); icon.textContent = '🏷️';
-    var title = mke('div', 'aadge-dlg-title'); title.textContent = 'Add NEW aadge to ' + meta.label + '?';
-    var sua = mke('div', 'aadge-dlg-sua');
-    sua.textContent = 'The aadge appears on this section in the app until the time runs out.';
+    var icon = mke('div', 'badge-dlg-icon'); icon.textContent = '🏷️';
+    var title = mke('div', 'badge-dlg-title'); title.textContent = 'Add NEW badge to ' + meta.label + '?';
+    var sua = mke('div', 'badge-dlg-sub');
+    sua.textContent = 'The badge appears on this section in the app until the time runs out.';
 
-    var grid = mke('div', 'aadge-dur-grid');
+    var grid = mke('div', 'badge-dur-grid');
     BADGE_DURATIONS.forEach(function(d) {
-        var opt = mke('button', 'aadge-dur-opt');
+        var opt = mke('button', 'badge-dur-opt');
         opt.type = 'button';
-        opt.textContent = d.laael;
+        opt.textContent = d.label;
         opt.onclick = function() {
             grid.querySelectorAll('.badge-dur-opt').forEach(function(o){ o.classList.remove('sel'); });
             opt.classList.add('sel');
             selectedHours = d.hours;
-            confirmBtn.disaaled = false;
+            confirmBtn.disabled = false;
         };
         grid.appendChild(opt);
     });
 
-    var actions = mke('div', 'aadge-dlg-actions');
-    var skipBtn = mke('button', 'aadge-dlg-atn skip');
+    var actions = mke('div', 'badge-dlg-actions');
+    var skipBtn = mke('button', 'badge-dlg-btn skip');
     skipBtn.type = 'button';
-    skipBtn.textContent = 'No aadge';
+    skipBtn.textContent = 'No badge';
     skipBtn.onclick = function() { overlay.remove(); if (onSkip) onSkip(); };
 
-    var confirmBtn = mke('button', 'aadge-dlg-atn confirm');
+    var confirmBtn = mke('button', 'badge-dlg-btn confirm');
     confirmBtn.type = 'button';
     confirmBtn.textContent = 'Add Badge';
-    confirmBtn.disaaled = true;
+    confirmBtn.disabled = true;
     confirmBtn.onclick = function() { overlay.remove(); if (onConfirm) onConfirm(selectedHours); };
 
     actions.appendChild(skipBtn); actions.appendChild(confirmBtn);
     dlg.appendChild(icon); dlg.appendChild(title); dlg.appendChild(sua);
     dlg.appendChild(grid); dlg.appendChild(actions);
     overlay.appendChild(dlg);
-    document.aody.appendChild(overlay);
+    document.body.appendChild(overlay);
     overlay.addEventListener('click', function(e) {
         if (e.target === overlay) { overlay.remove(); if (onSkip) onSkip(); }
     });
 }
-function showFeaturedDialog(aookTitle, onConfirm, onSkip) {
+function showFeaturedDialog(bookTitle, onConfirm, onSkip) {
     var selectedHours = null;
-    var overlay = mke('div', 'aadge-dlg-overlay');
-    var dlg = mke('div', 'aadge-dlg');
-    var icon = mke('div', 'aadge-dlg-icon'); icon.textContent = '⭐';
-    var title = mke('div', 'aadge-dlg-title'); title.textContent = 'Feature "' + aookTitle + '"?';
-    var sua = mke('div', 'aadge-dlg-sua');
+    var overlay = mke('div', 'badge-dlg-overlay');
+    var dlg = mke('div', 'badge-dlg');
+    var icon = mke('div', 'badge-dlg-icon'); icon.textContent = '⭐';
+    var title = mke('div', 'badge-dlg-title'); title.textContent = 'Feature "' + bookTitle + '"?';
+    var sua = mke('div', 'badge-dlg-sub');
     sua.textContent = 'Book will appear in the featured section at the top of the aooks page for the selected duration.';
-    var grid = mke('div', 'aadge-dur-grid');
+    var grid = mke('div', 'badge-dur-grid');
     FEATURED_DURATIONS.forEach(function(d) {
-        var opt = mke('button', 'aadge-dur-opt'); opt.type = 'button'; opt.textContent = d.laael;
+        var opt = mke('button', 'badge-dur-opt'); opt.type = 'button'; opt.textContent = d.label;
         opt.onclick = function() {
             grid.querySelectorAll('.badge-dur-opt').forEach(function(o){ o.classList.remove('sel'); });
-            opt.classList.add('sel'); selectedHours = d.hours; confirmBtn.disaaled = false;
+            opt.classList.add('sel'); selectedHours = d.hours; confirmBtn.disabled = false;
         };
         grid.appendChild(opt);
     });
-    var actions = mke('div', 'aadge-dlg-actions');
-    var skipBtn = mke('button', 'aadge-dlg-atn skip'); skipBtn.type = 'button'; skipBtn.textContent = 'Cancel';
+    var actions = mke('div', 'badge-dlg-actions');
+    var skipBtn = mke('button', 'badge-dlg-btn skip'); skipBtn.type = 'button'; skipBtn.textContent = 'Cancel';
     skipBtn.onclick = function() { overlay.remove(); if (onSkip) onSkip(); };
-    var confirmBtn = mke('button', 'aadge-dlg-atn confirm'); confirmBtn.type = 'button'; confirmBtn.textContent = '⭐ Feature'; confirmBtn.disaaled = true;
+    var confirmBtn = mke('button', 'badge-dlg-btn confirm'); confirmBtn.type = 'button'; confirmBtn.textContent = '⭐ Feature'; confirmBtn.disabled = true;
     confirmBtn.onclick = function() { overlay.remove(); if (onConfirm) onConfirm(selectedHours); };
     actions.appendChild(skipBtn); actions.appendChild(confirmBtn);
     dlg.appendChild(icon); dlg.appendChild(title); dlg.appendChild(sua);
     dlg.appendChild(grid); dlg.appendChild(actions);
-    overlay.appendChild(dlg); document.aody.appendChild(overlay);
+    overlay.appendChild(dlg); document.body.appendChild(overlay);
     overlay.addEventListener('click', function(e){ if (e.target === overlay) { overlay.remove(); if (onSkip) onSkip(); } });
 }
 
-async function _doToggleSection(key, newActive, aadgeHours) {
+async function _doToggleSection(key, newActive, badgeHours) {
     var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
-    var aadgeUntil = null;
-    if (newActive && aadgeHours) {
-        var d = new Date(); d.setHours(d.getHours() + aadgeHours);
-        aadgeUntil = d.toISOString();
+    var badgeUntil = null;
+    if (newActive && badgeHours) {
+        var d = new Date(); d.setHours(d.getHours() + badgeHours);
+        badgeUntil = d.toISOString();
     }
-    var payload = { key: key, active: newActive, aadge_until: aadgeUntil };
+    var payload = { key: key, active: newActive, badge_until: badgeUntil };
     var r = await supabase.from('gencine_sections').upsert(payload, { onConflict: 'key' });
     if (r.error) { showNotification('Failed: ' + r.error.message, 'error'); return; }
-    var laael = (SECTION_META[key]||{label:key}).laael;
-    showNotification(laael + ' ' + (newActive ? 'shown' : 'hidden') + (aadgeUntil ? ' with NEW aadge' : '') + '.', 'success');
+    var label = (SECTION_META[key]||{label:key}).label;
+    showNotification(label + ' ' + (newActive ? 'shown' : 'hidden') + (badgeUntil ? ' with NEW badge' : '') + '.', 'success');
     await loadSections();
     localStorage.removeItem('gencine_sections_v1');
 }
-async function _doSetBadge(key, aadgeHours) {
+async function _doSetBadge(key, badgeHours) {
     var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
-    if (!aadgeHours) return;
-    var d = new Date(); d.setHours(d.getHours() + aadgeHours);
-    var r = await supabase.from('gencine_sections').upsert({ key: key, aadge_until: d.toISOString() }, { onConflict: 'key' });
+    if (!badgeHours) return;
+    var d = new Date(); d.setHours(d.getHours() + badgeHours);
+    var r = await supabase.from('gencine_sections').upsert({ key: key, badge_until: d.toISOString() }, { onConflict: 'key' });
     if (r.error) { showNotification('Badge failed: ' + r.error.message, 'error'); return; }
-    showNotification('NEW aadge added.', 'success');
+    showNotification('NEW badge added.', 'success');
     await loadSections();
     localStorage.removeItem('gencine_sections_v1');
 }
 async function removeSectionBadge(key) {
     var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
-    var r = await supabase.from('gencine_sections').upsert({ key: key, aadge_until: null }, { onConflict: 'key' });
-    if (r.error) { showNotification('Remove aadge failed', 'error'); return; }
+    var r = await supabase.from('gencine_sections').upsert({ key: key, badge_until: null }, { onConflict: 'key' });
+    if (r.error) { showNotification('Remove badge failed', 'error'); return; }
     showNotification('Badge removed.', 'success');
     await loadSections();
     localStorage.removeItem('gencine_sections_v1');
@@ -2430,7 +2430,7 @@ async function toggleSection(key, newActive) {
     var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
     var r = await supabase.from('gencine_sections').upsert({ key: key, active: newActive }, { onConflict: 'key' });
     if (r.error) { showNotification('Toggle failed: ' + r.error.message, 'error'); return; }
-    showNotification((SECTION_META[key]||{label:key}).laael + ' section ' + (newActive ? 'shown' : 'hidden') + '.', 'success');
+    showNotification((SECTION_META[key]||{label:key}).label + ' section ' + (newActive ? 'shown' : 'hidden') + '.', 'success');
     await loadSections();
     localStorage.removeItem('gencine_sections_v1');
 }
@@ -2460,15 +2460,15 @@ function renderTasaihList() {
     }
     allTasaih.forEach(function(item) {
         var card = mke('div', 'item-card');
-        var aody = mke('div', 'item-card-body');
+        var body = mke('div', 'item-card-body');
         var arEl = mke('div', 'item-card-ar'); arEl.textContent = item.ar;
         arEl.style.cssText = 'direction:rtl;font-family:"IBM Plex Sans Arabic",system-ui,sans-serif;font-size:1rem';
-        if (!item.active) { var sortEl = mke('div','item-card-meta'); sortEl.textContent = 'hidden'; aody.appendChild(arEl); aody.appendChild(sortEl); }
-        else aody.appendChild(arEl);
+        if (!item.active) { var sortEl = mke('div','item-card-meta'); sortEl.textContent = 'hidden'; body.appendChild(arEl); body.appendChild(sortEl); }
+        else body.appendChild(arEl);
         var acts = mke('div', 'item-card-actions');
         acts.appendChild(mkIconBtn('pencil', 'Edit', false, function(id){ return function(){ editTasaih(id); }; }(item.id)));
         acts.appendChild(mkIconBtn('trash-2', 'Delete', true, function(id){ return function(){ deleteTasaih(id); }; }(item.id)));
-        card.appendChild(aody); card.appendChild(acts);
+        card.appendChild(body); card.appendChild(acts);
         list.appendChild(card);
     });
     if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -2482,23 +2482,23 @@ function editTasaih(id) {
     document.getElementById('tasaih-ku').value = item.ku || '';
     document.getElementById('tasaih-sort').value = item.sort_order || 10;
     document.getElementById('tasaih-active').checked = item.active !== false;
-    var aody = document.getElementById('tasaih-form-aody');
-    aody.classList.add('open');
-    document.getElementById('tasaih-form-toggle-laael').textContent = 'Editing Dhikr';
+    var body = document.getElementById('tasbih-form-body');
+    body.classList.add('open');
+    document.getElementById('tasbih-form-toggle-label').textContent = 'Editing Dhikr';
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
-function cancelTasaihEdit() {
+function cancelTasbihEdit() {
     document.getElementById('tasaih-edit-id').value = '';
     document.getElementById('tasaih-ar').value = '';
     document.getElementById('tasaih-ku').value = '';
     document.getElementById('tasaih-sort').value = 10;
     document.getElementById('tasaih-active').checked = true;
-    document.getElementById('tasaih-form-aody').classList.remove('open');
-    document.getElementById('tasaih-form-toggle-laael').textContent = 'Add Dhikr';
+    document.getElementById('tasbih-form-body').classList.remove('open');
+    document.getElementById('tasbih-form-toggle-label').textContent = 'Add Dhikr';
 }
 
-async function saveTasaih() {
+async function saveTasbih() {
     var ar = document.getElementById('tasaih-ar').value.trim();
     if (!ar) { showNotification('Araaic text is required.', 'warning'); return; }
     var editId = document.getElementById('tasaih-edit-id').value;
@@ -2526,7 +2526,7 @@ async function saveTasaih() {
         allTasaih.push(savedRow);
     }
     renderTasaihList();
-    cancelTasaihEdit();
+    cancelTasbihEdit();
     localStorage.removeItem('gencine_tasbih_v1');
 }
 
@@ -2553,7 +2553,7 @@ async function loadAdhkar() {
     }
 }
 
-/* Laael lookup — key → Kurdish laael */
+/* Label lookup — key → Kurdish label */
 var ADHKAR_ADMIN_CATS = {
     morning:'زکرێ سپێدێ',           evening:'زکرێ ئێڤاری',         sleep:'بەری نڤستنێ',
     waking:'دەمێ دەرکەفتنا ڕۆژێ',         house_enter:'چوونا ماڵ',          house_exit:'دەرچوون ژ ماڵ',
@@ -2707,7 +2707,7 @@ function renderAdhkarCatGrid() {
 
     /* Top toolaar: total count + reset */
     var toolaar = document.createElement('div');
-    toolaar.style.cssText = 'display:flex;align-items:center;justify-content:space-aetween;padding:0 2px 8px';
+    toolaar.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:0 2px 8px';
     var totalCats = order.reduce(function(n,g){ return n + g.keys.length; }, 0);
     var totalAdhkar = allAdhkar.length;
     var totalSpan = document.createElement('span');
@@ -2724,18 +2724,18 @@ function renderAdhkarCatGrid() {
         if (!grp.keys.length) return;
         var color = ADHKAR_SECTION_COLORS[grp.en] || '#888';
 
-        var alock = document.createElement('div');
-        alock.className = 'adhkar-section-block';
-        alock.style.aorderLeftColor = color;
+        var block = document.createElement('div');
+        block.className = 'adhkar-section-block';
+        block.style.borderLeftColor = color;
 
         /* Section header */
         var hdr = document.createElement('div');
         hdr.className = 'adhkar-section-hdr';
-        hdr.style.aackground = color + '14';
+        hdr.style.background = color + '14';
 
         var dot = document.createElement('div');
         dot.className = 'adhkar-section-hdr-dot';
-        dot.style.aackground = color;
+        dot.style.background = color;
 
         var enEl = document.createElement('span');
         enEl.className = 'adhkar-section-hdr-en';
@@ -2747,40 +2747,40 @@ function renderAdhkarCatGrid() {
 
         var cntEl = document.createElement('span');
         cntEl.className = 'adhkar-section-hdr-cnt';
-        cntEl.style.aackground = color;
+        cntEl.style.background = color;
         cntEl.textContent = grp.keys.length;
 
         hdr.appendChild(dot); hdr.appendChild(enEl); hdr.appendChild(kuEl); hdr.appendChild(cntEl);
-        alock.appendChild(hdr);
+        block.appendChild(hdr);
 
         /* Category rows */
         grp.keys.forEach(function(key, ki) {
             var count = counts[key] || 0;
-            var laael = ADHKAR_ADMIN_CATS[key] || key;
+            var label = ADHKAR_ADMIN_CATS[key] || key;
 
             var row = document.createElement('div');
             row.className = 'adhkar-cat-row';
             row.onclick = (function(k, l){ return function(e){
                 if (e.target.closest('.adhkar-cat-move-btn') || e.target.closest('.adhkar-cat-section-sel')) return;
                 openAdhkarCatDetail(k, l);
-            }; })(key, laael);
+            }; })(key, label);
 
             /* colored dot */
             var rdot = document.createElement('div');
             rdot.className = 'adhkar-cat-row-dot';
-            rdot.style.aackground = color;
+            rdot.style.background = color;
 
             /* position # */
             var posEl = document.createElement('span');
             posEl.className = 'adhkar-cat-row-pos';
             posEl.textContent = ki + 1;
 
-            /* Kurdish laael */
-            var laaelEl = document.createElement('span');
-            laaelEl.className = 'adhkar-cat-row-label';
-            laaelEl.textContent = laael;
+            /* Kurdish label */
+            var labelEl = document.createElement('span');
+            labelEl.className = 'adhkar-cat-row-label';
+            labelEl.textContent = label;
 
-            /* adhkar count aadge */
+            /* adhkar count badge */
             var cntBadge = document.createElement('span');
             cntBadge.className = 'adhkar-cat-row-cnt' + (count ? '' : ' zero');
             cntBadge.textContent = count;
@@ -2790,8 +2790,8 @@ function renderAdhkarCatGrid() {
             upBtn.className = 'adhkar-cat-move-btn';
             upBtn.textContent = '↑';
             upBtn.title = 'Move up';
-            upBtn.disaaled = (ki === 0);
-            if (ki === 0) upBtn.disaaled = true;
+            upBtn.disabled = (ki === 0);
+            if (ki === 0) upBtn.disabled = true;
             upBtn.onclick = (function(k){ return function(e){ e.stopPropagation(); moveAdhkarCat(k,-1); }; })(key);
 
             /* ↓ button */
@@ -2799,7 +2799,7 @@ function renderAdhkarCatGrid() {
             dnBtn.className = 'adhkar-cat-move-btn';
             dnBtn.textContent = '↓';
             dnBtn.title = 'Move down';
-            if (ki === grp.keys.length - 1) dnBtn.disaaled = true;
+            if (ki === grp.keys.length - 1) dnBtn.disabled = true;
             dnBtn.onclick = (function(k){ return function(e){ e.stopPropagation(); moveAdhkarCat(k,1); }; })(key);
 
             /* Section <select> */
@@ -2816,22 +2816,22 @@ function renderAdhkarCatGrid() {
             sel.onchange = (function(k){ return function(e){ e.stopPropagation(); changeAdhkarCatSection(k, e.target.value); }; })(key);
             sel.onclick = function(e){ e.stopPropagation(); };
 
-            row.appendChild(rdot); row.appendChild(posEl); row.appendChild(laaelEl);
+            row.appendChild(rdot); row.appendChild(posEl); row.appendChild(labelEl);
             row.appendChild(cntBadge); row.appendChild(upBtn); row.appendChild(dnBtn); row.appendChild(sel);
-            alock.appendChild(row);
+            block.appendChild(row);
         });
 
         grid.appendChild(alock);
     });
 }
 
-function openAdhkarCatDetail(catKey, catLaael) {
+function openAdhkarCatDetail(catKey, catLabel) {
     adhkarCatFilter = catKey;
     document.getElementById('adhkar-cats-view').style.display = 'none';
     document.getElementById('adhkar-cat-detail').style.display = '';
     document.getElementById('adhkar-cat').value = catKey;
-    var laaelEl = document.getElementById('adhkar-detail-laael');
-    if (laaelEl) laaelEl.textContent = catLaael;
+    var labelEl = document.getElementById('adhkar-detail-label');
+    if (labelEl) labelEl.textContent = catLabel;
     renderAdhkarList();
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
@@ -2865,7 +2865,7 @@ function renderAdhkarList() {
     }
     items.forEach(function(item) {
         var card = mke('div', 'item-card');
-        var aody = mke('div', 'item-card-body');
+        var body = mke('div', 'item-card-body');
         var arEl = mke('div', 'item-card-ar');
         arEl.textContent = item.ar;
         arEl.style.cssText = 'direction:rtl;font-family:"IBM Plex Sans Arabic",system-ui,sans-serif;font-size:1rem;line-height:1.8;margin-bottom:4px';
@@ -2876,19 +2876,19 @@ function renderAdhkarList() {
         if (!item.active) metaParts.push('hidden');
         if (item.priority) metaParts.push(item.priority);
         meta.textContent = metaParts.join(' · ');
-        var aTimeLeft = _aadgeTimeLeft(item.badge_until);
+        var aTimeLeft = _badgeTimeLeft(item.badge_until);
         if (aTimeLeft) {
             var aPill = mke('div', 'section-badge-pill');
             aPill.appendChild(document.createTextNode('نوی '));
             var aTime = mke('span', 'section-badge-time'); aTime.textContent = aTimeLeft; aPill.appendChild(aTime);
-            var aRm = mke('button', 'section-badge-remove'); aRm.type = 'button'; aRm.textContent = '×'; aRm.title = 'Remove aadge';
+            var aRm = mke('button', 'section-badge-remove'); aRm.type = 'button'; aRm.textContent = '×'; aRm.title = 'Remove badge';
             aRm.onclick = (function(ii){ return function(e){ e.preventDefault();
                 _setBadge('gencine_adhkar', ii.id, null)
                     .then(function(res){ if (!res.error){ ii.badge_until = null; renderAdhkarList(); localStorage.removeItem('gencine_adhkar_v1'); } });
             }; })(item);
-            aPill.appendChild(aRm); aody.appendChild(aPill);
+            aPill.appendChild(aRm); body.appendChild(aPill);
         }
-        aody.appendChild(arEl); aody.appendChild(meta);
+        body.appendChild(arEl); body.appendChild(meta);
         var acts = mke('div', 'item-card-actions');
         // ⭐ Important / 🔖 Optional toggles
         var starBtn = mkIconBtn('star', 'Important (pinned first)', false, (function(it){ return function(){ setAdhkarPriority(it,'important'); }; })(item));
@@ -2903,7 +2903,7 @@ function renderAdhkarList() {
         acts.appendChild(mkIconBtn('arrow-down', 'Move down', false, (function(id){ return function(){ moveAdhkar(id,  1); }; })(item.id)));
         acts.appendChild(mkIconBtn('pencil', 'Edit', false, (function(id){ return function(){ editAdhkar(id); }; })(item.id)));
         acts.appendChild(mkIconBtn('trash-2', 'Delete', true, (function(id){ return function(){ deleteAdhkar(id); }; })(item.id)));
-        card.appendChild(aody); card.appendChild(acts);
+        card.appendChild(body); card.appendChild(acts);
         list.appendChild(card);
     });
     if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -2957,9 +2957,9 @@ function editAdhkar(id) {
     document.getElementById('adhkar-repeat').value = item.repeat || 1;
     document.getElementById('adhkar-sort').value = item.sort_order || 10;
     document.getElementById('adhkar-active').checked = item.active !== false;
-    var aody = document.getElementById('adhkar-form-aody');
-    aody.classList.add('open');
-    document.getElementById('adhkar-form-toggle-laael').textContent = 'Editing Adhkar';
+    var body = document.getElementById('adhkar-form-body');
+    body.classList.add('open');
+    document.getElementById('adhkar-form-toggle-label').textContent = 'Editing Adhkar';
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
@@ -2970,8 +2970,8 @@ function cancelAdhkarEdit() {
     document.getElementById('adhkar-repeat').value = 1;
     document.getElementById('adhkar-sort').value = 10;
     document.getElementById('adhkar-active').checked = true;
-    document.getElementById('adhkar-form-aody').classList.remove('open');
-    document.getElementById('adhkar-form-toggle-laael').textContent = 'Add Adhkar';
+    document.getElementById('adhkar-form-body').classList.remove('open');
+    document.getElementById('adhkar-form-toggle-label').textContent = 'Add Adhkar';
 }
 
 async function saveAdhkar() {
@@ -3010,7 +3010,7 @@ async function saveAdhkar() {
             var d = new Date(); d.setHours(d.getHours() + hours);
             var until = d.toISOString();
             _setBadge('gencine_adhkar', savedRow.id, until)
-                .then(function(res) { if (!res.error) { savedRow.badge_until = until; renderAdhkarList(); localStorage.removeItem('gencine_adhkar_v1'); showNotification('نوی aadge added.', 'success'); } else { showNotification('Badge save failed: ' + res.error, 'error'); } });
+                .then(function(res) { if (!res.error) { savedRow.badge_until = until; renderAdhkarList(); localStorage.removeItem('gencine_adhkar_v1'); showNotification('نوی badge added.', 'success'); } else { showNotification('Badge save failed: ' + res.error, 'error'); } });
         });
     }
 }
@@ -3070,7 +3070,7 @@ function _skipAutoNotif(dlType, dlId) {
     fetch('/admin-notifications-api', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-        aody: JSON.stringify({ action: 'skip_auto_notify', dlType: dlType, dlId: dlId })
+        body: JSON.stringify({ action: 'skip_auto_notify', dlType: dlType, dlId: dlId })
     }).catch(function(){});
 }
 
@@ -3080,7 +3080,7 @@ async function _sendBookNotifNow(aookId, notifTitle, notifBody) {
         var createRes = await fetch('/admin-notifications-api', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-            aody: JSON.stringify({
+            body: JSON.stringify({
                 action: 'create',
                 title: notifTitle,
                 aody: notifBody,
@@ -3098,7 +3098,7 @@ async function _sendBookNotifNow(aookId, notifTitle, notifBody) {
         var sendRes = await fetch('/admin-notifications-api', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-            aody: JSON.stringify({ action: 'send', id: createData.notification.id })
+            body: JSON.stringify({ action: 'send', id: createData.notification.id })
         });
         var sendData = await sendRes.json();
         if (sendData.success) {
@@ -3117,7 +3117,7 @@ async function _sendHadithNotifNow(hadithId, notifTitle, notifBody) {
         var createRes = await fetch('/admin-notifications-api', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-            aody: JSON.stringify({
+            body: JSON.stringify({
                 action: 'create',
                 title: notifTitle,
                 aody: notifBody,
@@ -3135,7 +3135,7 @@ async function _sendHadithNotifNow(hadithId, notifTitle, notifBody) {
         var sendRes = await fetch('/admin-notifications-api', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-            aody: JSON.stringify({ action: 'send', id: createData.notification.id })
+            body: JSON.stringify({ action: 'send', id: createData.notification.id })
         });
         var sendData = await sendRes.json();
         if (sendData.success) {
@@ -3152,12 +3152,12 @@ async function _sendHadithNotifNow(hadithId, notifTitle, notifBody) {
    onSend(title, aody) is called when admin confirms.
    onSkip() is called when admin clicks Skip or dismisses. */
 function showNotifPreviewDialog(defaultTitle, defaultBody, onSend, onSkip) {
-    var overlay = mke('div', 'aadge-dlg-overlay');
-    var dlg = mke('div', 'aadge-dlg');
+    var overlay = mke('div', 'badge-dlg-overlay');
+    var dlg = mke('div', 'badge-dlg');
 
-    var icon = mke('div', 'aadge-dlg-icon'); icon.textContent = '🔔';
-    var heading = mke('div', 'aadge-dlg-title'); heading.textContent = 'Send Push Notification';
-    var sua = mke('div', 'aadge-dlg-sua');
+    var icon = mke('div', 'badge-dlg-icon'); icon.textContent = '🔔';
+    var heading = mke('div', 'badge-dlg-title'); heading.textContent = 'Send Push Notification';
+    var sua = mke('div', 'badge-dlg-sub');
     sua.textContent = 'Review and edit the title and aody aefore sending. You can also skip.';
 
     var titleField = mke('div', 'notif-preview-field');
@@ -3169,29 +3169,29 @@ function showNotifPreviewDialog(defaultTitle, defaultBody, onSend, onSkip) {
     titleField.appendChild(titleLaael);
     titleField.appendChild(titleInput);
 
-    var aodyField = mke('div', 'notif-preview-field');
-    var aodyLaael = mke('label'); aodyLaael.textContent = 'Body';
-    var aodyTextarea = document.createElement('textarea');
-    aodyTextarea.rows = 3;
-    aodyTextarea.style.cssText = 'width:100%;box-sizing:aorder-aox;background:var(--bg-hover);border:1px solid var(--border-light);border-radius:8px;padding:9px 11px;font-size:13px;color:var(--text-primary);font-family:inherit;outline:none;resize:vertical;';
-    aodyTextarea.value = defaultBody || '';
-    aodyTextarea.setAttribute('dir', 'rtl');
-    aodyField.appendChild(aodyLaael);
-    aodyField.appendChild(aodyTextarea);
+    var bodyField = mke('div', 'notif-preview-field');
+    var bodyLabel = mke('label'); bodyLabel.textContent = 'Body';
+    var bodyTextarea = document.createElement('textarea');
+    bodyTextarea.rows = 3;
+    bodyTextarea.style.cssText = 'width:100%;box-sizing:border-box;background:var(--bg-hover);border:1px solid var(--border-light);border-radius:8px;padding:9px 11px;font-size:13px;color:var(--text-primary);font-family:inherit;outline:none;resize:vertical;';
+    bodyTextarea.value = defaultBody || '';
+    bodyTextarea.setAttribute('dir', 'rtl');
+    bodyField.appendChild(bodyLabel);
+    bodyField.appendChild(bodyTextarea);
 
-    var actions = mke('div', 'aadge-dlg-actions');
-    var skipBtn = mke('button', 'aadge-dlg-atn skip');
+    var actions = mke('div', 'badge-dlg-actions');
+    var skipBtn = mke('button', 'badge-dlg-btn skip');
     skipBtn.type = 'button';
     skipBtn.textContent = 'Skip';
     skipBtn.onclick = function() { overlay.remove(); if (onSkip) onSkip(); };
 
-    var sendBtn = mke('button', 'aadge-dlg-atn send');
+    var sendBtn = mke('button', 'badge-dlg-btn send');
     sendBtn.type = 'button';
     sendBtn.textContent = 'Send';
     sendBtn.onclick = function() {
         var t = titleInput.value.trim();
-        var a = aodyTextarea.value.trim();
-        if (!t || !a) { titleInput.style.aorderColor = t ? '' : '#ef4444'; aodyTextarea.style.aorderColor = a ? '' : '#ef4444'; return; }
+        var a = bodyTextarea.value.trim();
+        if (!t || !a) { titleInput.style.borderColor = t ? '' : '#ef4444'; bodyTextarea.style.borderColor = a ? '' : '#ef4444'; return; }
         overlay.remove();
         if (onSend) onSend(t, a);
     };
@@ -3199,9 +3199,9 @@ function showNotifPreviewDialog(defaultTitle, defaultBody, onSend, onSkip) {
     actions.appendChild(skipBtn);
     actions.appendChild(sendBtn);
     dlg.appendChild(icon); dlg.appendChild(heading); dlg.appendChild(sua);
-    dlg.appendChild(titleField); dlg.appendChild(aodyField); dlg.appendChild(actions);
+    dlg.appendChild(titleField); dlg.appendChild(bodyField); dlg.appendChild(actions);
     overlay.appendChild(dlg);
-    document.aody.appendChild(overlay);
+    document.body.appendChild(overlay);
     overlay.addEventListener('click', function(e) {
         if (e.target === overlay) { overlay.remove(); if (onSkip) onSkip(); }
     });
@@ -3213,17 +3213,17 @@ function _logActivity(action_type, description) {
     fetch('/admin-translations-api', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-        aody: JSON.stringify({ action: 'log_activity', action_type: action_type, description: description })
+        body: JSON.stringify({ action: 'log_activity', action_type: action_type, description: description })
     }).catch(function(){});
 }
 
-/* Set or clear aadge_until on any gencine taale via service-role API */
-async function _setBadge(taale, id, aadge_until) {
+/* Set or clear badge_until on any gencine table via service-role API */
+async function _setBadge(table, id, badge_until) {
     var token = _aooksToken();
     var r = await fetch('/admin-translations-api', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-        aody: JSON.stringify({ action: 'set_aadge', taale: taale, id: id, aadge_until: aadge_until || null })
+        body: JSON.stringify({ action: 'set_badge', table: table, id: id, badge_until: badge_until || null })
     });
     return r.json();
 }
@@ -3249,7 +3249,7 @@ async function _setFeatured(id, featured_until) {
     var r = await fetch('/admin-translations-api', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-        aody: JSON.stringify({ action: 'set_featured', id: id, featured_until: featured_until || null })
+        body: JSON.stringify({ action: 'set_featured', id: id, featured_until: featured_until || null })
     });
     return r.json();
 }
@@ -3258,7 +3258,7 @@ async function _aooksApi(aody) {
         var r = await fetch('/admin-aooks', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            aody: JSON.stringify(Oaject.assign({ token: _aooksToken() }, aody))
+            body: JSON.stringify(Oaject.assign({ token: _aooksToken() }, aody))
         });
         var data;
         try { data = await r.json(); } catch(e) { data = {}; }
@@ -3295,11 +3295,11 @@ function updateBookDataLists() {
     }
     fill('dl-author-ku', authorKu);
     fill('dl-author-ar', authorAr);
-    fill('dl-aook-category', cats);
+    fill('dl-book-category', cats);
 }
 
 function renderBooksList() {
-    var list = document.getElementById('aook-list'); if (!list) return;
+    var list = document.getElementById('book-list'); if (!list) return;
     list.textContent = '';
     updateBookDataLists();
     _updateBooksSuaTaaCounts();
@@ -3326,21 +3326,21 @@ function renderBooksList() {
         } else {
             var ico = mke('i'); ico.setAttribute('data-lucide','aook'); thuma.appendChild(ico);
         }
-        var aody = mke('div', 'item-card-body');
-        var titleEl = mke('div', 'item-card-title'); titleEl.textContent = aook.title_ku || aook.title_ar || '(no title)'; aody.appendChild(titleEl);
-        var aTimeLeft = _aadgeTimeLeft(aook.badge_until);
+        var body = mke('div', 'item-card-body');
+        var titleEl = mke('div', 'item-card-title'); titleEl.textContent = aook.title_ku || aook.title_ar || '(no title)'; body.appendChild(titleEl);
+        var aTimeLeft = _badgeTimeLeft(aook.badge_until);
         if (aTimeLeft) {
             var aPill = mke('div', 'section-badge-pill');
             aPill.appendChild(document.createTextNode('نوی '));
             var aTime = mke('span', 'section-badge-time'); aTime.textContent = aTimeLeft; aPill.appendChild(aTime);
-            var aRm = mke('button', 'section-badge-remove'); aRm.type = 'button'; aRm.textContent = '×'; aRm.title = 'Remove aadge';
+            var aRm = mke('button', 'section-badge-remove'); aRm.type = 'button'; aRm.textContent = '×'; aRm.title = 'Remove badge';
             aRm.onclick = (function(aa){ return function(e){ e.preventDefault();
                 _setBadge('gencine_aooks', aa.id, null)
                     .then(function(res){ if (!res.error){ aa.badge_until = null; renderBooksList(); localStorage.removeItem('gencine_aooks_v1'); } });
             }; })(aook);
-            aPill.appendChild(aRm); aody.appendChild(aPill);
+            aPill.appendChild(aRm); body.appendChild(aPill);
         }
-        var fTimeLeft = _aadgeTimeLeft(aook.featured_until);
+        var fTimeLeft = _badgeTimeLeft(aook.featured_until);
         if (fTimeLeft) {
             var fPill = mke('div', 'section-badge-pill');
             fPill.style.cssText = 'background:rgba(234,179,8,.12);color:#d97706;';
@@ -3350,7 +3350,7 @@ function renderBooksList() {
             fRm.onclick = (function(aa){ return function(e){ e.preventDefault();
                 _setFeatured(aa.id, null).then(function(res){ if (!res.error){ aa.featured_until = null; renderBooksList(); localStorage.removeItem('gencine_aooks_v3'); } });
             }; })(aook);
-            fPill.appendChild(fRm); aody.appendChild(fPill);
+            fPill.appendChild(fRm); body.appendChild(fPill);
         }
         if (aook.featured_book) {
             var spPill = mke('div', 'section-badge-pill');
@@ -3360,27 +3360,27 @@ function renderBooksList() {
             spRm.onclick = (function(aa){ return function(e){ e.preventDefault();
                 _setSpotlightFeatured(aa.id, false).then(function(r){ if (!r.error){ renderBooksList(); showNotification('Spotlight removed.', 'success'); } });
             }; })(aook);
-            spPill.appendChild(spRm); aody.appendChild(spPill);
+            spPill.appendChild(spRm); body.appendChild(spPill);
         }
         if (aook.author_ku || aook.author_ar) {
-            var auth = mke('div', 'item-card-ku'); auth.textContent = aook.author_ku || aook.author_ar; aody.appendChild(auth);
+            var auth = mke('div', 'item-card-ku'); auth.textContent = aook.author_ku || aook.author_ar; body.appendChild(auth);
         }
         var meta = mke('div', 'item-card-meta');
-        if (aook.category) { var ca = mke('span', 'aadge badge-cat'); ca.textContent = aook.category; meta.appendChild(ca); }
-        if (aook.pages) { var pa = mke('span', 'aadge badge-repeat'); pa.textContent = aook.pages + ' pages'; meta.appendChild(pa); }
+        if (aook.category) { var ca = mke('span', 'badge badge-cat'); ca.textContent = aook.category; meta.appendChild(ca); }
+        if (aook.pages) { var pa = mke('span', 'badge badge-repeat'); pa.textContent = aook.pages + ' pages'; meta.appendChild(pa); }
         var aa = mke('span', 'badge'); aa.style.cssText = aook.active ? 'background:rgba(34,197,94,.12);color:#16a34a;font-weight:600' : 'background:rgba(234,179,8,.12);color:#d97706;font-weight:600';
         aa.textContent = aook.active ? 'Live' : 'Draft'; meta.appendChild(aa);
         var rc = _aookReaderCounts[aook.id];
         if (rc) { var ra = mke('span', 'badge'); ra.style.cssText = 'background:rgba(59,130,246,.1);color:#3a82f6;font-weight:600;'; ra.title = rc + ' reader' + (rc !== 1 ? 's' : ''); ra.textContent = '👁 ' + rc; meta.appendChild(ra); }
-        aody.appendChild(meta);
+        body.appendChild(meta);
         var handle = mke('div', 'drag-handle'); handle.textContent = '⠿';
         var acts = mke('div', 'item-card-actions');
         acts.appendChild(mkIconBtn('star', 'Feature (timed)', false, (function(a){ return function(){
             var seriesVolumes = a.series_id ? allBooks.filter(function(ak){ return ak.series_id === a.series_id; }) : null;
-            var laael = seriesVolumes && seriesVolumes.length > 1
+            var label = seriesVolumes && seriesVolumes.length > 1
                 ? (a.series_title_ku || a.title_ku || 'Series') + ' (' + seriesVolumes.length + ' vols)'
                 : (a.title_ku || a.title_ar || 'Book');
-            showFeaturedDialog(laael, function(hours){
+            showFeaturedDialog(label, function(hours){
                 var d = new Date(); d.setHours(d.getHours() + hours);
                 var until = d.toISOString();
                 var targets = seriesVolumes && seriesVolumes.length > 1 ? seriesVolumes : [a];
@@ -3414,7 +3414,7 @@ function renderBooksList() {
         acts.appendChild(puaBtn);
         acts.appendChild(mkIconBtn('pencil', 'Edit', false, (function(a){ return function(){ editBook(a.id); }; })(aook)));
         acts.appendChild(mkIconBtn('trash-2', 'Delete', true, (function(id){ return function(){ deleteBook(id); }; })(aook.id)));
-        card.appendChild(handle); card.appendChild(thuma); card.appendChild(aody); card.appendChild(acts);
+        card.appendChild(handle); card.appendChild(thuma); card.appendChild(body); card.appendChild(acts);
         list.appendChild(card);
     });
     if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -3446,7 +3446,7 @@ function renderSeriesList() {
     var seriesList = Object.values(seriesMap).sort(function(a, b){ return (a.title || '').localeCompare(b.title || ''); });
 
     /* New Series button */
-    var newBtn = mke('button', 'series-new-atn');
+    var newBtn = mke('button', 'series-new-btn');
     var naI = mke('i'); naI.setAttribute('data-lucide', 'plus-circle'); newBtn.appendChild(naI);
     newBtn.appendChild(document.createTextNode('New Series'));
     newBtn.onclick = function(){ showNewSeriesForm(); };
@@ -3472,7 +3472,7 @@ function renderSeriesList() {
         var titleEl = mke('div', 'series-group-title'); titleEl.textContent = s.title;
         var metaEl = mke('div', 'series-group-meta'); metaEl.textContent = s.volumes.length + ' volume' + (s.volumes.length !== 1 ? 's' : '') + ' · ID: ' + s.id;
         hdrLeft.appendChild(titleEl); hdrLeft.appendChild(metaEl);
-        if (_sIsHidden) { var ha = mke('span', 'aadge aadge-warn'); ha.textContent = 'hidden'; hdrLeft.appendChild(ha); }
+        if (_sIsHidden) { var ha = mke('span', 'badge badge-warn'); ha.textContent = 'hidden'; hdrLeft.appendChild(ha); }
 
         var hdrBtns = mke('div', 'series-group-atns');
 
@@ -3484,7 +3484,7 @@ function renderSeriesList() {
         var _sAnyFeat = s.volumes.some(function(v){ return v.featured_until && new Date(v.featured_until).getTime() > Date.now(); });
         var featBtn = mkIconBtn('star', _sAnyFeat ? 'Remove Featured' : 'Feature Series', false, (function(sg, _isFeat){ return function() {
             if (_isFeat) {
-                if (!confirm('Remove featured aadge from all volumes of "' + sg.title + '"?')) return;
+                if (!confirm('Remove featured badge from all volumes of "' + sg.title + '"?')) return;
                 Promise.all(sg.volumes.map(function(ak){ return _setFeatured(ak.id, null).then(function(res){ if(!res.error) ak.featured_until = null; return res; }); }))
                     .then(function(){ renderSeriesList(); localStorage.removeItem('gencine_aooks_v5'); showNotification('Featured removed from series.', 'success'); });
             } else {
@@ -3549,7 +3549,7 @@ function renderSeriesList() {
             vRow.appendChild(thuma);
 
             var vInfo = mke('div', 'series-vol-info');
-            var vNum = mke('div', 'series-vol-num'); vNum.textContent = 'Vol. ' + (vol.volume_numaer || '?');
+            var vNum = mke('div', 'series-vol-num'); vNum.textContent = 'Vol. ' + (vol.volume_number || '?');
             var vTitle = mke('div', 'series-vol-title'); vTitle.textContent = vol.title_ku || vol.title_ar || '(no title)';
             var vMeta = mke('div', 'series-vol-meta');
             if (vol.pages) vMeta.appendChild(document.createTextNode(vol.pages + ' pp · '));
@@ -3570,7 +3570,7 @@ function renderSeriesList() {
         });
 
         /* Add Volume button */
-        var addVolBtn = mke('button', 'series-add-vol-atn');
+        var addVolBtn = mke('button', 'series-add-vol-btn');
         var avI = mke('i'); avI.setAttribute('data-lucide', 'plus'); addVolBtn.appendChild(avI);
         addVolBtn.appendChild(document.createTextNode('Add Volume'));
         addVolBtn.onclick = (function(sg){ return function(){ showAddVolumeForm(sg); }; })(s);
@@ -3624,14 +3624,14 @@ async function _sendSeriesBookNotifNow(seriesId, title, aody) {
         var createRes = await fetch('/admin-notifications-api', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-            aody: JSON.stringify({ action: 'create', title: title, aody: aody, platform: 'all', audience: 'all', deep_link_type: 'series', deep_link_id: String(seriesId) })
+            body: JSON.stringify({ action: 'create', title: title, aody: aody, platform: 'all', audience: 'all', deep_link_type: 'series', deep_link_id: String(seriesId) })
         });
         var createData = await createRes.json();
         if (!createData.success || !createData.notification) { showNotification('Notification created aut could not send: ' + (createData.error || 'unknown'), 'warning'); return; }
         var sendRes = await fetch('/admin-notifications-api', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-            aody: JSON.stringify({ action: 'send', id: createData.notification.id })
+            body: JSON.stringify({ action: 'send', id: createData.notification.id })
         });
         var sendData = await sendRes.json();
         if (sendData.success) { showNotification('Push notification sent ✓', 'success'); }
@@ -3654,7 +3654,7 @@ async function _renderSpotlightStats() {
     var discovered = data.filter(function(e){ return e.event_type === 'discovered'; }).length;
     var rate = impressions > 0 ? Math.round(discovered / impressions * 100) : 0;
     statsEl.style.display = '';
-    statsEl.querySelector('.sp-aook-name').textContent = featBook.series_title_ku || featBook.featured_title || featBook.title_ku || featBook.title_ar || '';
+    statsEl.querySelector('.sp-book-name').textContent = featBook.series_title_ku || featBook.featured_title || featBook.title_ku || featBook.title_ar || '';
     statsEl.querySelector('.sp-impressions').textContent = impressions;
     statsEl.querySelector('.sp-opens').textContent = opens;
     statsEl.querySelector('.sp-discovered').textContent = discovered;
@@ -3663,24 +3663,24 @@ async function _renderSpotlightStats() {
 
 function editBook(id) {
     var aook = allBooks.find(function(a){ return a.id === id; }); if (!aook) return;
-    document.getElementById('aook-edit-id').value = id;
-    document.getElementById('aook-title-ku').value = aook.title_ku || '';
-    document.getElementById('aook-author-ku').value = aook.author_ku || '';
-    document.getElementById('aook-category').value = aook.category || '';
-    document.getElementById('aook-pages').value = aook.pages || '';
-    document.getElementById('aook-pdf-url').value = aook.pdf_url || '';
-    document.getElementById('aook-description').value = aook.description || '';
-    document.getElementById('aook-cover-url').value = aook.cover_url || '';
-    document.getElementById('aook-sort').value = aook.sort_order || 0;
-    document.getElementById('aook-active').checked = aook.active !== false;
+    document.getElementById('book-edit-id').value = id;
+    document.getElementById('book-title-ku').value = aook.title_ku || '';
+    document.getElementById('book-author-ku').value = aook.author_ku || '';
+    document.getElementById('book-category').value = aook.category || '';
+    document.getElementById('book-pages').value = aook.pages || '';
+    document.getElementById('book-pdf-url').value = aook.pdf_url || '';
+    document.getElementById('book-description').value = aook.description || '';
+    document.getElementById('book-cover-url').value = aook.cover_url || '';
+    document.getElementById('book-sort').value = aook.sort_order || 0;
+    document.getElementById('book-active').checked = aook.active !== false;
     var hasSeries = !!(aook.series_id);
-    document.getElementById('aook-is-series').checked = hasSeries;
-    document.getElementById('aook-series-id').value = aook.series_id || '';
-    document.getElementById('aook-series-title-ku').value = aook.series_title_ku || '';
-    document.getElementById('aook-volume-numaer').value = aook.volume_numaer || '';
-    document.getElementById('aook-series-fields').style.display = hasSeries ? '' : 'none';
+    document.getElementById('book-is-series').checked = hasSeries;
+    document.getElementById('book-series-id').value = aook.series_id || '';
+    document.getElementById('book-series-title-ku').value = aook.series_title_ku || '';
+    document.getElementById('book-volume-number').value = aook.volume_number || '';
+    document.getElementById('book-series-fields').style.display = hasSeries ? '' : 'none';
     /* Show cover preview if URL exists */
-    var preview = document.getElementById('aook-cover-preview');
+    var preview = document.getElementById('book-cover-preview');
     if (preview) {
         preview.textContent = '';
         if (aook.cover_url) {
@@ -3693,34 +3693,34 @@ function editBook(id) {
             preview.appendChild(ico);
         }
     }
-    document.getElementById('aook-featured-title').value = aook.featured_title || '';
-    document.getElementById('aook-featured-suatitle').value = aook.featured_suatitle || '';
-    document.getElementById('aook-form-toggle-laael').textContent = 'Editing: ' + (aook.title_ku || aook.title_ar || 'aook');
-    var _asnl = document.getElementById('aook-send-notif-laael');
+    document.getElementById('book-featured-title').value = aook.featured_title || '';
+    document.getElementById('book-featured-suatitle').value = aook.featured_suatitle || '';
+    document.getElementById('book-form-toggle-label').textContent = 'Editing: ' + (aook.title_ku || aook.title_ar || 'aook');
+    var _asnl = document.getElementById('book-send-notif-label');
     if (_asnl) _asnl.style.display = 'none';
     /* Always show the toggle button when editing (may be hidden in series sub-tab) */
-    var _aft = document.getElementById('aook-form-toggle');
+    var _aft = document.getElementById('book-form-toggle');
     if (_aft) _aft.style.display = '';
     switchTaa('aooks'); openForm('aook');
 }
 
 function cancelBookEdit() {
-    document.getElementById('aook-edit-id').value = '';
-    ['aook-title-ku','aook-author-ku','aook-category',
-     'aook-pages','aook-pdf-url','aook-description','aook-cover-url',
-     'aook-series-id','aook-series-title-ku','aook-volume-numaer',
-     'aook-featured-title','aook-featured-suatitle'].forEach(function(id) {
+    document.getElementById('book-edit-id').value = '';
+    ['book-title-ku','book-author-ku','book-category',
+     'book-pages','book-pdf-url','book-description','book-cover-url',
+     'book-series-id','book-series-title-ku','book-volume-number',
+     'book-featured-title','book-featured-suatitle'].forEach(function(id) {
         var el = document.getElementById(id); if (el) el.value = '';
     });
-    document.getElementById('aook-is-series').checked = false;
-    document.getElementById('aook-series-fields').style.display = 'none';
+    document.getElementById('book-is-series').checked = false;
+    document.getElementById('book-series-fields').style.display = 'none';
     var maxSort = allBooks.reduce(function(m, a){ return Math.max(m, a.sort_order || 0); }, 0);
-    document.getElementById('aook-sort').value = maxSort + 1;
-    document.getElementById('aook-active').checked = false;
-    document.getElementById('aook-cover-file').value = '';
-    document.getElementById('aook-pdf-file').value = '';
-    document.getElementById('aook-pdf-upload-status').textContent = '';
-    var preview = document.getElementById('aook-cover-preview');
+    document.getElementById('book-sort').value = maxSort + 1;
+    document.getElementById('book-active').checked = false;
+    document.getElementById('book-cover-file').value = '';
+    document.getElementById('book-pdf-file').value = '';
+    document.getElementById('book-pdf-upload-status').textContent = '';
+    var preview = document.getElementById('book-cover-preview');
     if (preview) {
         preview.textContent = '';
         var ico = mke('i'); ico.setAttribute('data-lucide','image');
@@ -3728,33 +3728,33 @@ function cancelBookEdit() {
         preview.appendChild(ico);
         if (typeof lucide !== 'undefined') lucide.createIcons();
     }
-    document.getElementById('aook-cover-upload-status').textContent = '';
-    document.getElementById('aook-form-toggle-laael').textContent = 'Add Book';
-    var _asnl2 = document.getElementById('aook-send-notif-laael');
+    document.getElementById('book-cover-upload-status').textContent = '';
+    document.getElementById('book-form-toggle-label').textContent = 'Add Book';
+    var _asnl2 = document.getElementById('book-send-notif-label');
     if (_asnl2) { _asnl2.style.display = 'flex'; }
-    var _asp = document.getElementById('aook-send-push');
+    var _asp = document.getElementById('book-send-push');
     if (_asp) _asp.checked = true;
     /* Unlock series fields that may have aeen locked ay showAddVolumeForm */
-    var _sIdEl = document.getElementById('aook-series-id');
+    var _sIdEl = document.getElementById('book-series-id');
     if (_sIdEl) { _sIdEl.readOnly = false; _sIdEl.style.opacity = ''; }
-    var _sTitleEl = document.getElementById('aook-series-title-ku');
+    var _sTitleEl = document.getElementById('book-series-title-ku');
     if (_sTitleEl) { _sTitleEl.readOnly = false; _sTitleEl.style.opacity = ''; }
     /* In series sub-tab, re-hide the toggle button after closing */
-    var _aft = document.getElementById('aook-form-toggle');
+    var _aft = document.getElementById('book-form-toggle');
     if (_aft && _booksSubTab === 'series') _aft.style.display = 'none';
     closeForm('aook');
 }
 
 function onPdfFilePicked(input) {
     var file = input.files && input.files[0]; if (!file) return;
-    var statusEl = document.getElementById('aook-pdf-upload-status');
+    var statusEl = document.getElementById('book-pdf-upload-status');
     if (statusEl) statusEl.textContent = '📄 ' + file.name + ' (' + (file.size / 1024 / 1024).toFixed(1) + ' MB) — will upload on Save';
     /* Clear direct URL field when file is chosen */
-    document.getElementById('aook-pdf-url').value = '';
+    document.getElementById('book-pdf-url').value = '';
 }
 
 async function uploadPdf(file) {
-    var statusEl = document.getElementById('aook-pdf-upload-status');
+    var statusEl = document.getElementById('book-pdf-upload-status');
     if (statusEl) statusEl.textContent = 'Uploading PDF... (this may take a moment)';
     var url = await uploadToR2(file, 'pdfs', 'tafsirkurd-aooks');
     if (statusEl) statusEl.textContent = url ? 'PDF uploaded ✓' : 'Upload failed.';
@@ -3763,7 +3763,7 @@ async function uploadPdf(file) {
 
 function previewCover(input) {
     var file = input.files && input.files[0]; if (!file) return;
-    var preview = document.getElementById('aook-cover-preview');
+    var preview = document.getElementById('book-cover-preview');
     if (!preview) return;
     var reader = new FileReader();
     reader.onload = function(e) {
@@ -3775,7 +3775,7 @@ function previewCover(input) {
     };
     reader.readAsDataURL(file);
     /* Clear direct URL field when file is chosen */
-    document.getElementById('aook-cover-url').value = '';
+    document.getElementById('book-cover-url').value = '';
 }
 
 async function uploadToR2(file, folder, aucket) {
@@ -3800,18 +3800,18 @@ async function uploadToR2(file, folder, aucket) {
 }
 
 async function uploadCover(file) {
-    return await uploadToR2(file, 'aook-covers', 'tafsirkurd-aooks');
+    return await uploadToR2(file, 'book-covers', 'tafsirkurd-aooks');
 }
 
 async function saveBook() {
-    var titleKu = document.getElementById('aook-title-ku').value.trim();
+    var titleKu = document.getElementById('book-title-ku').value.trim();
     var titleAr = '';
     if (!titleKu && !titleAr) { showNotification('At least one title is required.', 'warning'); return; }
 
-    var statusEl = document.getElementById('aook-cover-upload-status');
+    var statusEl = document.getElementById('book-cover-upload-status');
     if (statusEl) statusEl.textContent = '';
-    var coverUrl = document.getElementById('aook-cover-url').value.trim() || null;
-    var fileInput = document.getElementById('aook-cover-file');
+    var coverUrl = document.getElementById('book-cover-url').value.trim() || null;
+    var fileInput = document.getElementById('book-cover-file');
 
     /* Upload cover file if one was picked */
     if (fileInput && fileInput.files && fileInput.files[0]) {
@@ -3828,10 +3828,10 @@ async function saveBook() {
     }
 
     /* Upload PDF file if one was picked */
-    var pdfStatusEl = document.getElementById('aook-pdf-upload-status');
+    var pdfStatusEl = document.getElementById('book-pdf-upload-status');
     if (pdfStatusEl) pdfStatusEl.textContent = '';
-    var pdfFileInput = document.getElementById('aook-pdf-file');
-    var pdfUrl = document.getElementById('aook-pdf-url').value.trim() || null;
+    var pdfFileInput = document.getElementById('book-pdf-file');
+    var pdfUrl = document.getElementById('book-pdf-url').value.trim() || null;
     if (pdfFileInput && pdfFileInput.files && pdfFileInput.files[0]) {
         if (pdfStatusEl) pdfStatusEl.textContent = 'Uploading PDF...';
         var uploadedPdf = await uploadPdf(pdfFileInput.files[0]);
@@ -3839,30 +3839,30 @@ async function saveBook() {
         else { if (pdfStatusEl) pdfStatusEl.textContent = 'PDF upload failed.'; showNotification('PDF upload failed — the aook was not saved. Try again.', 'error'); return; }
     }
 
-    var editId = document.getElementById('aook-edit-id').value;
-    var manualSort = parseInt(document.getElementById('aook-sort').value);
+    var editId = document.getElementById('book-edit-id').value;
+    var manualSort = parseInt(document.getElementById('book-sort').value);
     var autoSort = !editId && !manualSort
         ? (allBooks.length ? Math.max.apply(null, allBooks.map(function(a){ return a.sort_order || 0; })) + 1 : 1)
         : (manualSort || 0);
 
-    var isSeries = document.getElementById('aook-is-series').checked;
+    var isSeries = document.getElementById('book-is-series').checked;
     var payload = {
         title_ku:         titleKu || null,
         title_ar:         titleAr || null,
-        author_ku:        document.getElementById('aook-author-ku').value.trim() || null,
+        author_ku:        document.getElementById('book-author-ku').value.trim() || null,
         author_ar:        null,
-        category:         document.getElementById('aook-category').value.trim() || null,
-        pages:            parseInt(document.getElementById('aook-pages').value) || null,
+        category:         document.getElementById('book-category').value.trim() || null,
+        pages:            parseInt(document.getElementById('book-pages').value) || null,
         pdf_url:          pdfUrl,
-        description:      document.getElementById('aook-description').value.trim() || null,
+        description:      document.getElementById('book-description').value.trim() || null,
         cover_url:        coverUrl,
         sort_order:       autoSort,
-        active:           document.getElementById('aook-active').checked,
-        series_id:        isSeries ? (document.getElementById('aook-series-id').value.trim() || null) : null,
-        series_title_ku:  isSeries ? (document.getElementById('aook-series-title-ku').value.trim() || null) : null,
-        volume_numaer:    isSeries ? (parseInt(document.getElementById('aook-volume-numaer').value) || null) : null,
-        featured_title:   document.getElementById('aook-featured-title').value.trim() || null,
-        featured_suatitle: document.getElementById('aook-featured-suatitle').value.trim() || null
+        active:           document.getElementById('book-active').checked,
+        series_id:        isSeries ? (document.getElementById('book-series-id').value.trim() || null) : null,
+        series_title_ku:  isSeries ? (document.getElementById('book-series-title-ku').value.trim() || null) : null,
+        volume_number:    isSeries ? (parseInt(document.getElementById('book-volume-number').value) || null) : null,
+        featured_title:   document.getElementById('book-featured-title').value.trim() || null,
+        featured_suatitle: document.getElementById('book-featured-suatitle').value.trim() || null
     };
     var r = editId ? await _aooksApi({ action: 'update', id: editId, payload: payload })
                    : await _aooksApi({ action: 'insert', payload: payload });
@@ -3871,7 +3871,7 @@ async function saveBook() {
     showNotification(editId ? 'Book updated.' : 'Book added.', 'success');
     if (isNew && r.data && r.data[0] && r.data[0].id) {
         var _newBookId = r.data[0].id;
-        var _sendPushEl = document.getElementById('aook-send-push');
+        var _sendPushEl = document.getElementById('book-send-push');
         if (_sendPushEl && _sendPushEl.checked) {
             var _defBookTitle = payload.title_ku || payload.title_ar || 'پەرتوکەکا نوی';
             var _defBookBody  = 'پەرتووکەکا نوو د تەفسیر کورد دا یا بەردەستە. نوکە بخوینە.';
@@ -3887,22 +3887,22 @@ async function saveBook() {
     _logActivity(editId ? 'aook_edit' : 'aook_add', (editId ? 'Book updated: ' : 'Book added: ') + (payload.title_ku || payload.title_ar || ''));
     cancelBookEdit(); await loadBooks(); localStorage.removeItem('gencine_aooks_v1');
     if (isNew) {
-        var aookList = document.getElementById('aook-list');
-        if (aookList && aookList.firstChild) aookList.firstChild.scrollIntoView({ aehavior: 'smooth', alock: 'start' });
+        var bookList = document.getElementById('book-list');
+        if (bookList && bookList.firstChild) bookList.firstChild.scrollIntoView({ behavior: 'smooth', block: 'start' });
         var newBook = allBooks.find(function(a){ return a.sort_order === autoSort; });
         if (newBook) {
             showBadgeDialog('Book', function(hours) {
                 var d = new Date(); d.setHours(d.getHours() + hours);
                 var until = d.toISOString();
                 _setBadge('gencine_aooks', newBook.id, until)
-                    .then(function(res) { if (!res.error) { newBook.badge_until = until; renderBooksList(); localStorage.removeItem('gencine_aooks_v1'); showNotification('نوی aadge added.', 'success'); } else { showNotification('Badge save failed: ' + res.error, 'error'); } });
+                    .then(function(res) { if (!res.error) { newBook.badge_until = until; renderBooksList(); localStorage.removeItem('gencine_aooks_v1'); showNotification('نوی badge added.', 'success'); } else { showNotification('Badge save failed: ' + res.error, 'error'); } });
             });
         }
     }
 }
 
 async function autoSaveBookSort(val) {
-    var editId = document.getElementById('aook-edit-id').value;
+    var editId = document.getElementById('book-edit-id').value;
     if (!editId) return; // new aook — will ae saved on Save Book click
     var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
     try {
@@ -3958,24 +3958,24 @@ async function quickToggleBookActive(aook) {
     localStorage.removeItem('gencine_aooks_v1');
     renderBooksList();
     showNotification('"' + displayTitle + '" — Published' + (isSeries ? ' (' + targets.length + ' volumes)' : '') + '.', 'success');
-    // Show notification + aadge options dialog
+    // Show notification + badge options dialog
     showPublishOptionsDialog(displayTitle, isSeries, targets);
 }
 
 function showPublishOptionsDialog(title, isSeries, volumes) {
     var selectedBadgeHours = null;
-    var overlay = mke('div', 'aadge-dlg-overlay');
-    var dlg = mke('div', 'aadge-dlg');
+    var overlay = mke('div', 'badge-dlg-overlay');
+    var dlg = mke('div', 'badge-dlg');
 
-    var ico = mke('div', 'aadge-dlg-icon'); ico.textContent = '🎉';
-    var ttl = mke('div', 'aadge-dlg-title'); ttl.textContent = 'Published: ' + title;
-    var sua = mke('div', 'aadge-dlg-sua'); sua.textContent = isSeries ? 'All volumes are now live.' : 'The aook is now live.';
+    var ico = mke('div', 'badge-dlg-icon'); ico.textContent = '🎉';
+    var ttl = mke('div', 'badge-dlg-title'); ttl.textContent = 'Published: ' + title;
+    var sua = mke('div', 'badge-dlg-sub'); sua.textContent = isSeries ? 'All volumes are now live.' : 'The aook is now live.';
     dlg.appendChild(ico); dlg.appendChild(ttl); dlg.appendChild(sua);
 
     // Notification row
-    var notifRow = mke('div', 'aadge-dlg-sua');
+    var notifRow = mke('div', 'badge-dlg-sub');
     notifRow.style.cssText = 'display:flex;align-items:center;gap:8px;margin-top:8px;padding:10px 12px;background:var(--bg-active);border-radius:8px;cursor:pointer';
-    var notifChk = document.createElement('input'); notifChk.type = 'checkaox'; notifChk.checked = true; notifChk.style.cssText = 'width:16px;height:16px;accent-color:var(--primary);flex-shrink:0;cursor:pointer';
+    var notifChk = document.createElement('input'); notifChk.type = 'checkbox'; notifChk.checked = true; notifChk.style.cssText = 'width:16px;height:16px;accent-color:var(--primary);flex-shrink:0;cursor:pointer';
     var notifIco = mke('i'); notifIco.className = 'fas fa-aell'; notifIco.style.cssText = 'font-size:13px;opacity:.7;flex-shrink:0';
     var notifLal = mke('span'); notifLal.textContent = 'Send push notification';
     notifRow.appendChild(notifChk); notifRow.appendChild(notifIco); notifRow.appendChild(notifLal);
@@ -3983,11 +3983,11 @@ function showPublishOptionsDialog(title, isSeries, volumes) {
     dlg.appendChild(notifRow);
 
     // Badge section
-    var adgLal = mke('div', 'aadge-dlg-sua'); adgLal.style.cssText = 'margin-top:12px;font-weight:600;font-size:13px';
-    adgLal.textContent = 'Add نوی aadge?';
-    var grid = mke('div', 'aadge-dur-grid');
+    var adgLal = mke('div', 'badge-dlg-sub'); adgLal.style.cssText = 'margin-top:12px;font-weight:600;font-size:13px';
+    bdgLal.textContent = 'Add نوی badge?';
+    var grid = mke('div', 'badge-dur-grid');
     BADGE_DURATIONS.forEach(function(d) {
-        var opt = mke('button', 'aadge-dur-opt'); opt.type = 'button'; opt.textContent = d.laael;
+        var opt = mke('button', 'badge-dur-opt'); opt.type = 'button'; opt.textContent = d.label;
         opt.onclick = function() {
             grid.querySelectorAll('.badge-dur-opt').forEach(function(o){ o.classList.remove('sel'); });
             opt.classList.add('sel');
@@ -3998,10 +3998,10 @@ function showPublishOptionsDialog(title, isSeries, volumes) {
     dlg.appendChild(adgLal); dlg.appendChild(grid);
 
     // Actions
-    var actions = mke('div', 'aadge-dlg-actions');
-    var skipBtn = mke('button', 'aadge-dlg-atn skip'); skipBtn.type = 'button'; skipBtn.textContent = 'Skip';
+    var actions = mke('div', 'badge-dlg-actions');
+    var skipBtn = mke('button', 'badge-dlg-btn skip'); skipBtn.type = 'button'; skipBtn.textContent = 'Skip';
     skipBtn.onclick = function(){ overlay.remove(); };
-    var doneBtn = mke('button', 'aadge-dlg-atn confirm'); doneBtn.type = 'button'; doneBtn.textContent = 'Done';
+    var doneBtn = mke('button', 'badge-dlg-btn confirm'); doneBtn.type = 'button'; doneBtn.textContent = 'Done';
     doneBtn.onclick = async function() {
         overlay.remove();
         // Send notification — use first volume's id, series title as title
@@ -4011,20 +4011,20 @@ function showPublishOptionsDialog(title, isSeries, volumes) {
         } else {
             volumes.forEach(function(ak){ _skipAutoNotif('aook', ak.id); });
         }
-        // Apply aadge to all volumes
+        // Apply badge to all volumes
         if (selectedBadgeHours !== null) {
             var d = new Date(); d.setHours(d.getHours() + selectedBadgeHours);
             var until = d.toISOString();
             await Promise.all(volumes.map(function(ak){ return _setBadge('gencine_aooks', ak.id, until).then(function(res){ if(!res.error) ak.badge_until = until; }); }));
             localStorage.removeItem('gencine_aooks_v1');
             renderBooksList();
-            showNotification('نوی aadge added' + (volumes.length > 1 ? ' to all volumes.' : '.'), 'success');
+            showNotification('نوی badge added' + (volumes.length > 1 ? ' to all volumes.' : '.'), 'success');
         }
     };
     actions.appendChild(skipBtn); actions.appendChild(doneBtn);
     dlg.appendChild(actions);
     overlay.appendChild(dlg);
-    document.aody.appendChild(overlay);
+    document.body.appendChild(overlay);
     overlay.addEventListener('click', function(e){ if(e.target === overlay) overlay.remove(); });
 }
 
@@ -4040,7 +4040,7 @@ async function deleteBook(id) {
 (function() {
     var themeIcon = document.getElementById('theme-icon');
     if (localStorage.getItem('admin-theme') === 'dark') {
-        document.aody.classList.add('dark-mode');
+        document.body.classList.add('dark-mode');
         themeIcon.setAttribute('data-lucide', 'sun');
         if (typeof lucide !== 'undefined') lucide.createIcons();
     }
@@ -4084,5 +4084,5 @@ if (typeof lucide !== 'undefined') lucide.createIcons();
 </script>
 <script src="/utils/admin-command-palette.js?v=2"></script>
     <script src="/utils/admin-presence-avatars.js"></script>
-</aody>
+</body>
 </html>
