@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Smart Daily Companion  v84
  * Variable number of slides — seasonal items each get own slide, never displace card 1:
  *   1. Zikr of current time   (time-aware, always present via fallback)
@@ -1377,7 +1377,7 @@
     }
     var content = _mk('div', 'sd-content');
     var tagWrap = _mk('div', 'sd-tag-zone');
-    tagWrap.appendChild(_mk('span', 'sd-tag', 'پەرتوکی تایبەت'));
+    tagWrap.appendChild(_mk('span', 'sd-tag', 'پەرتوکا تایبەت'));
     content.appendChild(tagWrap);
     var tz = _mk('div', 'sd-title-zone');
     tz.appendChild(_mk('div', 'sd-title', book.series_title_ku || book.featured_title || book.title_ku || book.title_ar || ''));
