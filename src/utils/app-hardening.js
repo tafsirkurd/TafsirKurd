@@ -276,23 +276,23 @@
       var banner = document.createElement('div');
       banner.id = 'tk-recovery-banner';
       banner.style.cssText = [
-        'position:fixed;top:0;left:0;right:0;z-index:99999',
+        'position:fixed;top:env(safe-area-inset-top,0px);left:0;right:0;z-index:99999',
         'background:#b91c1c;color:#fff;padding:10px 14px',
         'display:flex;align-items:center;gap:10px',
-        'font-size:13px;font-family:sans-serif'
+        'font-size:13px;font-family:sans-serif;direction:rtl'
       ].join(';');
       var icon = document.createElement('span');
-      icon.textContent = '⚠';
+      icon.textContent = '⚠️';
       var text = document.createElement('span');
       text.style.flex = '1';
-      text.textContent = 'ئەپ ' + (window._tkCrashCount || 3) + ' جار داهاتووە. دەستکەوتی کەمینە چالاک کرا.';
+      text.textContent = 'ئەپ ' + (window._tkCrashCount || 3) + ' جار کراش کرد. دەستکەوتی بەئەمنی چالاک کرا.';
       var btn = document.createElement('button');
-      btn.textContent = '×';
-      btn.style.cssText = 'background:none;border:none;color:inherit;font-size:18px;cursor:pointer;padding:0 4px';
+      btn.textContent = '✕';
+      btn.style.cssText = 'background:none;border:none;color:inherit;font-size:18px;cursor:pointer;padding:0 4px;line-height:1';
       btn.onclick = function () { if (banner.parentNode) banner.parentNode.removeChild(banner); };
       var reset = document.createElement('button');
-      reset.textContent = 'ڕیست';
-      reset.style.cssText = 'background:rgba(255,255,255,.2);border:none;color:#fff;padding:4px 10px;border-radius:5px;font-size:12px;cursor:pointer';
+      reset.textContent = 'ڕیستکردن';
+      reset.style.cssText = 'background:rgba(255,255,255,.2);border:none;color:#fff;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap';
       reset.onclick = function () {
         window._tkMarkCleanLaunch();
         window.location.reload();
