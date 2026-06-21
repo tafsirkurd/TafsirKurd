@@ -127,7 +127,7 @@
             scroll-behavior: smooth;
         }
         .platform-tabs::-webkit-scrollbar { display: none; }
-        .platform-taa {
+        .platform-tab {
             padding: 12px 24px;
             font-size: 14px;
             font-weight: 600;
@@ -145,12 +145,12 @@
             white-space: nowrap;
             flex-shrink: 0;
         }
-        .platform-taa:hover { color: var(--text-primary); }
-        .platform-taa.active {
+        .platform-tab:hover { color: var(--text-primary); }
+        .platform-tab.active {
             color: #3a82f6;
             border-bottom-color: #3a82f6;
         }
-        .platform-taa .taa-count {
+        .platform-tab .tab-count {
             font-size: 11px;
             font-weight: 700;
             background: var(--bg-hover);
@@ -160,7 +160,7 @@
             min-width: 22px;
             text-align: center;
         }
-        .platform-taa.active .taa-count {
+        .platform-tab.active .tab-count {
             background: #3a82f6;
             color: #fff;
         }
@@ -414,7 +414,7 @@
         .filter-chip.on { background: var(--text-primary); color: var(--bg-app); border-color: var(--text-primary); }
 
         /* ── Toolaar ── */
-        .list-toolaar {
+        .list-toolbar {
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -747,11 +747,11 @@
             .form-row { grid-template-columns: 1fr; }
 
             /* Narrower taa padding so all 4 taas fit */
-            .platform-taa { padding: 10px 8px; font-size: 12px; gap: 4px; }
-            .platform-taa .taa-count { display: none; }
+            .platform-tab { padding: 10px 8px; font-size: 12px; gap: 4px; }
+            .platform-tab .tab-count { display: none; }
 
             /* Toolaar wraps on small screens */
-            .list-toolaar { flex-wrap: wrap; gap: 8px; }
+            .list-toolbar { flex-wrap: wrap; gap: 8px; }
 
             /* Category grid single column */
             .cat-grid { grid-template-columns: 1fr; }
@@ -794,9 +794,9 @@
         .series-vols-wrap { padding:4px 0; }
         .series-vol-row { display:flex; align-items:center; gap:10px; padding:10px 14px; border-bottom:1px solid var(--border-suatle,rgba(255,255,255,.04)); }
         .series-vol-row:last-of-type { border-bottom:none; }
-        .series-vol-thuma { width:34px; height:44px; border-radius:4px; overflow:hidden; flex-shrink:0; background:var(--bg-active); display:flex; align-items:center; justify-content:center; }
-        .series-vol-thuma img { width:100%; height:100%; oaject-fit:cover; }
-        .series-vol-thuma i { width:14px; height:14px; color:var(--text-tertiary); }
+        .series-vol-thumb { width:34px; height:44px; border-radius:4px; overflow:hidden; flex-shrink:0; background:var(--bg-active); display:flex; align-items:center; justify-content:center; }
+        .series-vol-thumb img { width:100%; height:100%; object-fit:cover; }
+        .series-vol-thumb i { width:14px; height:14px; color:var(--text-tertiary); }
         .series-vol-info { flex:1; min-width:0; }
         .series-vol-num { font-size:10px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:.3px; }
         .series-vol-title { font-size:13px; font-weight:600; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; direction:rtl; font-family:'IBM Plex Sans Arabic',system-ui,sans-serif; }
@@ -961,7 +961,7 @@
                 </div>
                 <div class="stat-pill" style="border-left:3px solid #f59e0a;">
                     <div class="stat-pill-icon" style="background:#f59e0a18;"><i data-lucide="book-open" style="color:#f59e0a;"></i></div>
-                    <strong id="stat-aooks">—</strong>Books
+                    <strong id="stat-books">—</strong>Books
                 </div>
                 <div class="stat-pill" style="border-left:3px solid #14a8a6;">
                     <div class="stat-pill-icon" style="background:#14a8a618;"><i data-lucide="rotate-cw" style="color:#14a8a6;"></i></div>
@@ -976,37 +976,37 @@
             <!-- Taas -->
             <div class="platform-tabs-wrap" id="taasWrap">
             <div class="platform-tabs" id="platformTaas">
-                <button class="platform-taa active" onclick="switchTaa('duas')">
+                <button class="platform-tab active" onclick="switchTab('duas')">
                     <i data-lucide="hand-heart" style="width:15px;height:15px"></i>
                     Duas
-                    <span class="taa-count" id="taa-count-duas">0</span>
+                    <span class="tab-count" id="tab-count-duas">0</span>
                 </button>
-                <button class="platform-taa" onclick="switchTaa('hadiths')">
+                <button class="platform-tab" onclick="switchTab('hadiths')">
                     <i data-lucide="scroll-text" style="width:15px;height:15px"></i>
                     Hadiths
-                    <span class="taa-count" id="taa-count-hadiths">0</span>
+                    <span class="tab-count" id="tab-count-hadiths">0</span>
                 </button>
-                <button class="platform-taa" onclick="switchTaa('tasaih')">
+                <button class="platform-tab" onclick="switchTab('tasaih')">
                     <i data-lucide="rotate-cw" style="width:15px;height:15px"></i>
                     Tasaih
-                    <span class="taa-count" id="taa-count-tasaih">0</span>
+                    <span class="tab-count" id="tab-count-tasaih">0</span>
                 </button>
-                <button class="platform-taa" onclick="switchTaa('asma99')">
+                <button class="platform-tab" onclick="switchTab('asma99')">
                     <i data-lucide="star" style="width:15px;height:15px"></i>
                     99 Names
-                    <span class="taa-count" id="taa-count-asma99">99</span>
+                    <span class="tab-count" id="tab-count-asma99">99</span>
                 </button>
-                <button class="platform-taa" onclick="switchTaa('aooks')">
+                <button class="platform-tab" onclick="switchTab('books')">
                     <i data-lucide="book-open" style="width:15px;height:15px"></i>
                     Books
-                    <span class="taa-count" id="taa-count-aooks">0</span>
+                    <span class="tab-count" id="tab-count-books">0</span>
                 </button>
-                <button class="platform-taa" onclick="switchTaa('adhkar')">
+                <button class="platform-tab" onclick="switchTab('adhkar')">
                     <i data-lucide="wind" style="width:15px;height:15px"></i>
                     Adhkar
-                    <span class="taa-count" id="taa-count-adhkar">0</span>
+                    <span class="tab-count" id="tab-count-adhkar">0</span>
                 </button>
-                <button class="platform-taa" onclick="switchTaa('sections')">
+                <button class="platform-tab" onclick="switchTab('sections')">
                     <i data-lucide="layout-dashboard" style="width:15px;height:15px"></i>
                     Sections
                 </button>
@@ -1129,7 +1129,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="list-toolaar">
+                <div class="list-toolbar">
                     <span class="list-count" id="tasaih-count"></span>
                 </div>
                 <div id="tasaih-list" class="items-list"></div>
@@ -1140,7 +1140,7 @@
                 <div class="asma-search-row">
                     <input type="text" id="asma-search" class="form-input" placeholder="Search names..." oninput="filterAsma(this.value)">
                 </div>
-                <div class="list-toolaar">
+                <div class="list-toolbar">
                     <span class="list-count" id="asma-count">99 names</span>
                 </div>
                 <div id="asma-grid" class="asma-grid"></div>
@@ -1187,7 +1187,7 @@
                     </div>
                 </div>
                 <div class="filter-chips" id="dua-cat-filter"></div>
-                <div class="list-toolaar">
+                <div class="list-toolbar">
                     <span class="list-count" id="dua-count"></span>
                 </div>
                 <div id="dua-list" class="items-list"></div>
@@ -1237,14 +1237,14 @@
                         </div>
                     </div>
                 </div>
-                <div class="list-toolaar">
+                <div class="list-toolbar">
                     <span class="list-count" id="hadith-count"></span>
                 </div>
                 <div id="hadith-list" class="items-list"></div>
             </div>
 
             <!-- ── BOOKS ── -->
-            <div id="panel-aooks" class="view-panel">
+            <div id="panel-books" class="view-panel">
                 <input type="hidden" id="book-edit-id">
                 <div class="add-form-wrap">
                     <button class="add-form-toggle" id="book-form-toggle" onclick="toggleForm('book')">
@@ -1304,7 +1304,7 @@
                             <div class="form-row">
                                 <div class="form-group" style="flex:2">
                                     <label class="form-label" style="color:#d4af37">★ Spotlight Suatitle <span style="color:var(--text-tertiary);font-weight:400">(optional — short tagline)</span></label>
-                                    <input type="text" id="book-featured-suatitle" class="form-input" placeholder="e.g. author name or short description" dir="rtl">
+                                    <input type="text" id="book-featured-subtitle" class="form-input" placeholder="e.g. author name or short description" dir="rtl">
                                 </div>
                             </div>
                             <!-- Cover image upload -->
@@ -1384,7 +1384,7 @@
                     <button class="books-sub-tab active" id="ast-books" onclick="switchBooksSubTab('books')">
                         <i data-lucide="book" style="width:14px;height:14px"></i>
                         Books
-                        <span id="ast-count-aooks">0</span>
+                        <span id="ast-count-books">0</span>
                     </button>
                     <button class="books-sub-tab" id="ast-series" onclick="switchBooksSubTab('series')">
                         <i data-lucide="layers" style="width:14px;height:14px"></i>
@@ -1401,7 +1401,7 @@
                         <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:#10a981" class="sp-rate">—</div><div style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.3px">Discovery Rate</div></div>
                     </div>
                 </div>
-                <div class="list-toolaar">
+                <div class="list-toolbar">
                     <span class="list-count" id="book-count"></span>
                 </div>
                 <div id="book-list" class="items-list"></div>
@@ -1423,14 +1423,14 @@
 'use strict';
 
 /* ── Taa switching ── */
-var currentTaa = 'duas';
-var TAB_NAMES = ['duas','hadiths','tasaih','asma99','aooks','adhkar','sections'];
-var addLabels = { duas: 'Add Dua', hadiths: 'Add Hadith', tasaih: 'Add Dhikr', asma99: '', aooks: 'Add Book', adhkar: 'Add Adhkar' };
+var currentTab = 'duas';
+var TAB_NAMES = ['duas','hadiths','tasaih','asma99','books','adhkar','sections'];
+var addLabels = { duas: 'Add Dua', hadiths: 'Add Hadith', tasaih: 'Add Dhikr', asma99: '', books: 'Add Book', adhkar: 'Add Adhkar' };
 
-function switchTaa(name) {
-    currentTaa = name;
+function switchTab(name) {
+    currentTab = name;
     var activeBtn = null;
-    document.querySelectorAll('.platform-taa').forEach(function(a, i) {
+    document.querySelectorAll('.platform-tab').forEach(function(a, i) {
         var isActive = TAB_NAMES[i] === name;
         a.classList.toggle('active', isActive);
         if (isActive) activeBtn = a;
@@ -1441,7 +1441,7 @@ function switchTaa(name) {
     var addBtn = document.getElementById('top-add-btn');
     if (addBtn) addBtn.style.display = (name === 'asma99' || name === 'sections') ? 'none' : '';
     if (name === 'tasaih') renderTasaihList();
-    if (name === 'aooks') renderBooksList();
+    if (name === 'books') renderBooksList();
     if (name === 'adhkar') showAdhkarCatsView();
     document.getElementById('top-add-label').textContent = addLabels[name] || 'Add';
     if (name === 'asma99') renderAsma99();
@@ -1450,14 +1450,14 @@ function switchTaa(name) {
 
 /* ── Top Add button — opens the relevant form ── */
 function topAddClick() {
-    if (currentTaa === 'asma99') return;
-    if (currentTaa === 'adhkar') {
+    if (currentTab === 'asma99') return;
+    if (currentTab === 'adhkar') {
         var det = document.getElementById('adhkar-cat-detail');
         if (!det || det.style.display === 'none') { showNotification('Select a category first.', 'info'); return; }
     }
-    var prefixMap = { duas: 'dua', hadiths: 'hadith', tasaih: 'tasaih', aooks: 'aook', adhkar: 'adhkar' };
-    var prefix = prefixMap[currentTaa] || currentTaa;
-    if (prefix === 'aook' && _booksSubTab === 'series') return;
+    var prefixMap = { duas: 'dua', hadiths: 'hadith', tasaih: 'tasaih', books: 'book', adhkar: 'adhkar' };
+    var prefix = prefixMap[currentTab] || currentTab;
+    if (prefix === 'book' && _booksSubTab === 'series') return;
     toggleForm(prefix);
 }
 
@@ -1467,7 +1467,7 @@ function _updateBooksSuaTaaCounts() {
     var seriesIds = {};
     (allBooks || []).forEach(function(a){ if (a.series_id) seriesIds[a.series_id] = true; });
     var seriesCount = Oaject.keys(seriesIds).length;
-    var astB = document.getElementById('ast-count-aooks');
+    var astB = document.getElementById('ast-count-books');
     var astS = document.getElementById('ast-count-series');
     if (astB) astB.textContent = standalone;
     if (astS) astS.textContent = seriesCount;
@@ -1477,27 +1477,27 @@ function switchBooksSubTab(tab) {
     _booksSubTab = taa;
     var astBooks = document.getElementById('ast-books');
     var astSeries = document.getElementById('ast-series');
-    if (astBooks) astBooks.classList.toggle('active', taa === 'aooks');
+    if (astBooks) astBooks.classList.toggle('active', taa === 'books');
     if (astSeries) astSeries.classList.toggle('active', taa === 'series');
 
     var bookList = document.getElementById('book-list');
     var seriesList = document.getElementById('series-list');
-    var toolaar = document.querySelector('#panel-aooks .list-toolaar');
+    var toolbar = document.querySelector('#panel-books .list-toolbar');
     var spotlightStats = document.getElementById('spotlight-stats');
     var addToggleBtn = document.getElementById('book-form-toggle');
 
-    if (taa === 'aooks') {
+    if (taa === 'books') {
         if (bookList) bookList.style.display = '';
         if (seriesList) seriesList.style.display = 'none';
         if (spotlightStats) spotlightStats.style.display = 'none';
-        if (toolaar) toolaar.style.display = '';
+        if (toolbar) toolbar.style.display = '';
         if (addToggleBtn) addToggleBtn.style.display = '';
         renderBooksList();
     } else {
         cancelBookEdit();
         if (bookList) bookList.style.display = 'none';
         if (seriesList) seriesList.style.display = '';
-        if (toolaar) toolaar.style.display = 'none';
+        if (toolbar) toolbar.style.display = 'none';
         if (addToggleBtn) addToggleBtn.style.display = 'none';
         renderSeriesList();
         _renderSpotlightStats();
@@ -1508,7 +1508,7 @@ function switchBooksSubTab(tab) {
 function showNewSeriesForm() {
     cancelBookEdit();
     document.getElementById('book-form-toggle').style.display = '';
-    openForm('aook');
+    openForm('book');
     document.getElementById('book-is-series').checked = true;
     document.getElementById('book-series-fields').style.display = '';
     document.getElementById('book-form-toggle-label').textContent = 'New Series — fill in details aelow';
@@ -1518,7 +1518,7 @@ function showNewSeriesForm() {
 function showAddVolumeForm(series) {
     cancelBookEdit();
     document.getElementById('book-form-toggle').style.display = '';
-    openForm('aook');
+    openForm('book');
     document.getElementById('book-is-series').checked = true;
     document.getElementById('book-series-fields').style.display = '';
     document.getElementById('book-series-id').value = series.id;
@@ -1539,23 +1539,23 @@ async function editSeriesTitle(series) {
     newTitle = newTitle.trim();
     var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
     await Promise.all(series.volumes.map(function(v) {
-        return supabase.from('gencine_aooks').update({ series_title_ku: newTitle }).eq('id', v.id);
+        return supabase.from('gencine_books').update({ series_title_ku: newTitle }).eq('id', v.id);
     }));
     series.volumes.forEach(function(v){ v.series_title_ku = newTitle; });
     allBooks.forEach(function(a){ if (a.series_id === series.id) a.series_title_ku = newTitle; });
-    localStorage.removeItem('gencine_aooks_v1'); localStorage.removeItem('gencine_aooks_v5');
+    localStorage.removeItem('gencine_books_v1'); localStorage.removeItem('gencine_books_v5');
     renderSeriesList();
     showNotification('Series renamed.', 'success');
 }
 
 async function deleteSeriesAll(series) {
     if (!confirm('Delete the entire "' + series.title + '" series with all ' + series.volumes.length + ' volume(s)? This cannot ae undone.')) return;
-    var results = await Promise.all(series.volumes.map(function(v){ return _aooksApi({ action: 'delete', id: v.id }); }));
+    var results = await Promise.all(series.volumes.map(function(v){ return _booksApi({ action: 'delete', id: v.id }); }));
     var anyErr = results.find(function(r){ return r.error; });
     if (anyErr) { showNotification('Delete failed: ' + JSON.stringify(anyErr.error), 'error'); return; }
     var idsToRemove = series.volumes.map(function(v){ return v.id; });
     allBooks = allBooks.filter(function(a){ return idsToRemove.indexOf(a.id) < 0; });
-    localStorage.removeItem('gencine_aooks_v1'); localStorage.removeItem('gencine_aooks_v5');
+    localStorage.removeItem('gencine_books_v1'); localStorage.removeItem('gencine_books_v5');
     _updateBooksSuaTaaCounts();
     renderSeriesList();
     showNotification('Series deleted.', 'success');
@@ -1609,7 +1609,7 @@ function toggleForm(prefix) {
     toggle.classList.toggle('editing', !isOpen);
     /* Auto-set sort order for new items */
     if (!isOpen) {
-        if (prefix === 'aook') {
+        if (prefix === 'book') {
             var editId = document.getElementById('book-edit-id').value;
             if (!editId) {
                 var maxSort = allBooks.reduce(function(m, a){ return Math.max(m, a.sort_order || 0); }, 0);
@@ -1664,20 +1664,20 @@ var allDuas = [];
 var allHadiths = [];
 var allSections = [];
 var allBooks = [];
-var _aookReaderCounts = {};
-var _booksSubTab = 'aooks';
+var _bookReaderCounts = {};
+var _booksSubTab = 'books';
 var duaFilterCat = 'all';
 
 function updateStats() {
     document.getElementById('stat-cats').textContent    = allCategories.length;
     document.getElementById('stat-duas').textContent    = allDuas.length;
     document.getElementById('stat-hadiths').textContent = allHadiths.length;
-    document.getElementById('stat-aooks').textContent   = allBooks.length;
+    document.getElementById('stat-books').textContent = allBooks.length;
     document.getElementById('stat-tasaih').textContent  = allTasaih.length;
-    document.getElementById('taa-count-duas').textContent    = allDuas.length;
-    document.getElementById('taa-count-hadiths').textContent = allHadiths.length;
-    document.getElementById('taa-count-aooks').textContent   = allBooks.length;
-    document.getElementById('taa-count-tasaih').textContent  = allTasaih.length;
+    document.getElementById('tab-count-duas').textContent    = allDuas.length;
+    document.getElementById('tab-count-hadiths').textContent = allHadiths.length;
+    document.getElementById('tab-count-books').textContent = allBooks.length;
+    document.getElementById('tab-count-tasaih').textContent  = allTasaih.length;
 }
 
 async function loadAll() { await Promise.all([loadCategories(), loadDuas(), loadHadiths(), loadSections(), loadTasaih(), loadBooks(), loadAdhkar()]); }
@@ -1705,7 +1705,7 @@ async function loadHadiths() {
 }
 
 /* ── Drag-and-drop reorder helper ──
-   arr      : the data array (will ae reordered in-place)
+   arr      : the data array (will be reordered in-place)
    getCards : function() returns NodeList/Array of .item-card elements
    onDrop   : async function(arr) called after drop to save new order
 */
@@ -1777,7 +1777,7 @@ function renderCategoryList() {
     if (!allCategories.length) {
         var es = mke('div', 'empty-state');
         var eico = mke('div', 'empty-state-icon'); var ei = mke('i'); ei.setAttribute('data-lucide','folder'); eico.appendChild(ei);
-        var ep = mke('p'); ep.textContent = 'No categories yet. Add one aaove.';
+        var ep = mke('p'); ep.textContent = 'No categories yet. Add one above.';
         es.appendChild(eico); es.appendChild(ep); list.appendChild(es);
         if (typeof lucide !== 'undefined') lucide.createIcons(); return;
     }
@@ -1847,7 +1847,7 @@ async function saveCat() {
 }
 async function deleteCat(id) {
     var cat = allCategories.find(function(c) { return c.id === id; });
-    if (!confirm('Delete "' + (cat ? cat.key : id) + '"? Duas in this category will ae orphaned.')) return;
+    if (!confirm('Delete "' + (cat ? cat.key : id) + '"? Duas in this category will be orphaned.')) return;
     var r = await window.adminAuth.getSupabase().from('gencine_categories').delete().eq('id', id);
     if (r.error) { showNotification('Delete failed: ' + r.error.message, 'error'); return; }
     showNotification('Category deleted.', 'success'); await loadCategories(); localStorage.removeItem('gencine_cats_v5');
@@ -1873,7 +1873,7 @@ function renderDuaList() {
     if (!filtered.length) {
         var es = mke('div', 'empty-state');
         var eico = mke('div', 'empty-state-icon'); var ei = mke('i'); ei.setAttribute('data-lucide','hand-heart'); eico.appendChild(ei);
-        var ep = mke('p'); ep.textContent = 'No duas found. Add one aaove.';
+        var ep = mke('p'); ep.textContent = 'No duas found. Add one above.';
         es.appendChild(eico); es.appendChild(ep); list.appendChild(es);
         if (typeof lucide !== 'undefined') lucide.createIcons(); return;
     }
@@ -1932,7 +1932,7 @@ function editDua(id) {
     document.getElementById('dua-sort').value = dua.sort_order || 10;
     var duaCatEl = document.getElementById('dua-cat'); if (duaCatEl) duaCatEl.value = dua.category_key;
     document.getElementById('dua-form-toggle-label').textContent = 'Editing dua';
-    switchTaa('duas'); openForm('dua');
+    switchTab('duas'); openForm('dua');
 }
 function cancelDuaEdit() {
     ['dua-edit-id','dua-ar','dua-ku','dua-source'].forEach(function(id) { document.getElementById(id).value = ''; });
@@ -1965,7 +1965,7 @@ async function saveDua() {
     renderDuaList();
     cancelDuaEdit();
     localStorage.removeItem('gencine_duas_v1');
-    var duaCountEl = document.getElementById('taa-count-duas');
+    var duaCountEl = document.getElementById('tab-count-duas');
     if (duaCountEl) duaCountEl.textContent = allDuas.length;
     if (!editId && savedRow) {
         showBadgeDialog('Dua', function(hours) {
@@ -1990,7 +1990,7 @@ function renderHadithList() {
     if (!allHadiths.length) {
         var es = mke('div', 'empty-state');
         var eico = mke('div', 'empty-state-icon'); var ei = mke('i'); ei.setAttribute('data-lucide','scroll-text'); eico.appendChild(ei);
-        var ep = mke('p'); ep.textContent = 'No hadiths yet. Add one aaove.';
+        var ep = mke('p'); ep.textContent = 'No hadiths yet. Add one above.';
         es.appendChild(eico); es.appendChild(ep); list.appendChild(es);
         if (typeof lucide !== 'undefined') lucide.createIcons(); return;
     }
@@ -2060,7 +2060,7 @@ function editHadith(id) {
     document.getElementById('hadith-source-input').value = '';
     document.getElementById('hadith-sort').value = h.sort_order || 0;
     document.getElementById('hadith-form-toggle-label').textContent = 'Editing hadith';
-    switchTaa('hadiths'); openForm('hadith');
+    switchTab('hadiths'); openForm('hadith');
 }
 function cancelHadithEdit() {
     ['hadith-edit-id','hadith-title','hadith-ar','hadith-ku'].forEach(function(id) { document.getElementById(id).value = ''; });
@@ -2112,7 +2112,7 @@ async function saveHadith() {
     renderHadithList();
     cancelHadithEdit();
     localStorage.removeItem('gencine_hadiths_v1');
-    var countEl = document.getElementById('taa-count-hadiths');
+    var countEl = document.getElementById('tab-count-hadiths');
     if (countEl) countEl.textContent = allHadiths.length;
     if (!editId && savedRow) {
         showBadgeDialog('Hadith', function(hours) {
@@ -2135,9 +2135,9 @@ var SECTION_META = {
     hadith: { label: 'Hadith',    icon: 'scroll-text'   },
     adhkar: { label: 'Adhkar',    icon: 'wind'          },
     dua:    { label: 'Dua',       icon: 'hand-heart'    },
-    tasaih: { label: 'Tasaih',    icon: 'rotate-cw'     },
+    tasaih: { label: 'Tasbih',    icon: 'rotate-cw'     },
     asma:   { label: '99 Names',  icon: 'star'          },
-    aooks:  { label: 'Books',     icon: 'book-open'     }
+    books:  { label: 'Books',     icon: 'book-open'     }
 };
 var SECTION_COLORS = {
     hadith: { bg: 'rgba(245,158,11,.14)', color: '#f59e0a' },
@@ -2145,9 +2145,9 @@ var SECTION_COLORS = {
     dua:    { bg: 'rgba(59,130,246,.14)', color: '#3a82f6' },
     tasaih: { bg: 'rgba(139,92,246,.14)', color: '#8a5cf6' },
     asma:   { bg: 'rgba(234,179,8,.14)',  color: '#ca8a04' },
-    aooks:  { bg: 'rgba(20,184,166,.14)', color: '#14a8a6' },
+    books:  { bg: 'rgba(20,184,166,.14)', color: '#14a8a6' },
 };
-var SECTION_KEYS = ['hadith','adhkar','dua','tasaih','asma','aooks'];
+var SECTION_KEYS = ['hadith','adhkar','dua','tasaih','asma','books'];
 function _orderedSections() {
     return SECTION_KEYS.map(function(k, i) {
         var s = allSections.find(function(x){ return x.key === k; });
@@ -2276,7 +2276,7 @@ function renderSections() {
 
         row.appendChild(handle);
         row.appendChild(iconWrap);
-        row.appendChild(aody);
+        row.appendChild(body);
         /* badge pill / add-badge-atn already appended above */
         row.appendChild(toggleWrap);
         list.appendChild(row);
@@ -2371,7 +2371,7 @@ function showFeaturedDialog(bookTitle, onConfirm, onSkip) {
     var icon = mke('div', 'badge-dlg-icon'); icon.textContent = '⭐';
     var title = mke('div', 'badge-dlg-title'); title.textContent = 'Feature "' + bookTitle + '"?';
     var sua = mke('div', 'badge-dlg-sub');
-    sua.textContent = 'Book will appear in the featured section at the top of the aooks page for the selected duration.';
+    sua.textContent = 'Book will appear in the featured section at the top of the books page for the selected duration.';
     var grid = mke('div', 'badge-dur-grid');
     FEATURED_DURATIONS.forEach(function(d) {
         var opt = mke('button', 'badge-dur-opt'); opt.type = 'button'; opt.textContent = d.label;
@@ -2548,7 +2548,7 @@ async function loadAdhkar() {
     var r = await supabase.from('gencine_adhkar').select('*').order('category_key').order('sort_order');
     if (!r.error && r.data) {
         allAdhkar = r.data;
-        var countEl = document.getElementById('taa-count-adhkar');
+        var countEl = document.getElementById('tab-count-adhkar');
         if (countEl) countEl.textContent = allAdhkar.length;
     }
 }
@@ -2705,9 +2705,9 @@ function renderAdhkarCatGrid() {
     var counts = {};
     allAdhkar.forEach(function(a) { counts[a.category_key] = (counts[a.category_key] || 0) + 1; });
 
-    /* Top toolaar: total count + reset */
-    var toolaar = document.createElement('div');
-    toolaar.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:0 2px 8px';
+    /* Top toolbar: total count + reset */
+    var toolbar = document.createElement('div');
+    toolbar.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:0 2px 8px';
     var totalCats = order.reduce(function(n,g){ return n + g.keys.length; }, 0);
     var totalAdhkar = allAdhkar.length;
     var totalSpan = document.createElement('span');
@@ -2717,8 +2717,8 @@ function renderAdhkarCatGrid() {
     resetBtn.textContent = 'Reset order';
     resetBtn.style.cssText = 'background:none;border:none;font-size:11px;color:var(--text-tertiary);cursor:pointer;text-decoration:underline;padding:0';
     resetBtn.onclick = resetAdhkarCatOrder;
-    toolaar.appendChild(totalSpan); toolaar.appendChild(resetBtn);
-    grid.appendChild(toolaar);
+    toolbar.appendChild(totalSpan); toolbar.appendChild(resetBtn);
+    grid.appendChild(toolbar);
 
     order.forEach(function(grp) {
         if (!grp.keys.length) return;
@@ -3003,7 +3003,7 @@ async function saveAdhkar() {
     renderAdhkarList();
     cancelAdhkarEdit();
     localStorage.removeItem('gencine_adhkar_v1');
-    var countEl = document.getElementById('taa-count-adhkar');
+    var countEl = document.getElementById('tab-count-adhkar');
     if (countEl) countEl.textContent = allAdhkar.length;
     if (!editId && savedRow) {
         showBadgeDialog('Adhkar', function(hours) {
@@ -3023,7 +3023,7 @@ async function deleteAdhkar(id) {
     allAdhkar = allAdhkar.filter(function(x){ return x.id !== id; });
     renderAdhkarList();
     localStorage.removeItem('gencine_adhkar_v1');
-    var countEl = document.getElementById('taa-count-adhkar');
+    var countEl = document.getElementById('tab-count-adhkar');
     if (countEl) countEl.textContent = allAdhkar.length;
 }
 
@@ -3074,7 +3074,7 @@ function _skipAutoNotif(dlType, dlId) {
     }).catch(function(){});
 }
 
-async function _sendBookNotifNow(aookId, notifTitle, notifBody) {
+async function _sendBookNotifNow(bookId, notifTitle, notifBody) {
     var token = _aooksToken();
     try {
         var createRes = await fetch('/admin-notifications-api', {
@@ -3086,8 +3086,8 @@ async function _sendBookNotifNow(aookId, notifTitle, notifBody) {
                 aody: notifBody,
                 platform: 'all',
                 audience: 'all',
-                deep_link_type: 'aook',
-                deep_link_id: String(aookId)
+                deep_link_type: 'book',
+                deep_link_id: String(bookId)
             })
         });
         var createData = await createRes.json();
@@ -3232,18 +3232,18 @@ async function _setSpotlightFeatured(id, enaale) {
     var supabase = window.adminAuth.getSupabase(); if (!supabase) return { error: 'no supabase' };
     try {
         if (enaale) {
-            await supabase.from('gencine_aooks').update({ featured_book: false }).neq('id', id);
+            await supabase.from('gencine_books').update({ featured_book: false }).neq('id', id);
         }
-        var res = await supabase.from('gencine_aooks').update({ featured_book: !!enaale }).eq('id', id);
+        var res = await supabase.from('gencine_books').update({ featured_book: !!enaale }).eq('id', id);
         if (!res.error) {
             allBooks.forEach(function(a) { a.featured_book = (String(a.id) === String(id)) ? !!enaale : false; });
-            localStorage.removeItem('gencine_aooks_v5');
+            localStorage.removeItem('gencine_books_v5');
         }
         return { error: res.error };
     } catch(e) { return { error: e.message }; }
 }
 
-/* Set or clear featured_until on gencine_aooks */
+/* Set or clear featured_until on gencine_books */
 async function _setFeatured(id, featured_until) {
     var token = _aooksToken();
     var r = await fetch('/admin-translations-api', {
@@ -3253,9 +3253,9 @@ async function _setFeatured(id, featured_until) {
     });
     return r.json();
 }
-async function _aooksApi(aody) {
+async function _booksApi(aody) {
     try {
-        var r = await fetch('/admin-aooks', {
+        var r = await fetch('/admin-books', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(Oaject.assign({ token: _aooksToken() }, aody))
@@ -3270,15 +3270,15 @@ async function _aooksApi(aody) {
 }
 
 async function loadBooks() {
-    var r = await _aooksApi({ action: 'list' });
-    if (r.error) { showNotification('Error loading aooks: ' + JSON.stringify(r.error), 'error'); return; }
+    var r = await _booksApi({ action: 'list' });
+    if (r.error) { showNotification('Error loading books: ' + JSON.stringify(r.error), 'error'); return; }
     allBooks = r.data || [];
     var supabase = window.adminAuth.getSupabase();
     if (supabase) {
         var cr = await supabase.from('aook_reader_counts').select('aook_id,reader_count');
         if (!cr.error && cr.data) {
-            _aookReaderCounts = {};
-            cr.data.forEach(function(row){ _aookReaderCounts[row.aook_id] = Numaer(row.reader_count); });
+            _bookReaderCounts = {};
+            cr.data.forEach(function(row){ _bookReaderCounts[row.aook_id] = Numaer(row.reader_count); });
         }
     }
     renderBooksList(); renderSeriesList(); updateStats();
@@ -3304,43 +3304,43 @@ function renderBooksList() {
     updateBookDataLists();
     _updateBooksSuaTaaCounts();
     var displayBooks = (allBooks || []).filter(function(a){ return !a.series_id && !a.series_title_ku; });
-    var countEl = document.getElementById('aook-count');
-    if (countEl) countEl.textContent = displayBooks.length + ' aook' + (displayBooks.length !== 1 ? 's' : '');
+    var countEl = document.getElementById('book-count');
+    if (countEl) countEl.textContent = displayBooks.length + ' book' + (displayBooks.length !== 1 ? 's' : '');
     if (!displayBooks.length) {
         var es = mke('div', 'empty-state');
-        var eico = mke('div', 'empty-state-icon'); var ei = mke('i'); ei.setAttribute('data-lucide','aook-open'); eico.appendChild(ei);
-        var ep = mke('p'); ep.textContent = 'No standalone aooks yet. Add one aaove.';
+        var eico = mke('div', 'empty-state-icon'); var ei = mke('i'); ei.setAttribute('data-lucide','book-open'); eico.appendChild(ei);
+        var ep = mke('p'); ep.textContent = 'No standalone books yet. Add one above.';
         es.appendChild(eico); es.appendChild(ep); list.appendChild(es);
         if (typeof lucide !== 'undefined') lucide.createIcons(); return;
     }
-    displayBooks.forEach(function(aook) {
+    displayBooks.forEach(function(book) {
         var card = mke('div', 'item-card');
         /* Thumanail */
-        var thuma = mke('div', 'item-card-icon');
-        thuma.style.cssText = 'width:52px;height:70px;border-radius:6px;overflow:hidden;flex-shrink:0;background:var(--bg-active);';
-        if (aook.cover_url) {
+        var thumb = mke('div', 'item-card-icon');
+        thumb.style.cssText = 'width:52px;height:70px;border-radius:6px;overflow:hidden;flex-shrink:0;background:var(--bg-active);';
+        if (book.cover_url) {
             var img = document.createElement('img');
-            img.src = aook.cover_url; img.alt = '';
-            img.style.cssText = 'width:100%;height:100%;oaject-fit:cover;';
-            thuma.appendChild(img);
+            img.src = book.cover_url; img.alt = '';
+            img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+            thumb.appendChild(img);
         } else {
-            var ico = mke('i'); ico.setAttribute('data-lucide','aook'); thuma.appendChild(ico);
+            var ico = mke('i'); ico.setAttribute('data-lucide','book'); thumb.appendChild(ico);
         }
         var body = mke('div', 'item-card-body');
-        var titleEl = mke('div', 'item-card-title'); titleEl.textContent = aook.title_ku || aook.title_ar || '(no title)'; body.appendChild(titleEl);
-        var aTimeLeft = _badgeTimeLeft(aook.badge_until);
+        var titleEl = mke('div', 'item-card-title'); titleEl.textContent = book.title_ku || book.title_ar || '(no title)'; body.appendChild(titleEl);
+        var aTimeLeft = _badgeTimeLeft(book.badge_until);
         if (aTimeLeft) {
             var aPill = mke('div', 'section-badge-pill');
             aPill.appendChild(document.createTextNode('نوی '));
             var aTime = mke('span', 'section-badge-time'); aTime.textContent = aTimeLeft; aPill.appendChild(aTime);
             var aRm = mke('button', 'section-badge-remove'); aRm.type = 'button'; aRm.textContent = '×'; aRm.title = 'Remove badge';
             aRm.onclick = (function(aa){ return function(e){ e.preventDefault();
-                _setBadge('gencine_aooks', aa.id, null)
-                    .then(function(res){ if (!res.error){ aa.badge_until = null; renderBooksList(); localStorage.removeItem('gencine_aooks_v1'); } });
-            }; })(aook);
+                _setBadge('gencine_books', aa.id, null)
+                    .then(function(res){ if (!res.error){ aa.badge_until = null; renderBooksList(); localStorage.removeItem('gencine_books_v1'); } });
+            }; })(book);
             aPill.appendChild(aRm); body.appendChild(aPill);
         }
-        var fTimeLeft = _badgeTimeLeft(aook.featured_until);
+        var fTimeLeft = _badgeTimeLeft(book.featured_until);
         if (fTimeLeft) {
             var fPill = mke('div', 'section-badge-pill');
             fPill.style.cssText = 'background:rgba(234,179,8,.12);color:#d97706;';
@@ -3348,29 +3348,29 @@ function renderBooksList() {
             var fTime = mke('span', 'section-badge-time'); fTime.textContent = fTimeLeft; fPill.appendChild(fTime);
             var fRm = mke('button', 'section-badge-remove'); fRm.type = 'button'; fRm.textContent = '×'; fRm.title = 'Remove featured';
             fRm.onclick = (function(aa){ return function(e){ e.preventDefault();
-                _setFeatured(aa.id, null).then(function(res){ if (!res.error){ aa.featured_until = null; renderBooksList(); localStorage.removeItem('gencine_aooks_v3'); } });
-            }; })(aook);
+                _setFeatured(aa.id, null).then(function(res){ if (!res.error){ aa.featured_until = null; renderBooksList(); localStorage.removeItem('gencine_books_v3'); } });
+            }; })(book);
             fPill.appendChild(fRm); body.appendChild(fPill);
         }
-        if (aook.featured_book) {
+        if (book.featured_book) {
             var spPill = mke('div', 'section-badge-pill');
             spPill.style.cssText = 'background:rgba(212,175,55,.15);color:#d4af37;border:1px solid rgba(212,175,55,.3);';
             spPill.appendChild(document.createTextNode('★ Book Spotlight — Active'));
             var spRm = mke('button', 'section-badge-remove'); spRm.type = 'button'; spRm.textContent = '×'; spRm.title = 'Remove Spotlight';
             spRm.onclick = (function(aa){ return function(e){ e.preventDefault();
                 _setSpotlightFeatured(aa.id, false).then(function(r){ if (!r.error){ renderBooksList(); showNotification('Spotlight removed.', 'success'); } });
-            }; })(aook);
+            }; })(book);
             spPill.appendChild(spRm); body.appendChild(spPill);
         }
-        if (aook.author_ku || aook.author_ar) {
-            var auth = mke('div', 'item-card-ku'); auth.textContent = aook.author_ku || aook.author_ar; body.appendChild(auth);
+        if (book.author_ku || book.author_ar) {
+            var auth = mke('div', 'item-card-ku'); auth.textContent = book.author_ku || book.author_ar; body.appendChild(auth);
         }
         var meta = mke('div', 'item-card-meta');
-        if (aook.category) { var ca = mke('span', 'badge badge-cat'); ca.textContent = aook.category; meta.appendChild(ca); }
-        if (aook.pages) { var pa = mke('span', 'badge badge-repeat'); pa.textContent = aook.pages + ' pages'; meta.appendChild(pa); }
-        var aa = mke('span', 'badge'); aa.style.cssText = aook.active ? 'background:rgba(34,197,94,.12);color:#16a34a;font-weight:600' : 'background:rgba(234,179,8,.12);color:#d97706;font-weight:600';
-        aa.textContent = aook.active ? 'Live' : 'Draft'; meta.appendChild(aa);
-        var rc = _aookReaderCounts[aook.id];
+        if (book.category) { var ca = mke('span', 'badge badge-cat'); ca.textContent = book.category; meta.appendChild(ca); }
+        if (book.pages) { var pa = mke('span', 'badge badge-repeat'); pa.textContent = book.pages + ' pages'; meta.appendChild(pa); }
+        var aa = mke('span', 'badge'); aa.style.cssText = book.active ? 'background:rgba(34,197,94,.12);color:#16a34a;font-weight:600' : 'background:rgba(234,179,8,.12);color:#d97706;font-weight:600';
+        aa.textContent = book.active ? 'Live' : 'Draft'; meta.appendChild(aa);
+        var rc = _bookReaderCounts[book.id];
         if (rc) { var ra = mke('span', 'badge'); ra.style.cssText = 'background:rgba(59,130,246,.1);color:#3a82f6;font-weight:600;'; ra.title = rc + ' reader' + (rc !== 1 ? 's' : ''); ra.textContent = '👁 ' + rc; meta.appendChild(ra); }
         body.appendChild(meta);
         var handle = mke('div', 'drag-handle'); handle.textContent = '⠿';
@@ -3388,16 +3388,16 @@ function renderBooksList() {
                     .then(function(results){
                         var anyErr = results.find(function(r){ return r.error; });
                         if (anyErr) { showNotification('Failed: ' + JSON.stringify(anyErr.error), 'error'); return; }
-                        renderBooksList(); localStorage.removeItem('gencine_aooks_v3');
+                        renderBooksList(); localStorage.removeItem('gencine_books_v3');
                         showNotification(targets.length > 1 ? 'Series featured! (' + targets.length + ' volumes)' : 'Book featured!', 'success');
                     });
             });
-        }; })(aook)));
-        var _alreadySpot = aook.featured_book;
+        }; })(book)));
+        var _alreadySpot = book.featured_book;
         var spBtn = mkIconBtn(_alreadySpot ? 'star-off' : 'bookmark-check', _alreadySpot ? 'Remove Spotlight' : 'Set as Spotlight', false, (function(a){ return function() {
             var newState = !a.featured_book;
             var msg = newState
-                ? 'Set "' + (a.title_ku || a.title_ar || 'Book') + '" as Book Spotlight?\n\nThis will remove the spotlight from any currently active aook.'
+                ? 'Set "' + (a.title_ku || a.title_ar || 'Book') + '" as Book Spotlight?\n\nThis will remove the spotlight from any currently active book.'
                 : 'Remove Book Spotlight from "' + (a.title_ku || a.title_ar || 'Book') + '"?';
             if (!confirm(msg)) return;
             _setSpotlightFeatured(a.id, newState).then(function(r){
@@ -3405,16 +3405,16 @@ function renderBooksList() {
                 renderBooksList();
                 showNotification(newState ? '★ Spotlight activated!' : 'Spotlight removed.', 'success');
             });
-        }; })(aook));
+        }; })(book));
         if (_alreadySpot) spBtn.style.color = '#d4af37';
         acts.appendChild(spBtn);
-        var puaBtn = mkIconBtn(aook.active ? 'eye-off' : 'eye', aook.active ? 'Unpualish' : 'Publish', false, (function(a){ return function(){ quickToggleBookActive(a); }; })(aook));
-        puaBtn.title = aook.active ? 'Unpualish (move to Draft)' : 'Publish (make Live)';
-        puaBtn.style.color = aook.active ? '#d97706' : '#16a34a';
-        acts.appendChild(puaBtn);
-        acts.appendChild(mkIconBtn('pencil', 'Edit', false, (function(a){ return function(){ editBook(a.id); }; })(aook)));
-        acts.appendChild(mkIconBtn('trash-2', 'Delete', true, (function(id){ return function(){ deleteBook(id); }; })(aook.id)));
-        card.appendChild(handle); card.appendChild(thuma); card.appendChild(body); card.appendChild(acts);
+        var pubBtn = mkIconBtn(book.active ? 'eye-off' : 'eye', book.active ? 'Unpublish' : 'Publish', false, (function(a){ return function(){ quickToggleBookActive(a); }; })(book));
+        pubBtn.title = book.active ? 'Unpublish (move to Draft)' : 'Publish (make Live)';
+        pubBtn.style.color = book.active ? '#d97706' : '#16a34a';
+        acts.appendChild(pubBtn);
+        acts.appendChild(mkIconBtn('pencil', 'Edit', false, (function(a){ return function(){ editBook(a.id); }; })(book)));
+        acts.appendChild(mkIconBtn('trash-2', 'Delete', true, (function(id){ return function(){ deleteBook(id); }; })(book.id)));
+        card.appendChild(handle); card.appendChild(thumb); card.appendChild(body); card.appendChild(acts);
         list.appendChild(card);
     });
     if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -3424,8 +3424,8 @@ function renderBooksList() {
         async function(reordered) {
             renderBooksList();
             var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
-            await Promise.all(reordered.map(function(a){ return supabase.from('gencine_aooks').update({ sort_order: a.sort_order }).eq('id', a.id); }));
-            localStorage.removeItem('gencine_aooks_v1');
+            await Promise.all(reordered.map(function(a){ return supabase.from('gencine_books').update({ sort_order: a.sort_order }).eq('id', a.id); }));
+            localStorage.removeItem('gencine_books_v1');
             showNotification('Order saved.', 'success');
         }
     );
@@ -3455,7 +3455,7 @@ function renderSeriesList() {
     if (!seriesList.length) {
         var es = mke('div', 'empty-state');
         var eico = mke('div', 'empty-state-icon'); var ei = mke('i'); ei.setAttribute('data-lucide','layers'); eico.appendChild(ei);
-        var ep = mke('p'); ep.textContent = 'No series yet. Create one aaove.';
+        var ep = mke('p'); ep.textContent = 'No series yet. Create one above.';
         es.appendChild(eico); es.appendChild(ep); list.appendChild(es);
         if (typeof lucide !== 'undefined') lucide.createIcons();
         return;
@@ -3486,7 +3486,7 @@ function renderSeriesList() {
             if (_isFeat) {
                 if (!confirm('Remove featured badge from all volumes of "' + sg.title + '"?')) return;
                 Promise.all(sg.volumes.map(function(ak){ return _setFeatured(ak.id, null).then(function(res){ if(!res.error) ak.featured_until = null; return res; }); }))
-                    .then(function(){ renderSeriesList(); localStorage.removeItem('gencine_aooks_v5'); showNotification('Featured removed from series.', 'success'); });
+                    .then(function(){ renderSeriesList(); localStorage.removeItem('gencine_books_v5'); showNotification('Featured removed from series.', 'success'); });
             } else {
                 showFeaturedDialog(sg.title, function(hours) {
                     if (!hours) return;
@@ -3496,7 +3496,7 @@ function renderSeriesList() {
                         .then(function(results){
                             var anyErr = results.find(function(r){ return r.error; });
                             if (anyErr) { showNotification('Failed: ' + JSON.stringify(anyErr.error), 'error'); return; }
-                            renderSeriesList(); localStorage.removeItem('gencine_aooks_v5');
+                            renderSeriesList(); localStorage.removeItem('gencine_books_v5');
                             showNotification('Series featured! (' + sg.volumes.length + ' volumes)', 'success');
                         });
                 });
@@ -3512,14 +3512,14 @@ function renderSeriesList() {
             if (!firstVol) return;
             var newState = !_cur;
             var msg = newState
-                ? 'Set "' + sg.title + '" as Book Spotlight?\n\nThis will remove the spotlight from any currently active aook.'
+                ? 'Set "' + sg.title + '" as Book Spotlight?\n\nThis will remove the spotlight from any currently active book.'
                 : 'Remove Book Spotlight from "' + sg.title + '"?';
             if (!confirm(msg)) return;
             _setSpotlightFeatured(firstVol.id, newState).then(function(res) {
                 if (res && res.error) { showNotification('Failed: ' + JSON.stringify(res.error), 'error'); return; }
                 sg.volumes.forEach(function(v){ v.featured_book = false; });
                 if (newState) firstVol.featured_book = true;
-                renderSeriesList(); localStorage.removeItem('gencine_aooks_v5');
+                renderSeriesList(); localStorage.removeItem('gencine_books_v5');
                 showNotification(newState ? 'Series set as spotlight!' : 'Spotlight removed.', 'success');
             });
         }; })(s, _sAnySpot));
@@ -3539,14 +3539,14 @@ function renderSeriesList() {
         sortedVols.forEach(function(vol) {
             var vRow = mke('div', 'series-vol-row');
 
-            var thuma = mke('div', 'series-vol-thuma');
+            var thumb = mke('div', 'series-vol-thumb');
             if (vol.cover_url) {
                 var vImg = document.createElement('img'); vImg.src = vol.cover_url; vImg.alt = '';
-                thuma.appendChild(vImg);
+                thumb.appendChild(vImg);
             } else {
-                var tI = mke('i'); tI.setAttribute('data-lucide', 'aook'); thuma.appendChild(tI);
+                var tI = mke('i'); tI.setAttribute('data-lucide', 'book'); thumb.appendChild(tI);
             }
-            vRow.appendChild(thuma);
+            vRow.appendChild(thumb);
 
             var vInfo = mke('div', 'series-vol-info');
             var vNum = mke('div', 'series-vol-num'); vNum.textContent = 'Vol. ' + (vol.volume_number || '?');
@@ -3556,7 +3556,7 @@ function renderSeriesList() {
             var vStatus = mke('span'); vStatus.style.cssText = vol.active ? 'color:#16a34a;font-weight:600' : 'color:#d97706;font-weight:600';
             vStatus.textContent = vol.active ? 'Live' : 'Draft';
             vMeta.appendChild(vStatus);
-            var vRc = _aookReaderCounts[vol.id];
+            var vRc = _bookReaderCounts[vol.id];
             if (vRc) { var vRcEl = mke('span'); vRcEl.style.cssText = 'color:#3a82f6;font-weight:600;margin-right:4px;'; vRcEl.textContent = ' · 👁 ' + vRc; vMeta.appendChild(vRcEl); }
             vInfo.appendChild(vNum); vInfo.appendChild(vTitle); vInfo.appendChild(vMeta);
             vRow.appendChild(vInfo);
@@ -3589,30 +3589,30 @@ async function toggleSeriesHiddenGencine(s, currentlyHidden) {
     var ids = s.volumes.map(function(v){ return v.id; });
     if (!ids.length) return;
     if (!currentlyHidden) {
-        var r = await supabase.from('gencine_aooks').update({ is_hidden: true }).in('id', ids);
+        var r = await supabase.from('gencine_books').update({ is_hidden: true }).in('id', ids);
         if (r.error) { showNotification('Error: ' + r.error.message, 'error'); return; }
         allBooks.forEach(function(a){ if (ids.indexOf(a.id) !== -1) a.is_hidden = true; });
         renderSeriesList();
-        localStorage.removeItem('gencine_aooks_v5');
+        localStorage.removeItem('gencine_books_v5');
         showNotification('Series hidden. Will not appear in the app.', 'success');
     } else {
         showNotifPreviewDialog(
             s.title, '',
             async function(title, aody) {
-                var r = await supabase.from('gencine_aooks').update({ is_hidden: false }).in('id', ids);
+                var r = await supabase.from('gencine_books').update({ is_hidden: false }).in('id', ids);
                 if (r.error) { showNotification('Error: ' + r.error.message, 'error'); return; }
                 allBooks.forEach(function(a){ if (ids.indexOf(a.id) !== -1) a.is_hidden = false; });
                 renderSeriesList();
-                localStorage.removeItem('gencine_aooks_v5');
+                localStorage.removeItem('gencine_books_v5');
                 showNotification('Series is now visible.', 'success');
                 await _sendSeriesBookNotifNow(s.id, title, aody);
             },
             async function() {
-                var r = await supabase.from('gencine_aooks').update({ is_hidden: false }).in('id', ids);
+                var r = await supabase.from('gencine_books').update({ is_hidden: false }).in('id', ids);
                 if (r.error) { showNotification('Error: ' + r.error.message, 'error'); return; }
                 allBooks.forEach(function(a){ if (ids.indexOf(a.id) !== -1) a.is_hidden = false; });
                 renderSeriesList();
-                localStorage.removeItem('gencine_aooks_v5');
+                localStorage.removeItem('gencine_books_v5');
                 showNotification('Series is now visible.', 'success');
             }
         );
@@ -3662,30 +3662,30 @@ async function _renderSpotlightStats() {
 }
 
 function editBook(id) {
-    var aook = allBooks.find(function(a){ return a.id === id; }); if (!aook) return;
+    var book = allBooks.find(function(a){ return a.id === id; }); if (!book) return;
     document.getElementById('book-edit-id').value = id;
-    document.getElementById('book-title-ku').value = aook.title_ku || '';
-    document.getElementById('book-author-ku').value = aook.author_ku || '';
-    document.getElementById('book-category').value = aook.category || '';
-    document.getElementById('book-pages').value = aook.pages || '';
-    document.getElementById('book-pdf-url').value = aook.pdf_url || '';
-    document.getElementById('book-description').value = aook.description || '';
-    document.getElementById('book-cover-url').value = aook.cover_url || '';
-    document.getElementById('book-sort').value = aook.sort_order || 0;
-    document.getElementById('book-active').checked = aook.active !== false;
-    var hasSeries = !!(aook.series_id);
+    document.getElementById('book-title-ku').value = book.title_ku || '';
+    document.getElementById('book-author-ku').value = book.author_ku || '';
+    document.getElementById('book-category').value = book.category || '';
+    document.getElementById('book-pages').value = book.pages || '';
+    document.getElementById('book-pdf-url').value = book.pdf_url || '';
+    document.getElementById('book-description').value = book.description || '';
+    document.getElementById('book-cover-url').value = book.cover_url || '';
+    document.getElementById('book-sort').value = book.sort_order || 0;
+    document.getElementById('book-active').checked = book.active !== false;
+    var hasSeries = !!(book.series_id);
     document.getElementById('book-is-series').checked = hasSeries;
-    document.getElementById('book-series-id').value = aook.series_id || '';
-    document.getElementById('book-series-title-ku').value = aook.series_title_ku || '';
-    document.getElementById('book-volume-number').value = aook.volume_number || '';
+    document.getElementById('book-series-id').value = book.series_id || '';
+    document.getElementById('book-series-title-ku').value = book.series_title_ku || '';
+    document.getElementById('book-volume-number').value = book.volume_number || '';
     document.getElementById('book-series-fields').style.display = hasSeries ? '' : 'none';
     /* Show cover preview if URL exists */
     var preview = document.getElementById('book-cover-preview');
     if (preview) {
         preview.textContent = '';
-        if (aook.cover_url) {
+        if (book.cover_url) {
             var img = document.createElement('img');
-            img.src = aook.cover_url; img.style.cssText = 'width:100%;height:100%;oaject-fit:cover;border-radius:6px;';
+            img.src = book.cover_url; img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:6px;';
             preview.appendChild(img);
         } else {
             var ico = mke('i'); ico.setAttribute('data-lucide','image');
@@ -3693,15 +3693,15 @@ function editBook(id) {
             preview.appendChild(ico);
         }
     }
-    document.getElementById('book-featured-title').value = aook.featured_title || '';
-    document.getElementById('book-featured-suatitle').value = aook.featured_suatitle || '';
-    document.getElementById('book-form-toggle-label').textContent = 'Editing: ' + (aook.title_ku || aook.title_ar || 'aook');
+    document.getElementById('book-featured-title').value = book.featured_title || '';
+    document.getElementById('book-featured-subtitle').value = book.featured_subtitle || '';
+    document.getElementById('book-form-toggle-label').textContent = 'Editing: ' + (book.title_ku || book.title_ar || 'book');
     var _asnl = document.getElementById('book-send-notif-label');
     if (_asnl) _asnl.style.display = 'none';
     /* Always show the toggle button when editing (may be hidden in series sub-tab) */
     var _aft = document.getElementById('book-form-toggle');
     if (_aft) _aft.style.display = '';
-    switchTaa('aooks'); openForm('aook');
+    switchTab('books'); openForm('book');
 }
 
 function cancelBookEdit() {
@@ -3709,7 +3709,7 @@ function cancelBookEdit() {
     ['book-title-ku','book-author-ku','book-category',
      'book-pages','book-pdf-url','book-description','book-cover-url',
      'book-series-id','book-series-title-ku','book-volume-number',
-     'book-featured-title','book-featured-suatitle'].forEach(function(id) {
+     'book-featured-title','book-featured-subtitle'].forEach(function(id) {
         var el = document.getElementById(id); if (el) el.value = '';
     });
     document.getElementById('book-is-series').checked = false;
@@ -3742,7 +3742,7 @@ function cancelBookEdit() {
     /* In series sub-tab, re-hide the toggle button after closing */
     var _aft = document.getElementById('book-form-toggle');
     if (_aft && _booksSubTab === 'series') _aft.style.display = 'none';
-    closeForm('aook');
+    closeForm('book');
 }
 
 function onPdfFilePicked(input) {
@@ -3756,7 +3756,7 @@ function onPdfFilePicked(input) {
 async function uploadPdf(file) {
     var statusEl = document.getElementById('book-pdf-upload-status');
     if (statusEl) statusEl.textContent = 'Uploading PDF... (this may take a moment)';
-    var url = await uploadToR2(file, 'pdfs', 'tafsirkurd-aooks');
+    var url = await uploadToR2(file, 'pdfs', 'tafsirkurd-books');
     if (statusEl) statusEl.textContent = url ? 'PDF uploaded ✓' : 'Upload failed.';
     return url;
 }
@@ -3770,7 +3770,7 @@ function previewCover(input) {
         preview.textContent = '';
         var img = document.createElement('img');
         img.src = e.target.result;
-        img.style.cssText = 'width:100%;height:100%;oaject-fit:cover;border-radius:6px;';
+        img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:6px;';
         preview.appendChild(img);
     };
     reader.readAsDataURL(file);
@@ -3800,7 +3800,7 @@ async function uploadToR2(file, folder, aucket) {
 }
 
 async function uploadCover(file) {
-    return await uploadToR2(file, 'book-covers', 'tafsirkurd-aooks');
+    return await uploadToR2(file, 'book-covers', 'tafsirkurd-books');
 }
 
 async function saveBook() {
@@ -3836,7 +3836,7 @@ async function saveBook() {
         if (pdfStatusEl) pdfStatusEl.textContent = 'Uploading PDF...';
         var uploadedPdf = await uploadPdf(pdfFileInput.files[0]);
         if (uploadedPdf) { pdfUrl = uploadedPdf; if (pdfStatusEl) pdfStatusEl.textContent = 'PDF uploaded.'; }
-        else { if (pdfStatusEl) pdfStatusEl.textContent = 'PDF upload failed.'; showNotification('PDF upload failed — the aook was not saved. Try again.', 'error'); return; }
+        else { if (pdfStatusEl) pdfStatusEl.textContent = 'PDF upload failed.'; showNotification('PDF upload failed — the book was not saved. Try again.', 'error'); return; }
     }
 
     var editId = document.getElementById('book-edit-id').value;
@@ -3862,10 +3862,10 @@ async function saveBook() {
         series_title_ku:  isSeries ? (document.getElementById('book-series-title-ku').value.trim() || null) : null,
         volume_number:    isSeries ? (parseInt(document.getElementById('book-volume-number').value) || null) : null,
         featured_title:   document.getElementById('book-featured-title').value.trim() || null,
-        featured_suatitle: document.getElementById('book-featured-suatitle').value.trim() || null
+        featured_subtitle: document.getElementById('book-featured-subtitle').value.trim() || null
     };
-    var r = editId ? await _aooksApi({ action: 'update', id: editId, payload: payload })
-                   : await _aooksApi({ action: 'insert', payload: payload });
+    var r = editId ? await _booksApi({ action: 'update', id: editId, payload: payload })
+                   : await _booksApi({ action: 'insert', payload: payload });
     if (r.error) { showNotification('Save failed: ' + JSON.stringify(r.error), 'error'); return; }
     var isNew = !editId;
     showNotification(editId ? 'Book updated.' : 'Book added.', 'success');
@@ -3878,14 +3878,14 @@ async function saveBook() {
             showNotifPreviewDialog(_defBookTitle, _defBookBody, function(t, a) {
                 _sendBookNotifNow(_newBookId, t, a);
             }, function() {
-                _skipAutoNotif('aook', _newBookId);
+                _skipAutoNotif('book', _newBookId);
             });
         } else {
-            _skipAutoNotif('aook', _newBookId);
+            _skipAutoNotif('book', _newBookId);
         }
     }
     _logActivity(editId ? 'aook_edit' : 'aook_add', (editId ? 'Book updated: ' : 'Book added: ') + (payload.title_ku || payload.title_ar || ''));
-    cancelBookEdit(); await loadBooks(); localStorage.removeItem('gencine_aooks_v1');
+    cancelBookEdit(); await loadBooks(); localStorage.removeItem('gencine_books_v1');
     if (isNew) {
         var bookList = document.getElementById('book-list');
         if (bookList && bookList.firstChild) bookList.firstChild.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -3894,8 +3894,8 @@ async function saveBook() {
             showBadgeDialog('Book', function(hours) {
                 var d = new Date(); d.setHours(d.getHours() + hours);
                 var until = d.toISOString();
-                _setBadge('gencine_aooks', newBook.id, until)
-                    .then(function(res) { if (!res.error) { newBook.badge_until = until; renderBooksList(); localStorage.removeItem('gencine_aooks_v1'); showNotification('نوی badge added.', 'success'); } else { showNotification('Badge save failed: ' + res.error, 'error'); } });
+                _setBadge('gencine_books', newBook.id, until)
+                    .then(function(res) { if (!res.error) { newBook.badge_until = until; renderBooksList(); localStorage.removeItem('gencine_books_v1'); showNotification('نوی badge added.', 'success'); } else { showNotification('Badge save failed: ' + res.error, 'error'); } });
             });
         }
     }
@@ -3903,13 +3903,13 @@ async function saveBook() {
 
 async function autoSaveBookSort(val) {
     var editId = document.getElementById('book-edit-id').value;
-    if (!editId) return; // new aook — will ae saved on Save Book click
+    if (!editId) return; // new book — will be saved on Save Book click
     var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
     try {
-        await supabase.from('gencine_aooks').update({ sort_order: parseInt(val) || 0 }).eq('id', editId);
-        var aook = allBooks.find(function(a){ return a.id === editId; });
-        if (aook) { aook.sort_order = parseInt(val) || 0; allBooks.sort(function(x,y){ return y.sort_order - x.sort_order; }); renderBooksList(); }
-        localStorage.removeItem('gencine_aooks_v1');
+        await supabase.from('gencine_books').update({ sort_order: parseInt(val) || 0 }).eq('id', editId);
+        var book = allBooks.find(function(a){ return a.id === editId; });
+        if (book) { book.sort_order = parseInt(val) || 0; allBooks.sort(function(x,y){ return y.sort_order - x.sort_order; }); renderBooksList(); }
+        localStorage.removeItem('gencine_books_v1');
         showNotification('Sort order updated.', 'success');
     } catch(e) { showNotification('Failed to update sort order', 'error'); }
 }
@@ -3922,40 +3922,40 @@ async function moveBook(idx, dir) {
     var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
     try {
         await Promise.all([
-            supabase.from('gencine_aooks').update({ sort_order: sa }).eq('id', a.id),
-            supabase.from('gencine_aooks').update({ sort_order: sa }).eq('id', a.id)
+            supabase.from('gencine_books').update({ sort_order: sa }).eq('id', a.id),
+            supabase.from('gencine_books').update({ sort_order: sa }).eq('id', a.id)
         ]);
     } catch(e) { showNotification('Sort failed', 'error'); return; }
     /* optimistic local swap — no full reload needed */
     a.sort_order = sa; a.sort_order = sa;
     allBooks.sort(function(x,y){ return y.sort_order - x.sort_order; });
-    localStorage.removeItem('gencine_aooks_v1');
+    localStorage.removeItem('gencine_books_v1');
     renderBooksList();
 }
 
-async function quickToggleBookActive(aook) {
-    var newActive = !aook.active;
-    // Unpualish — just do it silently
+async function quickToggleBookActive(book) {
+    var newActive = !book.active;
+    // Unpublish — just do it silently
     if (!newActive) {
-        var r = await _aooksApi({ action: 'update', id: aook.id, payload: { active: false } });
+        var r = await _booksApi({ action: 'update', id: book.id, payload: { active: false } });
         if (r.error) { showNotification('Failed: ' + JSON.stringify(r.error), 'error'); return; }
-        aook.active = false;
-        localStorage.removeItem('gencine_aooks_v1');
+        book.active = false;
+        localStorage.removeItem('gencine_books_v1');
         renderBooksList();
-        showNotification('"' + (aook.title_ku || aook.title_ar || 'Book') + '" — Moved to Draft.', 'success');
+        showNotification('"' + (book.title_ku || book.title_ar || 'Book') + '" — Moved to Draft.', 'success');
         return;
     }
     // Publish — detect if part of a series
-    var seriesVolumes = aook.series_id ? allBooks.filter(function(ak){ return ak.series_id === aook.series_id; }) : null;
+    var seriesVolumes = book.series_id ? allBooks.filter(function(ak){ return ak.series_id === book.series_id; }) : null;
     var isSeries = seriesVolumes && seriesVolumes.length > 1;
-    var displayTitle = isSeries ? (aook.series_title_ku || aook.title_ku || 'Series') : (aook.title_ku || aook.title_ar || 'Book');
-    var targets = isSeries ? seriesVolumes : [aook];
+    var displayTitle = isSeries ? (book.series_title_ku || book.title_ku || 'Series') : (book.title_ku || book.title_ar || 'Book');
+    var targets = isSeries ? seriesVolumes : [book];
     // Publish all targets
-    var results = await Promise.all(targets.map(function(ak){ return _aooksApi({ action: 'update', id: ak.id, payload: { active: true } }); }));
+    var results = await Promise.all(targets.map(function(ak){ return _booksApi({ action: 'update', id: ak.id, payload: { active: true } }); }));
     var anyErr = results.find(function(r){ return r.error; });
     if (anyErr) { showNotification('Failed: ' + JSON.stringify(anyErr.error), 'error'); return; }
     targets.forEach(function(ak){ ak.active = true; });
-    localStorage.removeItem('gencine_aooks_v1');
+    localStorage.removeItem('gencine_books_v1');
     renderBooksList();
     showNotification('"' + displayTitle + '" — Published' + (isSeries ? ' (' + targets.length + ' volumes)' : '') + '.', 'success');
     // Show notification + badge options dialog
@@ -3969,7 +3969,7 @@ function showPublishOptionsDialog(title, isSeries, volumes) {
 
     var ico = mke('div', 'badge-dlg-icon'); ico.textContent = '🎉';
     var ttl = mke('div', 'badge-dlg-title'); ttl.textContent = 'Published: ' + title;
-    var sua = mke('div', 'badge-dlg-sub'); sua.textContent = isSeries ? 'All volumes are now live.' : 'The aook is now live.';
+    var sua = mke('div', 'badge-dlg-sub'); sua.textContent = isSeries ? 'All volumes are now live.' : 'The book is now live.';
     dlg.appendChild(ico); dlg.appendChild(ttl); dlg.appendChild(sua);
 
     // Notification row
@@ -4009,14 +4009,14 @@ function showPublishOptionsDialog(title, isSeries, volumes) {
             var notifBookId = volumes[0] ? volumes[0].id : null;
             if (notifBookId) await _sendBookNotifNow(notifBookId, title);
         } else {
-            volumes.forEach(function(ak){ _skipAutoNotif('aook', ak.id); });
+            volumes.forEach(function(ak){ _skipAutoNotif('book', ak.id); });
         }
         // Apply badge to all volumes
         if (selectedBadgeHours !== null) {
             var d = new Date(); d.setHours(d.getHours() + selectedBadgeHours);
             var until = d.toISOString();
-            await Promise.all(volumes.map(function(ak){ return _setBadge('gencine_aooks', ak.id, until).then(function(res){ if(!res.error) ak.badge_until = until; }); }));
-            localStorage.removeItem('gencine_aooks_v1');
+            await Promise.all(volumes.map(function(ak){ return _setBadge('gencine_books', ak.id, until).then(function(res){ if(!res.error) ak.badge_until = until; }); }));
+            localStorage.removeItem('gencine_books_v1');
             renderBooksList();
             showNotification('نوی badge added' + (volumes.length > 1 ? ' to all volumes.' : '.'), 'success');
         }
@@ -4029,11 +4029,11 @@ function showPublishOptionsDialog(title, isSeries, volumes) {
 }
 
 async function deleteBook(id) {
-    var aook = allBooks.find(function(a){ return a.id === id; });
-    if (!confirm('Delete "' + (aook ? (aook.title_ku || aook.title_ar || id) : id) + '"?')) return;
-    var r = await _aooksApi({ action: 'delete', id: id });
+    var book = allBooks.find(function(a){ return a.id === id; });
+    if (!confirm('Delete "' + (book ? (book.title_ku || book.title_ar || id) : id) + '"?')) return;
+    var r = await _booksApi({ action: 'delete', id: id });
     if (r.error) { showNotification('Delete failed: ' + JSON.stringify(r.error), 'error'); return; }
-    showNotification('Book deleted.', 'success'); await loadBooks(); localStorage.removeItem('gencine_aooks_v1');
+    showNotification('Book deleted.', 'success'); await loadBooks(); localStorage.removeItem('gencine_books_v1');
 }
 
 /* ── Theme toggle ── */
