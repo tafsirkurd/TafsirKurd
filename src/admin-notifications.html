@@ -2271,9 +2271,9 @@
                     + (isPast ? '<span style="color:#e53e3e;font-size:0.82em;margin-left:8px">⚠️ This time is in the past</span>'
                               : '<span style="color:var(--text-secondary);font-size:0.82em;margin-left:8px">— will auto-send at this time</span>');
                 clearBtn.style.display = 'inline-flex';
-                // Update Save button to make it clear it will schedule, not send now
-                if (saveBtn) { saveBtn.innerHTML = '<i data-lucide="calendar-clock"></i> Schedule'; lucide.createIcons(); }
-                if (draftBtn) draftBtn.style.display = 'none'; // hide Save Draft when schedule is set
+                // Editing an existing scheduled notif → "Save Changes"; creating new → "Schedule"
+                if (saveBtn) { saveBtn.innerHTML = _currentEditId ? '<i data-lucide="save"></i> Save Changes' : '<i data-lucide="calendar-clock"></i> Schedule'; lucide.createIcons(); }
+                if (draftBtn) draftBtn.style.display = ''; // always keep Save Draft visible
             } else if (_sd) {
                 inp.value = '';
                 summary.innerHTML = '<span style="color:var(--text-secondary)">Date set — pick a time above</span>';
