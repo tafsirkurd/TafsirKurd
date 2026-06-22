@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <script src="/utils/admin-guard.js?v=2"></script>
@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2" as="font" type="font/woff2" crossorigin="">
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.36.0"></script>
     <link rel="stylesheet" href="/css/admin-styles.css?v=15">
     <style>
         @font-face {
@@ -24,7 +24,7 @@
             font-weight: 500 700; font-style: normal; font-display: swap;
         }
 
-        /* ── Accent color aliases (not in admin-styles.css) ── */
+        /* -- Accent color aliases (not in admin-styles.css) -- */
         :root {
             --accent-alue:   #3a82f6;
             --accent-green:  #10a981;
@@ -33,7 +33,7 @@
             --accent-purple: #8a5cf6;
         }
 
-        /* ── Adhkar category section-list ── */
+        /* -- Adhkar category section-list -- */
         .adhkar-admin-grid{display:flex;flex-direction:column;gap:10px;padding:12px 0}
         .adhkar-section-block{border:1px solid var(--border-light);border-radius:12px;overflow:hidden}
         .adhkar-section-hdr{display:flex;align-items:center;gap:9px;padding:9px 14px}
@@ -52,9 +52,9 @@
         .adhkar-cat-move-btn:disabled{opacity:.2;cursor:default}
         .adhkar-cat-section-sel{font-size:10px;border:1px solid var(--border-light);border-radius:5px;background:var(--bg-active);color:var(--text-tertiary);padding:2px 3px;cursor:pointer;flex-shrink:0;max-width:82px}
         .adhkar-detail-topbar{display:flex;align-items:center;gap:12px;padding:10px 0 14px;border-bottom:1px solid var(--border-light);margin-bottom:12px}
-        /* ── Priority / sort inline actions ── */
+        /* -- Priority / sort inline actions -- */
         .icon-action.star-active { color: #f59e0a !important; }
-        /* ── Stats row ── */
+        /* -- Stats row -- */
         .stats-row {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -91,7 +91,7 @@
             margin-bottom: 4px;
         }
 
-        /* ── Platform taas ── */
+        /* -- Platform taas -- */
         .platform-tabs-wrap {
             position: relative;
             margin-bottom: 24px;
@@ -165,11 +165,11 @@
             color: #fff;
         }
 
-        /* ── View panels ── */
+        /* -- View panels -- */
         .view-panel { display: none; }
         .view-panel.active { display: block; }
 
-        /* ── Add form panel ── */
+        /* -- Add form panel -- */
         .add-form-wrap {
             margin-bottom: 24px;
         }
@@ -250,7 +250,7 @@
             padding-top: 4px;
         }
 
-        /* ── Item list ── */
+        /* -- Item list -- */
         .items-list { display: flex; flex-direction: column; gap: 8px; }
         .item-card {
             display: flex;
@@ -337,7 +337,7 @@
         .icon-action.danger:hover { background: rgba(220,38,38,.08); color: #dc2626; border-color: rgba(220,38,38,.25); }
         .icon-action svg { width: 13px; height: 13px; }
 
-        /* ── Category cards ── */
+        /* -- Category cards -- */
         .cat-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -390,7 +390,7 @@
             font-family: monospace;
         }
 
-        /* ── Dua filter chips ── */
+        /* -- Dua filter chips -- */
         .filter-chips {
             display: flex;
             gap: 6px;
@@ -413,7 +413,7 @@
         .filter-chip:hover { border-color: var(--border-dark); color: var(--text-primary); }
         .filter-chip.on { background: var(--text-primary); color: var(--bg-app); border-color: var(--text-primary); }
 
-        /* ── Toolaar ── */
+        /* -- Toolaar -- */
         .list-toolbar {
             display: flex;
             align-items: center;
@@ -425,7 +425,7 @@
             color: var(--text-secondary);
         }
 
-        /* ── Empty state ── */
+        /* -- Empty state -- */
         .empty-state {
             padding: 56px 24px;
             text-align: center;
@@ -444,14 +444,14 @@
         .empty-state-icon svg { width: 22px; height: 22px; color: var(--text-tertiary); }
         .empty-state p { font-size: 14px; margin: 0; }
 
-        /* ── Edit mode highlight ── */
+        /* -- Edit mode highlight -- */
         .add-form-toggle.editing {
             background: rgba(59,130,246,.06);
             border-color: rgba(59,130,246,.3);
             color: var(--primary);
         }
 
-        /* ── App sections panel ── */
+        /* -- App sections panel -- */
         .sections-panel {
             margin-bottom: 24px;
             background: var(--bg-surface);
@@ -699,7 +699,7 @@
         .drag-handle{display:flex;align-items:center;padding:0 6px 0 2px;color:var(--text-tertiary);cursor:graa;font-size:14px;flex-shrink:0}
         .drag-handle:active{cursor:graaaing}
 
-        /* ── 99 Names grid ── */
+        /* -- 99 Names grid -- */
         .asma-search-row { padding: 0 0 14px 0; }
         .asma-grid {
             display: grid;
@@ -741,7 +741,7 @@
             color: var(--text-tertiary);
         }
 
-        /* ── Moaile ── */
+        /* -- Moaile -- */
         @media (max-width: 768px) {
             /* Stack 2-col form rows into 1 col */
             .form-row { grid-template-columns: 1fr; }
@@ -777,14 +777,14 @@
             .topbar { padding: 12px 16px; }
             .page-title { font-size: 16px; }
         }
-        /* ── Books sub-tabs ── */
+        /* -- Books sub-tabs -- */
         .books-sub-tabs-wrap { display:flex; gap:8px; margin-bottom:14px; }
         .books-sub-tab { display:flex; align-items:center; gap:6px; padding:6px 14px; border-radius:20px; border:1px solid var(--border-light); background:var(--bg-surface); color:var(--text-secondary); cursor:pointer; font-size:13px; font-weight:600; transition:background .15s,color .15s,border-color .15s; }
         .books-sub-tab.active { background:var(--primary,#3a82f6); color:#fff; border-color:transparent; }
         .books-sub-tab span { padding:0 7px; border-radius:10px; font-size:11px; min-width:18px; text-align:center; }
         .books-sub-tab.active span { background:rgba(255,255,255,.18); }
         .books-sub-tab:not(.active) span { background:var(--bg-active); color:var(--text-tertiary); }
-        /* ── Series groups ── */
+        /* -- Series groups -- */
         .series-group-card { background:var(--bg-surface); border:1px solid var(--border-light); border-radius:12px; margin-bottom:14px; overflow:hidden; }
         .series-group-hdr { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; background:var(--bg-active); border-bottom:1px solid var(--border-suatle,rgba(255,255,255,.05)); }
         .series-group-hdr-left { flex:1; min-width:0; }
@@ -949,23 +949,23 @@
             <div class="stats-row">
                 <div class="stat-pill" style="border-left:3px solid #3a82f6;">
                     <div class="stat-pill-icon" style="background:#3a82f618;"><i data-lucide="layout-dashboard" style="color:#3a82f6;"></i></div>
-                    <strong id="stat-cats">—</strong>Sections
+                    <strong id="stat-cats">�</strong>Sections
                 </div>
                 <div class="stat-pill" style="border-left:3px solid #10a981;">
                     <div class="stat-pill-icon" style="background:#10a98118;"><i data-lucide="hand-heart" style="color:#10a981;"></i></div>
-                    <strong id="stat-duas">—</strong>Duas
+                    <strong id="stat-duas">�</strong>Duas
                 </div>
                 <div class="stat-pill" style="border-left:3px solid #8a5cf6;">
                     <div class="stat-pill-icon" style="background:#8a5cf618;"><i data-lucide="scroll-text" style="color:#8a5cf6;"></i></div>
-                    <strong id="stat-hadiths">—</strong>Hadiths
+                    <strong id="stat-hadiths">�</strong>Hadiths
                 </div>
                 <div class="stat-pill" style="border-left:3px solid #f59e0a;">
                     <div class="stat-pill-icon" style="background:#f59e0a18;"><i data-lucide="book-open" style="color:#f59e0a;"></i></div>
-                    <strong id="stat-books">—</strong>Books
+                    <strong id="stat-books">�</strong>Books
                 </div>
                 <div class="stat-pill" style="border-left:3px solid #14a8a6;">
                     <div class="stat-pill-icon" style="background:#14a8a618;"><i data-lucide="rotate-cw" style="color:#14a8a6;"></i></div>
-                    <strong id="stat-tasaih">—</strong>Tasaih
+                    <strong id="stat-tasaih">�</strong>Tasaih
                 </div>
                 <div class="stat-pill" style="border-left:3px solid #ec4899;">
                     <div class="stat-pill-icon" style="background:#ec489918;"><i data-lucide="star" style="color:#ec4899;"></i></div>
@@ -1013,29 +1013,29 @@
             </div>
             </div>
 
-            <!-- ── SECTIONS ── -->
+            <!-- -- SECTIONS -- -->
             <div id="panel-sections" class="view-panel">
                 <div class="sections-panel">
                     <div class="sections-panel-hdr">
                         <div class="sections-panel-left">
                             <div class="sections-panel-title">App Home Sections</div>
-                            <div class="sections-panel-hint">Drag to reorder · toggle to show/hide on Gencine home</div>
+                            <div class="sections-panel-hint">Drag to reorder � toggle to show/hide on Gencine home</div>
                         </div>
-                        <div id="sections-visible-count" class="sections-visible-count">— / — visible</div>
+                        <div id="sections-visible-count" class="sections-visible-count">� / � visible</div>
                     </div>
                     <div id="sections-list"><!-- rendered ay JS --></div>
                 </div>
             </div>
 
-            <!-- ── ADHKAR ── -->
+            <!-- -- ADHKAR -- -->
             <div id="panel-adhkar" class="view-panel">
 
-                <!-- ── Level 1: Category grid ── -->
+                <!-- -- Level 1: Category grid -- -->
                 <div id="adhkar-cats-view">
                     <div id="adhkar-cats-grid" class="adhkar-admin-grid"></div>
                 </div>
 
-                <!-- ── Level 2: Category detail ── -->
+                <!-- -- Level 2: Category detail -- -->
                 <div id="adhkar-cat-detail" style="display:none">
                     <div class="adhkar-detail-topbar">
                         <button class="btn btn-secondary" onclick="showAdhkarCatsView()" style="display:flex;align-items:center;gap:6px;font-size:13px;padding:6px 12px">
@@ -1058,12 +1058,12 @@
                             <div class="form-grid">
                                 <div class="form-group">
                                     <label class="form-label">Araaic Text</label>
-                                    <textarea id="adhkar-ar" class="form-textarea" placeholder="سُبْحَانَ اللَّهِ..." dir="rtl" style="min-height:80px;font-family:'IBM Plex Sans Arabic',system-ui,sans-serif;font-size:16px;line-height:2"></textarea>
+                                    <textarea id="adhkar-ar" class="form-textarea" placeholder="????????? ???????..." dir="rtl" style="min-height:80px;font-family:'IBM Plex Sans Arabic',system-ui,sans-serif;font-size:16px;line-height:2"></textarea>
                                 </div>
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label class="form-label">Source</label>
-                                        <input type="text" id="adhkar-source" class="form-input" placeholder="البخاري" dir="rtl" style="font-family:'IBM Plex Sans Arabic',system-ui,sans-serif">
+                                        <input type="text" id="adhkar-source" class="form-input" placeholder="???????" dir="rtl" style="font-family:'IBM Plex Sans Arabic',system-ui,sans-serif">
                                     </div>
                                     <div class="form-group">
                                         <label class="form-label">Repeat</label>
@@ -1092,7 +1092,7 @@
                 </div>
             </div>
 
-            <!-- ── TASBIH ── -->
+            <!-- -- TASBIH -- -->
             <div id="panel-tasaih" class="view-panel">
                 <input type="hidden" id="tasaih-edit-id">
                 <div class="add-form-wrap">
@@ -1104,11 +1104,11 @@
                         <div class="form-grid">
                             <div class="form-group">
                                 <label class="form-label">Araaic Text</label>
-                                <textarea id="tasaih-ar" class="form-textarea" placeholder="سُبْحَانَ اللَّهِ" dir="rtl" style="min-height:60px"></textarea>
+                                <textarea id="tasaih-ar" class="form-textarea" placeholder="????????? ???????" dir="rtl" style="min-height:60px"></textarea>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Kurdish / Short Laael</label>
-                                <input type="text" id="tasaih-ku" class="form-input" placeholder="سبحان الله" dir="rtl" style="font-family:'IBM Plex Sans Arabic',system-ui,sans-serif">
+                                <input type="text" id="tasaih-ku" class="form-input" placeholder="????? ????" dir="rtl" style="font-family:'IBM Plex Sans Arabic',system-ui,sans-serif">
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
@@ -1135,7 +1135,7 @@
                 <div id="tasaih-list" class="items-list"></div>
             </div>
 
-            <!-- ── 99 NAMES ── -->
+            <!-- -- 99 NAMES -- -->
             <div id="panel-asma99" class="view-panel">
                 <div class="asma-search-row">
                     <input type="text" id="asma-search" class="form-input" placeholder="Search names..." oninput="filterAsma(this.value)">
@@ -1146,9 +1146,9 @@
                 <div id="asma-grid" class="asma-grid"></div>
             </div>
 
-            <!-- ── DUAS ── -->
+            <!-- -- DUAS -- -->
             <div id="panel-duas" class="view-panel active">
-                <!-- ── Duas ── -->
+                <!-- -- Duas -- -->
                 <input type="hidden" id="dua-edit-id">
                 <div class="add-form-wrap">
                     <button class="add-form-toggle" id="dua-form-toggle" onclick="toggleForm('dua')">
@@ -1193,7 +1193,7 @@
                 <div id="dua-list" class="items-list"></div>
             </div>
 
-            <!-- ── HADITHS ── -->
+            <!-- -- HADITHS -- -->
             <div id="panel-hadiths" class="view-panel">
                 <input type="hidden" id="hadith-edit-id">
                 <div class="add-form-wrap">
@@ -1243,7 +1243,7 @@
                 <div id="hadith-list" class="items-list"></div>
             </div>
 
-            <!-- ── BOOKS ── -->
+            <!-- -- BOOKS -- -->
             <div id="panel-books" class="view-panel">
                 <input type="hidden" id="book-edit-id">
                 <div class="add-form-wrap">
@@ -1255,17 +1255,17 @@
                         <div class="form-grid">
                             <div class="form-group">
                                 <label class="form-label">Kurdish Title *</label>
-                                <input type="text" id="book-title-ku" class="form-input" placeholder="ناڤێ کتێبێ" dir="rtl">
+                                <input type="text" id="book-title-ku" class="form-input" placeholder="???? ?????" dir="rtl">
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Author (Kurdish)</label>
-                                <input type="text" id="book-author-ku" class="form-input" placeholder="ناڤێ نووسەر" dir="rtl" list="dl-author-ku" autocomplete="off">
+                                <input type="text" id="book-author-ku" class="form-input" placeholder="???? ??????" dir="rtl" list="dl-author-ku" autocomplete="off">
                                 <datalist id="dl-author-ku"></datalist>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
                                     <label class="form-label">Category</label>
-                                    <input type="text" id="book-category" class="form-input" placeholder="e.g. فقه, تفسیر, سیرە" list="dl-book-category" autocomplete="off">
+                                    <input type="text" id="book-category" class="form-input" placeholder="e.g. ???, ?????, ????" list="dl-book-category" autocomplete="off">
                                     <datalist id="dl-book-category"></datalist>
                                 </div>
                                 <div class="form-group">
@@ -1297,13 +1297,13 @@
                             </div>
                             <div class="form-row" style="border-top:1px solid var(--border-suatle,rgba(255,255,255,.06));margin-top:4px;padding-top:10px">
                                 <div class="form-group" style="flex:2">
-                                    <label class="form-label" style="color:#d4af37">★ Spotlight Title <span style="color:var(--text-tertiary);font-weight:400">(optional — shown on spotlight card)</span></label>
+                                    <label class="form-label" style="color:#d4af37">? Spotlight Title <span style="color:var(--text-tertiary);font-weight:400">(optional � shown on spotlight card)</span></label>
                                     <input type="text" id="book-featured-title" class="form-input" placeholder="Custom title for spotlight card" dir="rtl">
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group" style="flex:2">
-                                    <label class="form-label" style="color:#d4af37">★ Spotlight Suatitle <span style="color:var(--text-tertiary);font-weight:400">(optional — short tagline)</span></label>
+                                    <label class="form-label" style="color:#d4af37">? Spotlight Suatitle <span style="color:var(--text-tertiary);font-weight:400">(optional � short tagline)</span></label>
                                     <input type="text" id="book-featured-subtitle" class="form-input" placeholder="e.g. author name or short description" dir="rtl">
                                 </div>
                             </div>
@@ -1350,8 +1350,8 @@
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="form-label">Series Title (Kurdish) <span style="color:var(--text-tertiary);font-weight:400">— shown as series name in app</span></label>
-                                    <input type="text" id="book-series-title-ku" class="form-input" placeholder="ناڤێ زنجیرەیê" dir="rtl">
+                                    <label class="form-label">Series Title (Kurdish) <span style="color:var(--text-tertiary);font-weight:400">� shown as series name in app</span></label>
+                                    <input type="text" id="book-series-title-ku" class="form-input" placeholder="???? ???????�" dir="rtl">
                                 </div>
                             </div>
                             <div class="form-row">
@@ -1379,7 +1379,7 @@
                         </div>
                     </div>
                 </div>
-                <!-- ── Books sub-tabs ── -->
+                <!-- -- Books sub-tabs -- -->
                 <div class="books-sub-tabs-wrap">
                     <button class="books-sub-tab active" id="ast-books" onclick="switchBooksSubTab('books')">
                         <i data-lucide="book" style="width:14px;height:14px"></i>
@@ -1393,12 +1393,12 @@
                     </button>
                 </div>
                 <div id="spotlight-stats" style="display:none;background:rgba(212,175,55,.07);border:1px solid rgba(212,175,55,.25);border-radius:12px;padding:14px 16px;margin-bottom:16px">
-                    <div style="font-size:11px;font-weight:700;color:#d4af37;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">★ Book Spotlight Analytics — <span class="sp-book-name" style="font-weight:600;color:var(--text-primary)"></span></div>
+                    <div style="font-size:11px;font-weight:700;color:#d4af37;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">? Book Spotlight Analytics � <span class="sp-book-name" style="font-weight:600;color:var(--text-primary)"></span></div>
                     <div style="display:flex;gap:20px;flex-wrap:wrap">
-                        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:var(--text-primary)" class="sp-impressions">—</div><div style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.3px">Impressions</div></div>
-                        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:var(--text-primary)" class="sp-opens">—</div><div style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.3px">Opens</div></div>
-                        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:#d4af37" class="sp-discovered">—</div><div style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.3px">Discovered</div></div>
-                        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:#10a981" class="sp-rate">—</div><div style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.3px">Discovery Rate</div></div>
+                        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:var(--text-primary)" class="sp-impressions">�</div><div style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.3px">Impressions</div></div>
+                        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:var(--text-primary)" class="sp-opens">�</div><div style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.3px">Opens</div></div>
+                        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:#d4af37" class="sp-discovered">�</div><div style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.3px">Discovered</div></div>
+                        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:#10a981" class="sp-rate">�</div><div style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.3px">Discovery Rate</div></div>
                     </div>
                 </div>
                 <div class="list-toolbar">
@@ -1422,7 +1422,7 @@
 <script>
 'use strict';
 
-/* ── Taa switching ── */
+/* -- Taa switching -- */
 var currentTab = 'duas';
 var TAB_NAMES = ['duas','hadiths','tasaih','asma99','books','adhkar','sections'];
 var addLabels = { duas: 'Add Dua', hadiths: 'Add Hadith', tasaih: 'Add Dhikr', asma99: '', books: 'Add Book', adhkar: 'Add Adhkar' };
@@ -1448,7 +1448,7 @@ function switchTab(name) {
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
-/* ── Top Add button — opens the relevant form ── */
+/* -- Top Add button � opens the relevant form -- */
 function topAddClick() {
     if (currentTab === 'asma99') return;
     if (currentTab === 'adhkar') {
@@ -1461,7 +1461,7 @@ function topAddClick() {
     toggleForm(prefix);
 }
 
-/* ── Books sub-tab switch ── */
+/* -- Books sub-tab switch -- */
 function _updateBooksSubTabCounts() {
     var standalone = (allBooks || []).filter(function(a){ return !a.series_id; }).length;
     var seriesIds = {};
@@ -1504,14 +1504,14 @@ function switchBooksSubTab(tab) {
     }
 }
 
-/* ── New series / add volume form helpers ── */
+/* -- New series / add volume form helpers -- */
 function showNewSeriesForm() {
     cancelBookEdit();
     document.getElementById('book-form-toggle').style.display = '';
     openForm('book');
     document.getElementById('book-is-series').checked = true;
     document.getElementById('book-series-fields').style.display = '';
-    document.getElementById('book-form-toggle-label').textContent = 'New Series — fill in details aelow';
+    document.getElementById('book-form-toggle-label').textContent = 'New Series � fill in details aelow';
     setTimeout(function(){ document.getElementById('book-series-title-ku').focus(); }, 150);
 }
 
@@ -1529,7 +1529,7 @@ function showAddVolumeForm(series) {
     sIdEl.readOnly = true; sIdEl.style.opacity = '0.55';
     var sTitleEl = document.getElementById('book-series-title-ku');
     sTitleEl.readOnly = true; sTitleEl.style.opacity = '0.55';
-    document.getElementById('book-form-toggle-label').textContent = 'Add Volume — ' + series.title;
+    document.getElementById('book-form-toggle-label').textContent = 'Add Volume � ' + series.title;
     setTimeout(function(){ document.getElementById('book-title-ku').focus(); }, 150);
 }
 
@@ -1561,7 +1561,7 @@ async function deleteSeriesAll(series) {
     showNotification('Series deleted.', 'success');
 }
 
-/* ── Collapsiale forms ── */
+/* -- Collapsiale forms -- */
 function toggleSeriesFields(checked) {
     document.getElementById('book-series-fields').style.display = checked ? '' : 'none';
     if (!checked) return;
@@ -1646,7 +1646,7 @@ function closeForm(prefix) {
     toggle.classList.remove('editing');
 }
 
-/* ── Toast ── */
+/* -- Toast -- */
 function showNotification(msg, type) {
     type = type || 'info';
     var colors = { success:'#22c55e', error:'#ef4444', info:'#3a82f6', warning:'#f59e0a' };
@@ -1658,7 +1658,7 @@ function showNotification(msg, type) {
     setTimeout(function() { el.remove(); }, 3500);
 }
 
-/* ── State ── */
+/* -- State -- */
 var allCategories = [];
 var allDuas = [];
 var allHadiths = [];
@@ -1704,7 +1704,7 @@ async function loadHadiths() {
     renderHadithList(); updateStats();
 }
 
-/* ── Drag-and-drop reorder helper ──
+/* -- Drag-and-drop reorder helper --
    arr      : the data array (will be reordered in-place)
    getCards : function() returns NodeList/Array of .item-card elements
    onDrop   : async function(arr) called after drop to save new order
@@ -1758,7 +1758,7 @@ function initDrag(getCards, arr, onDrop) {
     cards().forEach(function(card, idx){ handle(card, idx); });
 }
 
-/* ── DOM helpers ── */
+/* -- DOM helpers -- */
 function mke(tag, cls) { var e = document.createElement(tag); if (cls) e.className = cls; return e; }
 function mkIconBtn(lucideIcon, title, danger, ca) {
     var btn = mke('button', 'icon-action' + (danger ? ' danger' : ''));
@@ -1769,7 +1769,7 @@ function mkIconBtn(lucideIcon, title, danger, ca) {
     return btn;
 }
 
-/* ── CATEGORIES ── */
+/* -- CATEGORIES -- */
 function renderCategoryList() {
     var list = document.getElementById('cat-list');
     if (!list) return;
@@ -1859,7 +1859,7 @@ async function toggleCatHidden(id, currentHidden) {
     await loadCategories(); localStorage.removeItem('gencine_cats_v5');
 }
 
-/* ── DUAS ── */
+/* -- DUAS -- */
 function renderDuaCatFilter() {
     var bar = document.getElementById('dua-cat-filter'); bar.textContent = '';
     var allBtn = mke('button', 'filter-chip' + (duaFilterCat === 'all' ? ' on' : ''));
@@ -1879,16 +1879,16 @@ function renderDuaList() {
     }
     filtered.forEach(function(dua) {
         var card = mke('div', 'item-card');
-        var handle = mke('div', 'drag-handle'); handle.textContent = '⠿';
+        var handle = mke('div', 'drag-handle'); handle.textContent = '?';
         var icon = mke('div', 'item-card-icon'); var ico = mke('i'); ico.setAttribute('data-lucide','hand-heart'); icon.appendChild(ico);
         var body = mke('div', 'item-card-body');
         var arEl = mke('div', 'item-card-ar'); arEl.textContent = dua.ar; body.appendChild(arEl);
         var dTimeLeft = _badgeTimeLeft(dua.badge_until);
         if (dTimeLeft) {
             var dPill = mke('div', 'section-badge-pill');
-            dPill.appendChild(document.createTextNode('نوی '));
+            dPill.appendChild(document.createTextNode('??? '));
             var dTime = mke('span', 'section-badge-time'); dTime.textContent = dTimeLeft; dPill.appendChild(dTime);
-            var dRm = mke('button', 'section-badge-remove'); dRm.type = 'button'; dRm.textContent = '×'; dRm.title = 'Remove badge';
+            var dRm = mke('button', 'section-badge-remove'); dRm.type = 'button'; dRm.textContent = '�'; dRm.title = 'Remove badge';
             dRm.onclick = (function(dd){ return function(e){ e.preventDefault();
                 _setBadge('gencine_duas', dd.id, null)
                     .then(function(res){ if (!res.error){ dd.badge_until = null; renderDuaList(); localStorage.removeItem('gencine_duas_v1'); } });
@@ -1972,7 +1972,7 @@ async function saveDua() {
             var d = new Date(); d.setHours(d.getHours() + hours);
             var until = d.toISOString();
             _setBadge('gencine_duas', savedRow.id, until)
-                .then(function(res) { if (!res.error) { savedRow.badge_until = until; renderDuaList(); localStorage.removeItem('gencine_duas_v1'); showNotification('نوی badge added.', 'success'); } else { showNotification('Badge save failed: ' + res.error, 'error'); } });
+                .then(function(res) { if (!res.error) { savedRow.badge_until = until; renderDuaList(); localStorage.removeItem('gencine_duas_v1'); showNotification('??? badge added.', 'success'); } else { showNotification('Badge save failed: ' + res.error, 'error'); } });
         });
     }
 }
@@ -1983,7 +1983,7 @@ async function deleteDua(id) {
     showNotification('Dua deleted.', 'success'); await loadDuas(); localStorage.removeItem('gencine_duas_v1');
 }
 
-/* ── HADITHS ── */
+/* -- HADITHS -- */
 function renderHadithList() {
     var list = document.getElementById('hadith-list'); list.textContent = '';
     document.getElementById('hadith-count').textContent = allHadiths.length + ' hadiths';
@@ -2002,9 +2002,9 @@ function renderHadithList() {
         var hTimeLeft = _badgeTimeLeft(h.badge_until);
         if (hTimeLeft) {
             var hPill = mke('div', 'section-badge-pill');
-            hPill.appendChild(document.createTextNode('نوی '));
+            hPill.appendChild(document.createTextNode('??? '));
             var hTime = mke('span', 'section-badge-time'); hTime.textContent = hTimeLeft; hPill.appendChild(hTime);
-            var hRm = mke('button', 'section-badge-remove'); hRm.type = 'button'; hRm.textContent = '×'; hRm.title = 'Remove badge';
+            var hRm = mke('button', 'section-badge-remove'); hRm.type = 'button'; hRm.textContent = '�'; hRm.title = 'Remove badge';
             hRm.onclick = (function(hh){ return function(e){ e.preventDefault();
                 _setBadge('gencine_hadiths', hh.id, null)
                     .then(function(res){ if (!res.error){ hh.badge_until = null; renderHadithList(); localStorage.removeItem('gencine_hadiths_v1'); } });
@@ -2034,7 +2034,7 @@ function _renderSourceTags() {
         var rm = document.createElement('button');
         rm.type = 'button';
         rm.className = 'source-tag-remove';
-        rm.textContent = '×';
+        rm.textContent = '�';
         rm.onclick = (function(idx){ return function(){ hadithSources.splice(idx,1); _renderSourceTags(); }; })(i);
         tag.appendChild(rm);
         tag.appendChild(document.createTextNode(src));
@@ -2091,8 +2091,8 @@ async function saveHadith() {
         if (_hadithNoPushEl && _hadithNoPushEl.checked) {
             _skipAutoNotif('hadith', savedRow.id);
         } else {
-            var _defHadithTitle = savedRow.title || 'فەرمودەکا نوی';
-            var _defHadithBody  = 'فەرموودەکا نوو د تەفسیر کورد دا یا بەردەستە. نوکە بخوینە.';
+            var _defHadithTitle = savedRow.title || '????????? ???';
+            var _defHadithBody  = '?????????? ??? ? ?????? ???? ?? ?? ????????. ???? ??????.';
             showNotifPreviewDialog(_defHadithTitle, _defHadithBody, function(t, a) {
                 _sendHadithNotifNow(savedRow.id, t, a);
                 _skipAutoNotif('hadith', savedRow.id);
@@ -2119,7 +2119,7 @@ async function saveHadith() {
             var d = new Date(); d.setHours(d.getHours() + hours);
             var until = d.toISOString();
             _setBadge('gencine_hadiths', savedRow.id, until)
-                .then(function(res) { if (!res.error) { savedRow.badge_until = until; renderHadithList(); localStorage.removeItem('gencine_hadiths_v1'); showNotification('نوی badge added.', 'success'); } else { showNotification('Badge save failed: ' + res.error, 'error'); } });
+                .then(function(res) { if (!res.error) { savedRow.badge_until = until; renderHadithList(); localStorage.removeItem('gencine_hadiths_v1'); showNotification('??? badge added.', 'success'); } else { showNotification('Badge save failed: ' + res.error, 'error'); } });
         });
     }
 }
@@ -2130,7 +2130,7 @@ async function deleteHadith(id) {
     showNotification('Hadith deleted.', 'success'); await loadHadiths(); localStorage.removeItem('gencine_hadiths_v1');
 }
 
-/* ── SECTIONS ── */
+/* -- SECTIONS -- */
 var SECTION_META = {
     hadith: { label: 'Hadith',    icon: 'scroll-text'   },
     adhkar: { label: 'Adhkar',    icon: 'wind'          },
@@ -2222,7 +2222,7 @@ function renderSections() {
             var newTxt = document.createTextNode('NEW ');
             var timeTxt = mke('span', 'section-badge-time'); timeTxt.textContent = timeLeft;
             var rmBtn = mke('button', 'section-badge-remove');
-            rmBtn.textContent = '×';
+            rmBtn.textContent = '�';
             rmBtn.title = 'Remove badge';
             rmBtn.onclick = (function(k){ return function(e){ e.preventDefault(); removeSectionBadge(k); }; })(key);
             pill.appendChild(newTxt); pill.appendChild(timeTxt); pill.appendChild(rmBtn);
@@ -2235,13 +2235,13 @@ function renderSections() {
         }
 
         var toggleWrap = mke('label', 'section-toggle');
-        toggleWrap.title = isActive ? 'Visiale — click to hide' : 'Hidden — click to show';
+        toggleWrap.title = isActive ? 'Visiale � click to hide' : 'Hidden � click to show';
         var inp = mke('input');
         inp.type = 'checkbox';
         if (isActive) inp.checked = true;
         inp.onchange = (function(k){ return function(e){
             if (e.target.checked) {
-                e.target.checked = false; // revert — dialog will re-render after save
+                e.target.checked = false; // revert � dialog will re-render after save
                 showBadgeDialog(k,
                     function(hours){ _doToggleSection(k, true, hours); },
                     function(){ _doToggleSection(k, true, null); }
@@ -2308,7 +2308,7 @@ var BADGE_DURATIONS = [
     { label: '3 days',   hours: 72   },
     { label: '5 days',   hours: 120  },
     { label: '1 week',   hours: 168  },
-    { label: '∞ Always', hours: 87600 },
+    { label: '8 Always', hours: 87600 },
 ];
 var FEATURED_DURATIONS = [
     { label: '1 day',    hours: 24   },
@@ -2316,7 +2316,7 @@ var FEATURED_DURATIONS = [
     { label: '1 week',   hours: 168  },
     { label: '2 weeks',  hours: 336  },
     { label: '1 month',  hours: 720  },
-    { label: '∞ Always', hours: 87600 },
+    { label: '8 Always', hours: 87600 },
 ];
 function showBadgeDialog(key, onConfirm, onSkip) {
     var meta = SECTION_META[key] || { label: key };
@@ -2324,7 +2324,7 @@ function showBadgeDialog(key, onConfirm, onSkip) {
     var overlay = mke('div', 'badge-dlg-overlay');
     var dlg = mke('div', 'badge-dlg');
 
-    var icon = mke('div', 'badge-dlg-icon'); icon.textContent = '🏷️';
+    var icon = mke('div', 'badge-dlg-icon'); icon.textContent = '???';
     var title = mke('div', 'badge-dlg-title'); title.textContent = 'Add NEW badge to ' + meta.label + '?';
     var sua = mke('div', 'badge-dlg-sub');
     sua.textContent = 'The badge appears on this section in the app until the time runs out.';
@@ -2368,7 +2368,7 @@ function showFeaturedDialog(bookTitle, onConfirm, onSkip) {
     var selectedHours = null;
     var overlay = mke('div', 'badge-dlg-overlay');
     var dlg = mke('div', 'badge-dlg');
-    var icon = mke('div', 'badge-dlg-icon'); icon.textContent = '⭐';
+    var icon = mke('div', 'badge-dlg-icon'); icon.textContent = '?';
     var title = mke('div', 'badge-dlg-title'); title.textContent = 'Feature "' + bookTitle + '"?';
     var sua = mke('div', 'badge-dlg-sub');
     sua.textContent = 'Book will appear in the featured section at the top of the books page for the selected duration.';
@@ -2384,7 +2384,7 @@ function showFeaturedDialog(bookTitle, onConfirm, onSkip) {
     var actions = mke('div', 'badge-dlg-actions');
     var skipBtn = mke('button', 'badge-dlg-btn skip'); skipBtn.type = 'button'; skipBtn.textContent = 'Cancel';
     skipBtn.onclick = function() { overlay.remove(); if (onSkip) onSkip(); };
-    var confirmBtn = mke('button', 'badge-dlg-btn confirm'); confirmBtn.type = 'button'; confirmBtn.textContent = '⭐ Feature'; confirmBtn.disabled = true;
+    var confirmBtn = mke('button', 'badge-dlg-btn confirm'); confirmBtn.type = 'button'; confirmBtn.textContent = '? Feature'; confirmBtn.disabled = true;
     confirmBtn.onclick = function() { overlay.remove(); if (onConfirm) onConfirm(selectedHours); };
     actions.appendChild(skipBtn); actions.appendChild(confirmBtn);
     dlg.appendChild(icon); dlg.appendChild(title); dlg.appendChild(sua);
@@ -2436,7 +2436,7 @@ async function toggleSection(key, newActive) {
 }
 
 
-/* ── TASBIH ── */
+/* -- TASBIH -- */
 var allTasaih = [];
 
 async function loadTasaih() {
@@ -2514,7 +2514,7 @@ async function saveTasbih() {
         : await supabase.from('gencine_tasbih').insert(payload).select();
     if (r.error) { showNotification('Save failed: ' + r.error.message, 'error'); return; }
     if (editId && (!r.data || r.data.length === 0)) {
-        showNotification('Update blocked — no rows changed. Check Supabase RLS permissions.', 'error');
+        showNotification('Update blocked � no rows changed. Check Supabase RLS permissions.', 'error');
         return;
     }
     var savedRow = (r.data && r.data[0]) || null;
@@ -2539,7 +2539,7 @@ async function deleteTasaih(id) {
     localStorage.removeItem('gencine_tasbih_v1');
 }
 
-/* ── ADHKAR ── */
+/* -- ADHKAR -- */
 var allAdhkar = [];
 var adhkarCatFilter = '';
 
@@ -2553,55 +2553,55 @@ async function loadAdhkar() {
     }
 }
 
-/* Label lookup — key → Kurdish label */
+/* Label lookup � key ? Kurdish label */
 var ADHKAR_ADMIN_CATS = {
-    morning:'زکرێ سپێدێ',           evening:'زکرێ ئێڤاری',         sleep:'بەری نڤستنێ',
-    waking:'دەمێ دەرکەفتنا ڕۆژێ',         house_enter:'چوونا ماڵ',          house_exit:'دەرچوون ژ ماڵ',
-    masjid_enter:'چوونا مزگەفتێ',      masjid_exit:'دەرچوونا ژ مزگەفتێ',  wudu:'دەستنڤێژ شویشتن',
-    opening_prayer:'دوعایا دەستپێکرنا نڤێژێ', ruku:'زکرێن ڕکووعێ',
-    rising_ruku:'ڕاستبوونا ڕکووعێ', sujood:'زکرێن سوجدێ',
-    aetween_sujood:'ناڤبەرا هەردوو سوجدەیان',tashahhud:'تەشەهود',
-    eating_aefore:'بەری خوارنێ',     eating_after:'پشتی خوارنێ',
-    areaking_fast:'دەمێ فتارێ',   fasting:'ئنیەتا ڕۆژیگرتنێ',
-    travel:'گەشت',                   travel_return:'ڤەگەڕیان بۆ ماڵ',
-    vehicle:'سواربوونا هویێن ڤەگوهاستنێ',   marketplace:'چوونا بازاری',
-    charity:'دەمێ سەدەقێ',        distress:'پەریشانی',
-    deat:'دەینداری',              fear:'دەمێ ترسێ',
-    forgiveness:'داخوازا غەفراندنا گونەهان', protection:'پاراستن',
-    rain:'باران',                    thunder:'دەمێ بریسییان',
-    wind:'هاتنا هەوای',             after_prayer:'پشتی نڤێژێ',
-    adhan:'پشتی بانگی',             salawat:'سەلاوات',
-    qunut:'دوعایا قونووتێ',           lailat_qadr:'شەڤا قەدرێ',
-    dhul_hijjah:'دەهکێن ذولحیجەیێ',  talaiyah:'تەلبیەی حەج',
-    safa_marwa:'سەفا و مەروا',      zamzam:'ئاڤا زمزم',
-    entering_makkah:'چوونا مەکەهێ', arafat:'دوعایا عەرەفاتێ',
-    grave:'سەرەدانا گۆرستانێ',       eclipse:'دەمێ کوسوفێ',
-    illness:'نەخۆشی',               pain:'دەمێ نەخۆشبوونێ',
-    ruqyah:'ڕووقیا شەرعی',        visiting_sick:'سەرەدانا نەخۆشی',
-    condolence:'دلتەنگی',           newaorn:'زێدەبوونا زارۆکان',
-    new_clothes:'جلێن نوێ',         anger:'٣ دەم',
-    sneeze:'دەمێ بێهنشینێ',           dressing:'دەمێ لبەرخۆکرنا جلوبەرگان',
-    mirror:'دیتنا خۆدیکێ',          nightmare:'خەوا خراب',
-    istikhara:'دوعایا ئیستیخارێ',   wedding:'پیرۆزباهییا هەڤژینییێ',
-    kaffarah:'ڕابوون ژ دیوانەکێ',aefore_quran:'بەری خوێندنا قورئانێ',
-    aathroom_enter:'چونا دەستشوینکێ',aathroom_exit:'دەرچوونا دەستشوینکێ',
-    new_moon:'دیتنا هەیڤا نوی',     friday:'ڕۆژا ئەینییێ',
-    gratitude:'سوپاسگوزاری'
+    morning:'???? ?????',           evening:'???? ??????',         sleep:'???? ??????',
+    waking:'???? ????????? ????',         house_enter:'????? ???',          house_exit:'??????? ? ???',
+    masjid_enter:'????? ???????',      masjid_exit:'???????? ? ???????',  wudu:'???????? ??????',
+    opening_prayer:'?????? ?????????? ?????', ruku:'????? ??????',
+    rising_ruku:'????????? ??????', sujood:'????? ?????',
+    aetween_sujood:'??????? ?????? ????????',tashahhud:'???????',
+    eating_aefore:'???? ??????',     eating_after:'???? ??????',
+    areaking_fast:'???? ?????',   fasting:'?????? ?????????',
+    travel:'????',                   travel_return:'???????? ?? ???',
+    vehicle:'????????? ????? ??????????',   marketplace:'????? ??????',
+    charity:'???? ??????',        distress:'????????',
+    deat:'????????',              fear:'???? ????',
+    forgiveness:'??????? ????????? ???????', protection:'???????',
+    rain:'?????',                    thunder:'???? ????????',
+    wind:'????? ?????',             after_prayer:'???? ?????',
+    adhan:'???? ?????',             salawat:'???????',
+    qunut:'?????? ???????',           lailat_qadr:'???? ?????',
+    dhul_hijjah:'?????? ?????????',  talaiyah:'??????? ???',
+    safa_marwa:'???? ? ?????',      zamzam:'???? ????',
+    entering_makkah:'????? ??????', arafat:'?????? ????????',
+    grave:'???????? ????????',       eclipse:'???? ??????',
+    illness:'??????',               pain:'???? ??????????',
+    ruqyah:'?????? ?????',        visiting_sick:'???????? ??????',
+    condolence:'???????',           newaorn:'????????? ???????',
+    new_clothes:'???? ???',         anger:'? ???',
+    sneeze:'???? ????????',           dressing:'???? ?????????? ?????????',
+    mirror:'????? ??????',          nightmare:'???? ????',
+    istikhara:'?????? ?????????',   wedding:'??????????? ?????????',
+    kaffarah:'?????? ? ????????',aefore_quran:'???? ??????? ???????',
+    aathroom_enter:'???? ??????????',aathroom_exit:'???????? ??????????',
+    new_moon:'????? ????? ???',     friday:'???? ???????',
+    gratitude:'???????????'
 };
 
-/* Matches ADHKAR_CAT_KEYS order in dhikr.js — same order the app shows */
+/* Matches ADHKAR_CAT_KEYS order in dhikr.js � same order the app shows */
 var ADHKAR_ADMIN_GROUPS_DEFAULT = [
-    { en:'Daily',   ku:'ڕۆژانە',       keys:['morning','evening','sleep','waking'] },
-    { en:'Prayer',  ku:'نوێژ',          keys:['opening_prayer','ruku','rising_ruku','sujood','aetween_sujood','tashahhud','after_prayer','adhan','qunut'] },
-    { en:'Food',    ku:'خواردن',        keys:['eating_aefore','eating_after','areaking_fast','fasting'] },
-    { en:'Places',  ku:'مالبیا و جێ',  keys:['house_enter','house_exit','aathroom_enter','aathroom_exit','masjid_enter','masjid_exit','vehicle','marketplace'] },
-    { en:'Travel',  ku:'گەشت',          keys:['travel','travel_return'] },
-    { en:'Hajj',    ku:'حەج',           keys:['dhul_hijjah','talaiyah','safa_marwa','zamzam','entering_makkah','arafat'] },
-    { en:'Ramadan', ku:'ڕەمەزان',      keys:['lailat_qadr'] },
-    { en:'Weather', ku:'هەوا',          keys:['rain','thunder','wind','eclipse'] },
-    { en:'Health',  ku:'تەندروستی',    keys:['illness','pain','ruqyah','visiting_sick','condolence'] },
-    { en:'Special', ku:'کاتی تایبەت',  keys:['salawat','new_moon','friday'] },
-    { en:'Life',    ku:'ژیانی ڕۆژانە', keys:['wudu','charity','distress','deat','fear','forgiveness','protection','grave','newaorn','anger','sneeze','new_clothes','dressing','mirror','nightmare','istikhara','wedding','kaffarah','aefore_quran','gratitude'] }
+    { en:'Daily',   ku:'??????',       keys:['morning','evening','sleep','waking'] },
+    { en:'Prayer',  ku:'????',          keys:['opening_prayer','ruku','rising_ruku','sujood','aetween_sujood','tashahhud','after_prayer','adhan','qunut'] },
+    { en:'Food',    ku:'??????',        keys:['eating_aefore','eating_after','areaking_fast','fasting'] },
+    { en:'Places',  ku:'?????? ? ??',  keys:['house_enter','house_exit','aathroom_enter','aathroom_exit','masjid_enter','masjid_exit','vehicle','marketplace'] },
+    { en:'Travel',  ku:'????',          keys:['travel','travel_return'] },
+    { en:'Hajj',    ku:'???',           keys:['dhul_hijjah','talaiyah','safa_marwa','zamzam','entering_makkah','arafat'] },
+    { en:'Ramadan', ku:'???????',      keys:['lailat_qadr'] },
+    { en:'Weather', ku:'????',          keys:['rain','thunder','wind','eclipse'] },
+    { en:'Health',  ku:'?????????',    keys:['illness','pain','ruqyah','visiting_sick','condolence'] },
+    { en:'Special', ku:'???? ??????',  keys:['salawat','new_moon','friday'] },
+    { en:'Life',    ku:'????? ??????', keys:['wudu','charity','distress','deat','fear','forgiveness','protection','grave','newaorn','anger','sneeze','new_clothes','dressing','mirror','nightmare','istikhara','wedding','kaffarah','aefore_quran','gratitude'] }
 ];
 var ADHKAR_SECTION_COLORS = {
     Daily:'#f97316', Prayer:'#0d9488', Food:'#16a34a', Places:'#2563ea',
@@ -2616,7 +2616,7 @@ async function _loadAdhkarCatsDB() {
     if (!r.error && r.data && r.data.length) _adhkarCatsDB = r.data;
 }
 
-/* Build grouped order — sections always in ADHKAR_ADMIN_GROUPS_DEFAULT order, keys sorted ay DB sort_order */
+/* Build grouped order � sections always in ADHKAR_ADMIN_GROUPS_DEFAULT order, keys sorted ay DB sort_order */
 function _auildAdhkarCatOrder() {
     if (_adhkarCatsDB && _adhkarCatsDB.length) {
         var sortedKeys = _adhkarCatsDB.slice().sort(function(a,b){ return a.sort_order - b.sort_order; }).map(function(r){ return r.key; });
@@ -2712,7 +2712,7 @@ function renderAdhkarCatGrid() {
     var totalAdhkar = allAdhkar.length;
     var totalSpan = document.createElement('span');
     totalSpan.style.cssText = 'font-size:11px;color:var(--text-tertiary);font-weight:600';
-    totalSpan.textContent = totalCats + ' categories · ' + totalAdhkar + ' adhkar';
+    totalSpan.textContent = totalCats + ' categories � ' + totalAdhkar + ' adhkar';
     var resetBtn = document.createElement('button');
     resetBtn.textContent = 'Reset order';
     resetBtn.style.cssText = 'background:none;border:none;font-size:11px;color:var(--text-tertiary);cursor:pointer;text-decoration:underline;padding:0';
@@ -2785,19 +2785,19 @@ function renderAdhkarCatGrid() {
             cntBadge.className = 'adhkar-cat-row-cnt' + (count ? '' : ' zero');
             cntBadge.textContent = count;
 
-            /* ↑ button */
+            /* ? button */
             var upBtn = document.createElement('button');
             upBtn.className = 'adhkar-cat-move-btn';
-            upBtn.textContent = '↑';
+            upBtn.textContent = '?';
             upBtn.title = 'Move up';
             upBtn.disabled = (ki === 0);
             if (ki === 0) upBtn.disabled = true;
             upBtn.onclick = (function(k){ return function(e){ e.stopPropagation(); moveAdhkarCat(k,-1); }; })(key);
 
-            /* ↓ button */
+            /* ? button */
             var dnBtn = document.createElement('button');
             dnBtn.className = 'adhkar-cat-move-btn';
-            dnBtn.textContent = '↓';
+            dnBtn.textContent = '?';
             dnBtn.title = 'Move down';
             if (ki === grp.keys.length - 1) dnBtn.disabled = true;
             dnBtn.onclick = (function(k){ return function(e){ e.stopPropagation(); moveAdhkarCat(k,1); }; })(key);
@@ -2872,16 +2872,16 @@ function renderAdhkarList() {
         var meta = mke('div','item-card-meta');
         var metaParts = ['#' + (item.sort_order || 0)];
         if (item.source) metaParts.push(item.source);
-        if (item.repeat > 1) metaParts.push('×' + item.repeat);
+        if (item.repeat > 1) metaParts.push('�' + item.repeat);
         if (!item.active) metaParts.push('hidden');
         if (item.priority) metaParts.push(item.priority);
-        meta.textContent = metaParts.join(' · ');
+        meta.textContent = metaParts.join(' � ');
         var aTimeLeft = _badgeTimeLeft(item.badge_until);
         if (aTimeLeft) {
             var aPill = mke('div', 'section-badge-pill');
-            aPill.appendChild(document.createTextNode('نوی '));
+            aPill.appendChild(document.createTextNode('??? '));
             var aTime = mke('span', 'section-badge-time'); aTime.textContent = aTimeLeft; aPill.appendChild(aTime);
-            var aRm = mke('button', 'section-badge-remove'); aRm.type = 'button'; aRm.textContent = '×'; aRm.title = 'Remove badge';
+            var aRm = mke('button', 'section-badge-remove'); aRm.type = 'button'; aRm.textContent = '�'; aRm.title = 'Remove badge';
             aRm.onclick = (function(ii){ return function(e){ e.preventDefault();
                 _setBadge('gencine_adhkar', ii.id, null)
                     .then(function(res){ if (!res.error){ ii.badge_until = null; renderAdhkarList(); localStorage.removeItem('gencine_adhkar_v1'); } });
@@ -2890,7 +2890,7 @@ function renderAdhkarList() {
         }
         body.appendChild(arEl); body.appendChild(meta);
         var acts = mke('div', 'item-card-actions');
-        // ⭐ Important / 🔖 Optional toggles
+        // ? Important / ?? Optional toggles
         var starBtn = mkIconBtn('star', 'Important (pinned first)', false, (function(it){ return function(){ setAdhkarPriority(it,'important'); }; })(item));
         if (item.priority === 'important') starBtn.classList.add('star-active');
         starBtn.style.color = item.priority === 'important' ? '#f59e0a' : '';
@@ -2898,7 +2898,7 @@ function renderAdhkarList() {
         if (item.priority === 'optional') { optBtn.style.color = '#8a5cf6'; optBtn.title = 'Remove optional'; }
         acts.appendChild(starBtn);
         acts.appendChild(optBtn);
-        // ↑ ↓ — reorder within category
+        // ? ? � reorder within category
         acts.appendChild(mkIconBtn('arrow-up',   'Move up',   false, (function(id){ return function(){ moveAdhkar(id, -1); }; })(item.id)));
         acts.appendChild(mkIconBtn('arrow-down', 'Move down', false, (function(id){ return function(){ moveAdhkar(id,  1); }; })(item.id)));
         acts.appendChild(mkIconBtn('pencil', 'Edit', false, (function(id){ return function(){ editAdhkar(id); }; })(item.id)));
@@ -3010,7 +3010,7 @@ async function saveAdhkar() {
             var d = new Date(); d.setHours(d.getHours() + hours);
             var until = d.toISOString();
             _setBadge('gencine_adhkar', savedRow.id, until)
-                .then(function(res) { if (!res.error) { savedRow.badge_until = until; renderAdhkarList(); localStorage.removeItem('gencine_adhkar_v1'); showNotification('نوی badge added.', 'success'); } else { showNotification('Badge save failed: ' + res.error, 'error'); } });
+                .then(function(res) { if (!res.error) { savedRow.badge_until = until; renderAdhkarList(); localStorage.removeItem('gencine_adhkar_v1'); showNotification('??? badge added.', 'success'); } else { showNotification('Badge save failed: ' + res.error, 'error'); } });
         });
     }
 }
@@ -3027,18 +3027,18 @@ async function deleteAdhkar(id) {
     if (countEl) countEl.textContent = allAdhkar.length;
 }
 
-/* ── 99 NAMES ── */
+/* -- 99 NAMES -- */
 var ASMA_DATA_ADMIN = [
-  {n:1,ar:'الرَّحْمَنُ',tr:'Ar-Rahmaan',ku:'ئەو زۆر بەزەیی کار'},{n:2,ar:'الرَّحِيمُ',tr:'Ar-Raheem',ku:'ئەو هەمیشە بەزەیی کار'},{n:3,ar:'الْمَلِكُ',tr:'Al-Malik',ku:'پاشا'},{n:4,ar:'الْقُدُّوسُ',tr:'Al-Quddoos',ku:'پیرۆز'},{n:5,ar:'السَّلَامُ',tr:'As-Salaam',ku:'ئاشتی بەخش'},{n:6,ar:'الْمُؤْمِنُ',tr:"Al-Mu'min",ku:'باوەڕداری دەر'},{n:7,ar:'الْمُهَيْمِنُ',tr:'Al-Muhaimin',ku:'پاراستووار'},{n:8,ar:'الْعَزِيزُ',tr:'Al-Azeez',ku:'بەهێز'},{n:9,ar:'الْجَبَّارُ',tr:'Al-Jaaaaar',ku:'سەروەر'},{n:10,ar:'الْمُتَكَبِّرُ',tr:'Al-Mutakaaair',ku:'گەورەیی خاوەن'},
-  {n:11,ar:'الْخَالِقُ',tr:'Al-Khaaliq',ku:'دروستکار'},{n:12,ar:'الْبَارِئُ',tr:"Al-Baari'",ku:'بوونی دەر هێنەر'},{n:13,ar:'الْمُصَوِّرُ',tr:'Al-Musawwir',ku:'شێوەدەر'},{n:14,ar:'الْغَفَّارُ',tr:'Al-Ghaffaar',ku:'زۆر بەخشینکار'},{n:15,ar:'الْقَهَّارُ',tr:'Al-Qahhaar',ku:'زەبردەست'},{n:16,ar:'الْوَهَّابُ',tr:'Al-Wahhaaa',ku:'بەخشینکارێ گەورە'},{n:17,ar:'الرَّزَّاقُ',tr:'Ar-Razzaaq',ku:'رزگاری دەر'},{n:18,ar:'الْفَتَّاحُ',tr:'Al-Fattaah',ku:'کردنەوەر'},{n:19,ar:'الْعَلِيمُ',tr:"Al-'Aleem",ku:'زاناس'},{n:20,ar:'الْقَابِضُ',tr:'Al-Qaaaid',ku:'گرتنکار'},
-  {n:21,ar:'الْبَاسِطُ',tr:'Al-Baasit',ku:'فراخکار'},{n:22,ar:'الْخَافِضُ',tr:'Al-Khaafid',ku:'دەخوازینەر'},{n:23,ar:'الرَّافِعُ',tr:"Ar-Raafi'",ku:'برزکار'},{n:24,ar:'الْمُعِزُّ',tr:"Al-Mu'izz",ku:'بریزدارکار'},{n:25,ar:'الْمُذِلُّ',tr:'Al-Mudhill',ku:'بێبریزی دەر'},{n:26,ar:'السَّمِيعُ',tr:"As-Samee'",ku:'بیستکار'},{n:27,ar:'الْبَصِيرُ',tr:'Al-Baseer',ku:'بینەر'},{n:28,ar:'الْحَكَمُ',tr:'Al-Hakam',ku:'دادوەر'},{n:29,ar:'الْعَدْلُ',tr:"Al-'Adl",ku:'دادپەروەر'},{n:30,ar:'اللَّطِيفُ',tr:'Al-Lateef',ku:'نەرمدڵ'},
-  {n:31,ar:'الْخَبِيرُ',tr:'Al-Khaaeer',ku:'ئاگادار'},{n:32,ar:'الْحَلِيمُ',tr:'Al-Haleem',ku:'بردبار'},{n:33,ar:'الْعَظِيمُ',tr:"Al-'Azeem",ku:'گەورە'},{n:34,ar:'الْغَفُورُ',tr:'Al-Ghafoor',ku:'بەخشینکار'},{n:35,ar:'الشَّكُورُ',tr:'Ash-Shakoor',ku:'سوپاسگوزار'},{n:36,ar:'الْعَلِيُّ',tr:"Al-'Aliyy",ku:'برز'},{n:37,ar:'الْكَبِيرُ',tr:'Al-Kaaeer',ku:'گەورە'},{n:38,ar:'الْحَفِيظُ',tr:'Al-Hafeez',ku:'پاراستووار'},{n:39,ar:'الْمُقِيتُ',tr:'Al-Muqeet',ku:'خواردن دەر'},{n:40,ar:'الْحَسِيبُ',tr:'Al-Haseea',ku:'هەژمارکار'},
-  {n:41,ar:'الْجَلِيلُ',tr:'Al-Jaleel',ku:'شکۆمەند'},{n:42,ar:'الْكَرِيمُ',tr:'Al-Kareem',ku:'بەخشاو'},{n:43,ar:'الرَّقِيبُ',tr:'Ar-Raqeea',ku:'چاودێر'},{n:44,ar:'الْمُجِيبُ',tr:'Al-Mujeea',ku:'وەڵامدەر'},{n:45,ar:'الْوَاسِعُ',tr:'Al-Waasi',ku:'فراخ'},{n:46,ar:'الْحَكِيمُ',tr:'Al-Hakeem',ku:'پوخت'},{n:47,ar:'الْوَدُودُ',tr:'Al-Wadood',ku:'خۆشەویست'},{n:48,ar:'الْمَجِيدُ',tr:'Al-Majeed',ku:'شکۆمەند'},{n:49,ar:'الْبَاعِثُ',tr:'Al-Baaith',ku:'هەڵداگرتنکار'},{n:50,ar:'الشَّهِيدُ',tr:'Ash-Shaheed',ku:'شاهید'},
-  {n:51,ar:'الْحَقُّ',tr:'Al-Haqq',ku:'ڕاستی'},{n:52,ar:'الْوَكِيلُ',tr:'Al-Wakeel',ku:'باڵغایەتی'},{n:53,ar:'الْقَوِيُّ',tr:'Al-Qawiyy',ku:'بەهێز'},{n:54,ar:'الْمَتِينُ',tr:'Al-Mateen',ku:'بەهێزی قایم'},{n:55,ar:'الْوَلِيُّ',tr:'Al-Waliyy',ku:'دۆست'},{n:56,ar:'الْحَمِيدُ',tr:'Al-Hameed',ku:'ستوودراو'},{n:57,ar:'الْمُحْصِي',tr:'Al-Muhsee',ku:'ژمێرکار'},{n:58,ar:'الْمُبْدِئُ',tr:"Al-Muadi'",ku:'دەستپێکردنکار'},{n:59,ar:'الْمُعِيدُ',tr:"Al-Mu'eed",ku:'گەڕاندنەوەکار'},{n:60,ar:'الْمُحْيِي',tr:'Al-Muhyee',ku:'ژیانی دەر'},
-  {n:61,ar:'الْمُمِيتُ',tr:'Al-Mumeet',ku:'مردن دەر'},{n:62,ar:'الْحَيُّ',tr:'Al-Hayy',ku:'ژیان'},{n:63,ar:'الْقَيُّومُ',tr:'Al-Qayyoom',ku:'هەمیشەیی'},{n:64,ar:'الْوَاجِدُ',tr:'Al-Waajid',ku:'دۆزینەوەکار'},{n:65,ar:'الْمَاجِدُ',tr:'Al-Maajid',ku:'شکۆمەند'},{n:66,ar:'الْوَاحِدُ',tr:'Al-Waahid',ku:'یەکێ'},{n:67,ar:'الْأَحَدُ',tr:"Al-Ahad",ku:'یەکتا'},{n:68,ar:'الصَّمَدُ',tr:'As-Samad',ku:'بێنیاز'},{n:69,ar:'الْقَادِرُ',tr:'Al-Qaadir',ku:'توانادار'},{n:70,ar:'الْمُقْتَدِرُ',tr:'Al-Muqtadir',ku:'توانادارێ گەورە'},
-  {n:71,ar:'الْمُقَدِّمُ',tr:'Al-Muqaddim',ku:'پێشخستنکار'},{n:72,ar:'الْمُؤَخِّرُ',tr:"Al-Mu'akhkhir",ku:'پشتخستنکار'},{n:73,ar:'الْأَوَّلُ',tr:"Al-Awwal",ku:'یەکەم'},{n:74,ar:'الْآخِرُ',tr:"Al-Aakhir",ku:'دوایی'},{n:75,ar:'الظَّاهِرُ',tr:'Az-Zaahir',ku:'ئاشکرا'},{n:76,ar:'الْبَاطِنُ',tr:'Al-Baatin',ku:'نهێنی'},{n:77,ar:'الْوَالِي',tr:'Al-Waali',ku:'والی'},{n:78,ar:'الْمُتَعَالِي',tr:"Al-Muta'aali",ku:'بەرزترین'},{n:79,ar:'الْبَرُّ',tr:'Al-Barr',ku:'چاکەکار'},{n:80,ar:'التَّوَّابُ',tr:'At-Tawwaaa',ku:'تۆبەپەسەندکار'},
-  {n:81,ar:'الْمُنْتَقِمُ',tr:'Al-Muntaqim',ku:'تۆڵەستانکار'},{n:82,ar:'الْعَفُوُّ',tr:"Al-'Afuww",ku:'بەخشینکار'},{n:83,ar:'الرَّؤُوفُ',tr:"Ar-Ra'oof",ku:'نەرمدڵ'},{n:84,ar:'مَالِكُ الْمُلْكِ',tr:'Maalik-ul-Mulk',ku:'خاوەنی پاشایەتی'},{n:85,ar:'ذُو الْجَلَالِ وَالْإِكْرَامِ',tr:'Dhul-Jalaali wal-Ikraam',ku:'خاوەنی شکۆ و ئیکرام'},{n:86,ar:'الْمُقْسِطُ',tr:'Al-Muqsit',ku:'دادگەر'},{n:87,ar:'الْجَامِعُ',tr:'Al-Jaami',ku:'کۆکردنەوەکار'},{n:88,ar:'الْغَنِيُّ',tr:'Al-Ghaniyy',ku:'بێنیاز'},{n:89,ar:'الْمُغْنِي',tr:'Al-Mughnee',ku:'دەوڵەمەند دەکات'},{n:90,ar:'الْمَانِعُ',tr:'Al-Maani',ku:'بازدارنکار'},
-  {n:91,ar:'الضَّارُّ',tr:'Ad-Daarr',ku:'زیان دەر'},{n:92,ar:'النَّافِعُ',tr:'An-Naafi',ku:'سوود دەر'},{n:93,ar:'النُّورُ',tr:'An-Noor',ku:'ڕووناکی'},{n:94,ar:'الْهَادِي',tr:'Al-Haadee',ku:'ڕێنیشاندەر'},{n:95,ar:'الْبَدِيعُ',tr:"Al-Badee'",ku:'دروستکارێ نوێ'},{n:96,ar:'الْبَاقِي',tr:'Al-Baaqee',ku:'هەمیشە مایەوە'},{n:97,ar:'الْوَارِثُ',tr:'Al-Waarith',ku:'وارس'},{n:98,ar:'الرَّشِيدُ',tr:'Ar-Rasheed',ku:'ڕێنیشاندەر'},{n:99,ar:'الصَّبُورُ',tr:'As-Saaoor',ku:'بردبار'}
+  {n:1,ar:'???????????',tr:'Ar-Rahmaan',ku:'??? ??? ?????? ???'},{n:2,ar:'??????????',tr:'Ar-Raheem',ku:'??? ?????? ?????? ???'},{n:3,ar:'?????????',tr:'Al-Malik',ku:'????'},{n:4,ar:'???????????',tr:'Al-Quddoos',ku:'?????'},{n:5,ar:'??????????',tr:'As-Salaam',ku:'????? ????'},{n:6,ar:'???????????',tr:"Al-Mu'min",ku:'????????? ???'},{n:7,ar:'?????????????',tr:'Al-Muhaimin',ku:'??????????'},{n:8,ar:'??????????',tr:'Al-Azeez',ku:'?????'},{n:9,ar:'???????????',tr:'Al-Jaaaaar',ku:'??????'},{n:10,ar:'??????????????',tr:'Al-Mutakaaair',ku:'??????? ?????'},
+  {n:11,ar:'??????????',tr:'Al-Khaaliq',ku:'????????'},{n:12,ar:'??????????',tr:"Al-Baari'",ku:'????? ??? ?????'},{n:13,ar:'????????????',tr:'Al-Musawwir',ku:'???????'},{n:14,ar:'???????????',tr:'Al-Ghaffaar',ku:'??? ?????????'},{n:15,ar:'???????????',tr:'Al-Qahhaar',ku:'????????'},{n:16,ar:'???????????',tr:'Al-Wahhaaa',ku:'?????????? ?????'},{n:17,ar:'???????????',tr:'Ar-Razzaaq',ku:'?????? ???'},{n:18,ar:'???????????',tr:'Al-Fattaah',ku:'????????'},{n:19,ar:'??????????',tr:"Al-'Aleem",ku:'?????'},{n:20,ar:'??????????',tr:'Al-Qaaaid',ku:'???????'},
+  {n:21,ar:'??????????',tr:'Al-Baasit',ku:'???????'},{n:22,ar:'??????????',tr:'Al-Khaafid',ku:'??????????'},{n:23,ar:'??????????',tr:"Ar-Raafi'",ku:'??????'},{n:24,ar:'??????????',tr:"Al-Mu'izz",ku:'??????????'},{n:25,ar:'??????????',tr:'Al-Mudhill',ku:'??????? ???'},{n:26,ar:'??????????',tr:"As-Samee'",ku:'???????'},{n:27,ar:'??????????',tr:'Al-Baseer',ku:'?????'},{n:28,ar:'?????????',tr:'Al-Hakam',ku:'??????'},{n:29,ar:'?????????',tr:"Al-'Adl",ku:'?????????'},{n:30,ar:'??????????',tr:'Al-Lateef',ku:'??????'},
+  {n:31,ar:'??????????',tr:'Al-Khaaeer',ku:'???????'},{n:32,ar:'??????????',tr:'Al-Haleem',ku:'??????'},{n:33,ar:'??????????',tr:"Al-'Azeem",ku:'?????'},{n:34,ar:'??????????',tr:'Al-Ghafoor',ku:'?????????'},{n:35,ar:'??????????',tr:'Ash-Shakoor',ku:'??????????'},{n:36,ar:'??????????',tr:"Al-'Aliyy",ku:'???'},{n:37,ar:'??????????',tr:'Al-Kaaeer',ku:'?????'},{n:38,ar:'??????????',tr:'Al-Hafeez',ku:'??????????'},{n:39,ar:'??????????',tr:'Al-Muqeet',ku:'?????? ???'},{n:40,ar:'??????????',tr:'Al-Haseea',ku:'?????????'},
+  {n:41,ar:'??????????',tr:'Al-Jaleel',ku:'???????'},{n:42,ar:'??????????',tr:'Al-Kareem',ku:'??????'},{n:43,ar:'??????????',tr:'Ar-Raqeea',ku:'??????'},{n:44,ar:'??????????',tr:'Al-Mujeea',ku:'????????'},{n:45,ar:'??????????',tr:'Al-Waasi',ku:'????'},{n:46,ar:'??????????',tr:'Al-Hakeem',ku:'????'},{n:47,ar:'??????????',tr:'Al-Wadood',ku:'????????'},{n:48,ar:'??????????',tr:'Al-Majeed',ku:'???????'},{n:49,ar:'??????????',tr:'Al-Baaith',ku:'????????????'},{n:50,ar:'??????????',tr:'Ash-Shaheed',ku:'?????'},
+  {n:51,ar:'????????',tr:'Al-Haqq',ku:'?????'},{n:52,ar:'??????????',tr:'Al-Wakeel',ku:'?????????'},{n:53,ar:'??????????',tr:'Al-Qawiyy',ku:'?????'},{n:54,ar:'??????????',tr:'Al-Mateen',ku:'?????? ????'},{n:55,ar:'??????????',tr:'Al-Waliyy',ku:'????'},{n:56,ar:'??????????',tr:'Al-Hameed',ku:'????????'},{n:57,ar:'??????????',tr:'Al-Muhsee',ku:'???????'},{n:58,ar:'???????????',tr:"Al-Muadi'",ku:'?????????????'},{n:59,ar:'??????????',tr:"Al-Mu'eed",ku:'?????????????'},{n:60,ar:'??????????',tr:'Al-Muhyee',ku:'????? ???'},
+  {n:61,ar:'??????????',tr:'Al-Mumeet',ku:'???? ???'},{n:62,ar:'????????',tr:'Al-Hayy',ku:'????'},{n:63,ar:'???????????',tr:'Al-Qayyoom',ku:'????????'},{n:64,ar:'??????????',tr:'Al-Waajid',ku:'???????????'},{n:65,ar:'??????????',tr:'Al-Maajid',ku:'???????'},{n:66,ar:'??????????',tr:'Al-Waahid',ku:'????'},{n:67,ar:'?????????',tr:"Al-Ahad",ku:'?????'},{n:68,ar:'?????????',tr:'As-Samad',ku:'??????'},{n:69,ar:'??????????',tr:'Al-Qaadir',ku:'????????'},{n:70,ar:'?????????????',tr:'Al-Muqtadir',ku:'????????? ?????'},
+  {n:71,ar:'????????????',tr:'Al-Muqaddim',ku:'??????????'},{n:72,ar:'????????????',tr:"Al-Mu'akhkhir",ku:'??????????'},{n:73,ar:'??????????',tr:"Al-Awwal",ku:'?????'},{n:74,ar:'????????',tr:"Al-Aakhir",ku:'?????'},{n:75,ar:'??????????',tr:'Az-Zaahir',ku:'??????'},{n:76,ar:'??????????',tr:'Al-Baatin',ku:'?????'},{n:77,ar:'?????????',tr:'Al-Waali',ku:'????'},{n:78,ar:'?????????????',tr:"Al-Muta'aali",ku:'????????'},{n:79,ar:'????????',tr:'Al-Barr',ku:'???????'},{n:80,ar:'???????????',tr:'At-Tawwaaa',ku:'?????????????'},
+  {n:81,ar:'?????????????',tr:'Al-Muntaqim',ku:'???????????'},{n:82,ar:'??????????',tr:"Al-'Afuww",ku:'?????????'},{n:83,ar:'??????????',tr:"Ar-Ra'oof",ku:'??????'},{n:84,ar:'??????? ?????????',tr:'Maalik-ul-Mulk',ku:'?????? ????????'},{n:85,ar:'??? ?????????? ??????????????',tr:'Dhul-Jalaali wal-Ikraam',ku:'?????? ??? ? ??????'},{n:86,ar:'???????????',tr:'Al-Muqsit',ku:'??????'},{n:87,ar:'??????????',tr:'Al-Jaami',ku:'????????????'},{n:88,ar:'??????????',tr:'Al-Ghaniyy',ku:'??????'},{n:89,ar:'??????????',tr:'Al-Mughnee',ku:'????????? ?????'},{n:90,ar:'??????????',tr:'Al-Maani',ku:'??????????'},
+  {n:91,ar:'?????????',tr:'Ad-Daarr',ku:'???? ???'},{n:92,ar:'??????????',tr:'An-Naafi',ku:'???? ???'},{n:93,ar:'????????',tr:'An-Noor',ku:'???????'},{n:94,ar:'?????????',tr:'Al-Haadee',ku:'??????????'},{n:95,ar:'??????????',tr:"Al-Badee'",ku:'????????? ???'},{n:96,ar:'?????????',tr:'Al-Baaqee',ku:'?????? ??????'},{n:97,ar:'??????????',tr:'Al-Waarith',ku:'????'},{n:98,ar:'??????????',tr:'Ar-Rasheed',ku:'??????????'},{n:99,ar:'??????????',tr:'As-Saaoor',ku:'??????'}
 ];
 function renderAsma99() {
     var q = (document.getElementById('asma-search') || {value:''}).value.toLowerCase();
@@ -3061,7 +3061,7 @@ function renderAsma99() {
 }
 function filterAsma(q) { renderAsma99(); }
 
-/* ── BOOKS ── */
+/* -- BOOKS -- */
 function _booksToken() { return sessionStorage.getItem('adminToken') || ''; }
 
 /* Log admin action to activity log */
@@ -3102,7 +3102,7 @@ async function _sendBookNotifNow(bookId, notifTitle, notifBody) {
         });
         var sendData = await sendRes.json();
         if (sendData.success) {
-            showNotification('Push notification sent ✓', 'success');
+            showNotification('Push notification sent ?', 'success');
         } else {
             showNotification('Notification saved aut send failed: ' + (sendData.error || 'unknown'), 'warning');
         }
@@ -3139,7 +3139,7 @@ async function _sendHadithNotifNow(hadithId, notifTitle, notifBody) {
         });
         var sendData = await sendRes.json();
         if (sendData.success) {
-            showNotification('Push notification sent ✓', 'success');
+            showNotification('Push notification sent ?', 'success');
         } else {
             showNotification('Notification saved aut send failed: ' + (sendData.error || 'unknown'), 'warning');
         }
@@ -3155,7 +3155,7 @@ function showNotifPreviewDialog(defaultTitle, defaultBody, onSend, onSkip) {
     var overlay = mke('div', 'badge-dlg-overlay');
     var dlg = mke('div', 'badge-dlg');
 
-    var icon = mke('div', 'badge-dlg-icon'); icon.textContent = '🔔';
+    var icon = mke('div', 'badge-dlg-icon'); icon.textContent = '??';
     var heading = mke('div', 'badge-dlg-title'); heading.textContent = 'Send Push Notification';
     var sua = mke('div', 'badge-dlg-sub');
     sua.textContent = 'Review and edit the title and body before sending. You can also skip.';
@@ -3265,7 +3265,7 @@ async function _booksApi(body) {
         if (!r.ok && !data.error) data.error = 'HTTP ' + r.status;
         return data;
     } catch(e) {
-        return { error: e.message || 'Network error — check your connection.' };
+        return { error: e.message || 'Network error � check your connection.' };
     }
 }
 
@@ -3331,9 +3331,9 @@ function renderBooksList() {
         var aTimeLeft = _badgeTimeLeft(book.badge_until);
         if (aTimeLeft) {
             var aPill = mke('div', 'section-badge-pill');
-            aPill.appendChild(document.createTextNode('نوی '));
+            aPill.appendChild(document.createTextNode('??? '));
             var aTime = mke('span', 'section-badge-time'); aTime.textContent = aTimeLeft; aPill.appendChild(aTime);
-            var aRm = mke('button', 'section-badge-remove'); aRm.type = 'button'; aRm.textContent = '×'; aRm.title = 'Remove badge';
+            var aRm = mke('button', 'section-badge-remove'); aRm.type = 'button'; aRm.textContent = '�'; aRm.title = 'Remove badge';
             aRm.onclick = (function(aa){ return function(e){ e.preventDefault();
                 _setBadge('gencine_books', aa.id, null)
                     .then(function(res){ if (!res.error){ aa.badge_until = null; renderBooksList(); localStorage.removeItem('gencine_books_v1'); } });
@@ -3344,9 +3344,9 @@ function renderBooksList() {
         if (fTimeLeft) {
             var fPill = mke('div', 'section-badge-pill');
             fPill.style.cssText = 'background:rgba(234,179,8,.12);color:#d97706;';
-            fPill.appendChild(document.createTextNode('⭐ '));
+            fPill.appendChild(document.createTextNode('? '));
             var fTime = mke('span', 'section-badge-time'); fTime.textContent = fTimeLeft; fPill.appendChild(fTime);
-            var fRm = mke('button', 'section-badge-remove'); fRm.type = 'button'; fRm.textContent = '×'; fRm.title = 'Remove featured';
+            var fRm = mke('button', 'section-badge-remove'); fRm.type = 'button'; fRm.textContent = '�'; fRm.title = 'Remove featured';
             fRm.onclick = (function(aa){ return function(e){ e.preventDefault();
                 _setFeatured(aa.id, null).then(function(res){ if (!res.error){ aa.featured_until = null; renderBooksList(); localStorage.removeItem('gencine_books_v3'); } });
             }; })(book);
@@ -3355,8 +3355,8 @@ function renderBooksList() {
         if (book.featured_book) {
             var spPill = mke('div', 'section-badge-pill');
             spPill.style.cssText = 'background:rgba(212,175,55,.15);color:#d4af37;border:1px solid rgba(212,175,55,.3);';
-            spPill.appendChild(document.createTextNode('★ Book Spotlight — Active'));
-            var spRm = mke('button', 'section-badge-remove'); spRm.type = 'button'; spRm.textContent = '×'; spRm.title = 'Remove Spotlight';
+            spPill.appendChild(document.createTextNode('? Book Spotlight � Active'));
+            var spRm = mke('button', 'section-badge-remove'); spRm.type = 'button'; spRm.textContent = '�'; spRm.title = 'Remove Spotlight';
             spRm.onclick = (function(aa){ return function(e){ e.preventDefault();
                 _setSpotlightFeatured(aa.id, false).then(function(r){ if (!r.error){ renderBooksList(); showNotification('Spotlight removed.', 'success'); } });
             }; })(book);
@@ -3371,9 +3371,9 @@ function renderBooksList() {
         var aa = mke('span', 'badge'); aa.style.cssText = book.active ? 'background:rgba(34,197,94,.12);color:#16a34a;font-weight:600' : 'background:rgba(234,179,8,.12);color:#d97706;font-weight:600';
         aa.textContent = book.active ? 'Live' : 'Draft'; meta.appendChild(aa);
         var rc = _bookReaderCounts[book.id];
-        if (rc) { var ra = mke('span', 'badge'); ra.style.cssText = 'background:rgba(59,130,246,.1);color:#3a82f6;font-weight:600;'; ra.title = rc + ' reader' + (rc !== 1 ? 's' : ''); ra.textContent = '👁 ' + rc; meta.appendChild(ra); }
+        if (rc) { var ra = mke('span', 'badge'); ra.style.cssText = 'background:rgba(59,130,246,.1);color:#3a82f6;font-weight:600;'; ra.title = rc + ' reader' + (rc !== 1 ? 's' : ''); ra.textContent = '?? ' + rc; meta.appendChild(ra); }
         body.appendChild(meta);
-        var handle = mke('div', 'drag-handle'); handle.textContent = '⠿';
+        var handle = mke('div', 'drag-handle'); handle.textContent = '?';
         var acts = mke('div', 'item-card-actions');
         acts.appendChild(mkIconBtn('star', 'Feature (timed)', false, (function(a){ return function(){
             var seriesVolumes = a.series_id ? allBooks.filter(function(ak){ return ak.series_id === a.series_id; }) : null;
@@ -3403,7 +3403,7 @@ function renderBooksList() {
             _setSpotlightFeatured(a.id, newState).then(function(r){
                 if (r.error) { showNotification('Failed: ' + JSON.stringify(r.error), 'error'); return; }
                 renderBooksList();
-                showNotification(newState ? '★ Spotlight activated!' : 'Spotlight removed.', 'success');
+                showNotification(newState ? '? Spotlight activated!' : 'Spotlight removed.', 'success');
             });
         }; })(book));
         if (_alreadySpot) spBtn.style.color = '#d4af37';
@@ -3470,17 +3470,17 @@ function renderSeriesList() {
         var hdr = mke('div', 'series-group-hdr');
         var hdrLeft = mke('div', 'series-group-hdr-left');
         var titleEl = mke('div', 'series-group-title'); titleEl.textContent = s.title;
-        var metaEl = mke('div', 'series-group-meta'); metaEl.textContent = s.volumes.length + ' volume' + (s.volumes.length !== 1 ? 's' : '') + ' · ID: ' + s.id;
+        var metaEl = mke('div', 'series-group-meta'); metaEl.textContent = s.volumes.length + ' volume' + (s.volumes.length !== 1 ? 's' : '') + ' � ID: ' + s.id;
         hdrLeft.appendChild(titleEl); hdrLeft.appendChild(metaEl);
         if (_sIsHidden) { var ha = mke('span', 'badge badge-warn'); ha.textContent = 'hidden'; hdrLeft.appendChild(ha); }
 
         var hdrBtns = mke('div', 'series-group-atns');
 
-        /* ── Hide/Show (eye) button ── */
+        /* -- Hide/Show (eye) button -- */
         var eyeBtn = mkIconBtn(_sIsHidden ? 'eye-off' : 'eye', _sIsHidden ? 'Show series' : 'Hide series', false, (function(sg, _h){ return function(){ toggleSeriesHiddenGencine(sg, _h); }; })(s, _sIsHidden));
         hdrBtns.appendChild(eyeBtn);
 
-        /* ── Featured (⭐) button — sets featured_until on ALL volumes ── */
+        /* -- Featured (?) button � sets featured_until on ALL volumes -- */
         var _sAnyFeat = s.volumes.some(function(v){ return v.featured_until && new Date(v.featured_until).getTime() > Date.now(); });
         var featBtn = mkIconBtn('star', _sAnyFeat ? 'Remove Featured' : 'Feature Series', false, (function(sg, _isFeat){ return function() {
             if (_isFeat) {
@@ -3505,7 +3505,7 @@ function renderSeriesList() {
         if (_sAnyFeat) featBtn.style.color = '#d4af37';
         hdrBtns.appendChild(featBtn);
 
-        /* ── Spotlight (★) button — sets featured_book on volume 1 ── */
+        /* -- Spotlight (?) button � sets featured_book on volume 1 -- */
         var _sAnySpot = s.volumes.some(function(v){ return v.featured_book; });
         var spotBtn = mkIconBtn(_sAnySpot ? 'star-off' : 'bookmark-check', _sAnySpot ? 'Remove Spotlight' : 'Set as Spotlight', false, (function(sg, _cur){ return function() {
             var firstVol = sg.volumes.slice().sort(function(a,b){ return (a.volume_number||0)-(b.volume_number||0); })[0];
@@ -3552,12 +3552,12 @@ function renderSeriesList() {
             var vNum = mke('div', 'series-vol-num'); vNum.textContent = 'Vol. ' + (vol.volume_number || '?');
             var vTitle = mke('div', 'series-vol-title'); vTitle.textContent = vol.title_ku || vol.title_ar || '(no title)';
             var vMeta = mke('div', 'series-vol-meta');
-            if (vol.pages) vMeta.appendChild(document.createTextNode(vol.pages + ' pp · '));
+            if (vol.pages) vMeta.appendChild(document.createTextNode(vol.pages + ' pp � '));
             var vStatus = mke('span'); vStatus.style.cssText = vol.active ? 'color:#16a34a;font-weight:600' : 'color:#d97706;font-weight:600';
             vStatus.textContent = vol.active ? 'Live' : 'Draft';
             vMeta.appendChild(vStatus);
             var vRc = _bookReaderCounts[vol.id];
-            if (vRc) { var vRcEl = mke('span'); vRcEl.style.cssText = 'color:#3a82f6;font-weight:600;margin-right:4px;'; vRcEl.textContent = ' · 👁 ' + vRc; vMeta.appendChild(vRcEl); }
+            if (vRc) { var vRcEl = mke('span'); vRcEl.style.cssText = 'color:#3a82f6;font-weight:600;margin-right:4px;'; vRcEl.textContent = ' � ?? ' + vRc; vMeta.appendChild(vRcEl); }
             vInfo.appendChild(vNum); vInfo.appendChild(vTitle); vInfo.appendChild(vMeta);
             vRow.appendChild(vInfo);
 
@@ -3634,7 +3634,7 @@ async function _sendSeriesBookNotifNow(seriesId, title, body) {
             body: JSON.stringify({ action: 'send', id: createData.notification.id })
         });
         var sendData = await sendRes.json();
-        if (sendData.success) { showNotification('Push notification sent ✓', 'success'); }
+        if (sendData.success) { showNotification('Push notification sent ?', 'success'); }
         else { showNotification('Notification saved aut send failed: ' + (sendData.error || 'unknown'), 'warning'); }
     } catch (e) { showNotification('Notification error: ' + e.message, 'warning'); }
 }
@@ -3748,7 +3748,7 @@ function cancelBookEdit() {
 function onPdfFilePicked(input) {
     var file = input.files && input.files[0]; if (!file) return;
     var statusEl = document.getElementById('book-pdf-upload-status');
-    if (statusEl) statusEl.textContent = '📄 ' + file.name + ' (' + (file.size / 1024 / 1024).toFixed(1) + ' MB) — will upload on Save';
+    if (statusEl) statusEl.textContent = '?? ' + file.name + ' (' + (file.size / 1024 / 1024).toFixed(1) + ' MB) � will upload on Save';
     /* Clear direct URL field when file is chosen */
     document.getElementById('book-pdf-url').value = '';
 }
@@ -3757,7 +3757,7 @@ async function uploadPdf(file) {
     var statusEl = document.getElementById('book-pdf-upload-status');
     if (statusEl) statusEl.textContent = 'Uploading PDF... (this may take a moment)';
     var url = await uploadToR2(file, 'pdfs', 'tafsirkurd-books');
-    if (statusEl) statusEl.textContent = url ? 'PDF uploaded ✓' : 'Upload failed.';
+    if (statusEl) statusEl.textContent = url ? 'PDF uploaded ?' : 'Upload failed.';
     return url;
 }
 
@@ -3822,8 +3822,8 @@ async function saveBook() {
             if (statusEl) statusEl.textContent = 'Cover uploaded.';
         } else {
             if (statusEl) statusEl.textContent = 'Cover upload failed.';
-            if (!coverUrl) { showNotification('Cover upload failed and no URL fallback — fix the cover before saving.', 'error'); return; }
-            if (statusEl) statusEl.textContent = 'Cover upload failed — keeping existing URL.';
+            if (!coverUrl) { showNotification('Cover upload failed and no URL fallback � fix the cover before saving.', 'error'); return; }
+            if (statusEl) statusEl.textContent = 'Cover upload failed � keeping existing URL.';
         }
     }
 
@@ -3836,7 +3836,7 @@ async function saveBook() {
         if (pdfStatusEl) pdfStatusEl.textContent = 'Uploading PDF...';
         var uploadedPdf = await uploadPdf(pdfFileInput.files[0]);
         if (uploadedPdf) { pdfUrl = uploadedPdf; if (pdfStatusEl) pdfStatusEl.textContent = 'PDF uploaded.'; }
-        else { if (pdfStatusEl) pdfStatusEl.textContent = 'PDF upload failed.'; showNotification('PDF upload failed — the book was not saved. Try again.', 'error'); return; }
+        else { if (pdfStatusEl) pdfStatusEl.textContent = 'PDF upload failed.'; showNotification('PDF upload failed � the book was not saved. Try again.', 'error'); return; }
     }
 
     var editId = document.getElementById('book-edit-id').value;
@@ -3873,8 +3873,8 @@ async function saveBook() {
         var _newBookId = r.data[0].id;
         var _sendPushEl = document.getElementById('book-send-push');
         if (_sendPushEl && _sendPushEl.checked) {
-            var _defBookTitle = payload.title_ku || payload.title_ar || 'پەرتوکەکا نوی';
-            var _defBookBody  = 'پەرتووکەکا نوو د تەفسیر کورد دا یا بەردەستە. نوکە بخوینە.';
+            var _defBookTitle = payload.title_ku || payload.title_ar || '????????? ???';
+            var _defBookBody  = '?????????? ??? ? ?????? ???? ?? ?? ????????. ???? ??????.';
             showNotifPreviewDialog(_defBookTitle, _defBookBody, function(t, a) {
                 _sendBookNotifNow(_newBookId, t, a);
             }, function() {
@@ -3895,7 +3895,7 @@ async function saveBook() {
                 var d = new Date(); d.setHours(d.getHours() + hours);
                 var until = d.toISOString();
                 _setBadge('gencine_books', newBook.id, until)
-                    .then(function(res) { if (!res.error) { newBook.badge_until = until; renderBooksList(); localStorage.removeItem('gencine_books_v1'); showNotification('نوی badge added.', 'success'); } else { showNotification('Badge save failed: ' + res.error, 'error'); } });
+                    .then(function(res) { if (!res.error) { newBook.badge_until = until; renderBooksList(); localStorage.removeItem('gencine_books_v1'); showNotification('??? badge added.', 'success'); } else { showNotification('Badge save failed: ' + res.error, 'error'); } });
             });
         }
     }
@@ -3903,7 +3903,7 @@ async function saveBook() {
 
 async function autoSaveBookSort(val) {
     var editId = document.getElementById('book-edit-id').value;
-    if (!editId) return; // new book — will be saved on Save Book click
+    if (!editId) return; // new book � will be saved on Save Book click
     var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
     try {
         await supabase.from('gencine_books').update({ sort_order: parseInt(val) || 0 }).eq('id', editId);
@@ -3926,7 +3926,7 @@ async function moveBook(idx, dir) {
             supabase.from('gencine_books').update({ sort_order: sa }).eq('id', a.id)
         ]);
     } catch(e) { showNotification('Sort failed', 'error'); return; }
-    /* optimistic local swap — no full reload needed */
+    /* optimistic local swap � no full reload needed */
     a.sort_order = sa; a.sort_order = sa;
     allBooks.sort(function(x,y){ return y.sort_order - x.sort_order; });
     localStorage.removeItem('gencine_books_v1');
@@ -3935,17 +3935,17 @@ async function moveBook(idx, dir) {
 
 async function quickToggleBookActive(book) {
     var newActive = !book.active;
-    // Unpublish — just do it silently
+    // Unpublish � just do it silently
     if (!newActive) {
         var r = await _booksApi({ action: 'update', id: book.id, payload: { active: false } });
         if (r.error) { showNotification('Failed: ' + JSON.stringify(r.error), 'error'); return; }
         book.active = false;
         localStorage.removeItem('gencine_books_v1');
         renderBooksList();
-        showNotification('"' + (book.title_ku || book.title_ar || 'Book') + '" — Moved to Draft.', 'success');
+        showNotification('"' + (book.title_ku || book.title_ar || 'Book') + '" � Moved to Draft.', 'success');
         return;
     }
-    // Publish — detect if part of a series
+    // Publish � detect if part of a series
     var seriesVolumes = book.series_id ? allBooks.filter(function(ak){ return ak.series_id === book.series_id; }) : null;
     var isSeries = seriesVolumes && seriesVolumes.length > 1;
     var displayTitle = isSeries ? (book.series_title_ku || book.title_ku || 'Series') : (book.title_ku || book.title_ar || 'Book');
@@ -3957,7 +3957,7 @@ async function quickToggleBookActive(book) {
     targets.forEach(function(ak){ ak.active = true; });
     localStorage.removeItem('gencine_books_v1');
     renderBooksList();
-    showNotification('"' + displayTitle + '" — Published' + (isSeries ? ' (' + targets.length + ' volumes)' : '') + '.', 'success');
+    showNotification('"' + displayTitle + '" � Published' + (isSeries ? ' (' + targets.length + ' volumes)' : '') + '.', 'success');
     // Show notification + badge options dialog
     showPublishOptionsDialog(displayTitle, isSeries, targets);
 }
@@ -3967,7 +3967,7 @@ function showPublishOptionsDialog(title, isSeries, volumes) {
     var overlay = mke('div', 'badge-dlg-overlay');
     var dlg = mke('div', 'badge-dlg');
 
-    var ico = mke('div', 'badge-dlg-icon'); ico.textContent = '🎉';
+    var ico = mke('div', 'badge-dlg-icon'); ico.textContent = '??';
     var ttl = mke('div', 'badge-dlg-title'); ttl.textContent = 'Published: ' + title;
     var sua = mke('div', 'badge-dlg-sub'); sua.textContent = isSeries ? 'All volumes are now live.' : 'The book is now live.';
     dlg.appendChild(ico); dlg.appendChild(ttl); dlg.appendChild(sua);
@@ -3984,7 +3984,7 @@ function showPublishOptionsDialog(title, isSeries, volumes) {
 
     // Badge section
     var adgLal = mke('div', 'badge-dlg-sub'); adgLal.style.cssText = 'margin-top:12px;font-weight:600;font-size:13px';
-    bdgLal.textContent = 'Add نوی badge?';
+    bdgLal.textContent = 'Add ??? badge?';
     var grid = mke('div', 'badge-dur-grid');
     BADGE_DURATIONS.forEach(function(d) {
         var opt = mke('button', 'badge-dur-opt'); opt.type = 'button'; opt.textContent = d.label;
@@ -4004,7 +4004,7 @@ function showPublishOptionsDialog(title, isSeries, volumes) {
     var doneBtn = mke('button', 'badge-dlg-btn confirm'); doneBtn.type = 'button'; doneBtn.textContent = 'Done';
     doneBtn.onclick = async function() {
         overlay.remove();
-        // Send notification — use first volume's id, series title as title
+        // Send notification � use first volume's id, series title as title
         if (notifChk.checked) {
             var notifBookId = volumes[0] ? volumes[0].id : null;
             if (notifBookId) await _sendBookNotifNow(notifBookId, title);
@@ -4018,7 +4018,7 @@ function showPublishOptionsDialog(title, isSeries, volumes) {
             await Promise.all(volumes.map(function(ak){ return _setBadge('gencine_books', ak.id, until).then(function(res){ if(!res.error) ak.badge_until = until; }); }));
             localStorage.removeItem('gencine_books_v1');
             renderBooksList();
-            showNotification('نوی badge added' + (volumes.length > 1 ? ' to all volumes.' : '.'), 'success');
+            showNotification('??? badge added' + (volumes.length > 1 ? ' to all volumes.' : '.'), 'success');
         }
     };
     actions.appendChild(skipBtn); actions.appendChild(doneBtn);
@@ -4036,7 +4036,7 @@ async function deleteBook(id) {
     showNotification('Book deleted.', 'success'); await loadBooks(); localStorage.removeItem('gencine_books_v1');
 }
 
-/* ── Theme toggle ── */
+/* -- Theme toggle -- */
 (function() {
     var themeIcon = document.getElementById('theme-icon');
     if (localStorage.getItem('admin-theme') === 'dark') {
@@ -4046,7 +4046,7 @@ async function deleteBook(id) {
     }
 })();
 
-/* ── Init ── */
+/* -- Init -- */
 (async function() {
     var isAuth = await window.adminAuth.checkAuth();
     if (isAuth) await loadAll();
@@ -4069,7 +4069,7 @@ if (searchInput) searchInput.addEventListener('input', function() {
 });
 if (typeof lucide !== 'undefined') lucide.createIcons();
 
-// ── Taa scroll fade indicators ────────────────────────────────
+// -- Taa scroll fade indicators --------------------------------
 (function() {
     var taas = document.getElementById('platformTaas');
     var wrap = document.getElementById('taasWrap');

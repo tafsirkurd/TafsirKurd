@@ -34,6 +34,7 @@
                 { href: '/admin-notifications.html',            icon: 'bell',        label: 'Notifications' },
                 { href: '/admin-notification-analytics.html',   icon: 'bar-chart-2', label: 'Notif Analytics' },
                 { href: '/admin-social-stats.html',             icon: 'share-2',     label: 'Social Stats' },
+                { href: '/admin-reading-stats.html',            icon: 'book-open',   label: 'Reading Stats' },
             ]
         },
         {
