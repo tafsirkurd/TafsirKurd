@@ -506,7 +506,7 @@ var CHECK_DEFS = {
     kmr_bundled: {
         name: 'kmr-bundled.js',
         run: async function() {
-            var r = await fetch('/i18n/kmr-bundled.js?v=20260620b', { method: 'HEAD' });
+            var r = await fetch('/i18n/kmr-bundled.js?v=20260622', { method: 'HEAD' });
             if (!r.ok) return { ok: false, detail: 'HTTP ' + r.status };
             return { detail: 'kmr-bundled.js accessible' };
         }
@@ -524,7 +524,7 @@ var CHECK_DEFS = {
     smart_dhikr_js: {
         name: 'smart-dhikr.js',
         run: async function() {
-            var r = await fetch('/dhikr/smart-dhikr.js?v=88', { method: 'HEAD' });
+            var r = await fetch('/dhikr/smart-dhikr.js?v=89', { method: 'HEAD' });
             if (!r.ok) return { ok: false, detail: 'HTTP ' + r.status };
             return { detail: 'smart-dhikr.js accessible' };
         }
@@ -560,9 +560,9 @@ var CHECK_DEFS = {
     app_js: {
         name: 'app.min.js',
         run: async function() {
-            var r = await fetch('/app/app.min.js?v=1211', { method: 'HEAD' });
+            var r = await fetch('/app/app.min.js?v=1212', { method: 'HEAD' });
             if (!r.ok) return { ok: false, detail: 'HTTP ' + r.status };
-            return { detail: 'app.min.js v1211 accessible' };
+            return { detail: 'app.min.js v1212 accessible' };
         }
     },
     hafs_font: {
