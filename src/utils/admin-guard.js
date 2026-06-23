@@ -44,5 +44,5 @@
         (document.head || document.documentElement).appendChild(s);
     }
     loadScript('/utils/admin-security-max.js?v=4');
-    loadScript('/utils/admin-notes.js?v=2');
+    loadScript('/utils/admin-notes.js?v=3');
 })();

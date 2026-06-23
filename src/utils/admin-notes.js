@@ -1040,8 +1040,13 @@
 
   // ─── Badge ────────────────────────────────────────────────────────────────
   function updateBadge() {
-    var badge=document.querySelector('#anTrigger .an-badge'); if (!badge) return;
-    badge.classList.toggle('on', notes.filter(function(n){return !n.is_archived;}).length > 0);
+    var cnt = notes.filter(function(n){ return !n.is_archived && n.note_type !== 'focus'; }).length;
+    // Topbar badge dot
+    var badge = document.querySelector('#anTrigger .an-badge');
+    if (badge) badge.style.display = cnt > 0 ? 'inline-block' : 'none';
+    // Sidebar badge count
+    var sb = document.getElementById('anSidebarBadge');
+    if (sb) { sb.textContent = cnt || ''; sb.style.display = cnt > 0 ? 'inline-block' : 'none'; }
   }
 
   // ─── Glass Pinned Widget ──────────────────────────────────────────────────
@@ -1203,16 +1208,43 @@
 
   // ─── Trigger Button ───────────────────────────────────────────────────────
   function injectTrigger() {
-    if (document.getElementById('anTrigger')) return;
-    var actions = document.querySelector('.topbar-actions'); if (!actions) return;
-    var btn = document.createElement('button');
-    btn.id = 'anTrigger'; btn.className = 'topbar-btn';
-    btn.title = 'Quick Notes (Ctrl+Shift+N)';
-    btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg><span class="an-badge"></span>`;
-    btn.addEventListener('click', function(){ panelOpen ? closePanel() : openPanel(); });
-    var themeBtn = document.getElementById('theme-toggle');
-    if (themeBtn) actions.insertBefore(btn, themeBtn);
-    else          actions.prepend(btn);
+    // ── Topbar button ──
+    if (!document.getElementById('anTrigger')) {
+      var actions = document.querySelector('.topbar-actions');
+      if (actions) {
+        var btn = document.createElement('button');
+        btn.id = 'anTrigger';
+        btn.title = 'Quick Notes (Ctrl+Shift+N)';
+        btn.style.cssText = 'display:flex;align-items:center;gap:5px;padding:0 10px;height:36px;background:var(--bg-active,#f1f5f9);border:1px solid var(--border-medium,#e2e8f0);border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text-secondary,#64748b);white-space:nowrap;flex-shrink:0;font-family:inherit;transition:all .2s;';
+        btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Notes <span class="an-badge" style="width:7px;height:7px;border-radius:50%;background:#f59e0b;display:none;flex-shrink:0;"></span>';
+        btn.addEventListener('mouseenter', function(){ btn.style.background='var(--bg-hover,#e2e8f0)'; btn.style.color='var(--text-primary,#0f172a)'; });
+        btn.addEventListener('mouseleave', function(){ btn.style.background='var(--bg-active,#f1f5f9)'; btn.style.color='var(--text-secondary,#64748b)'; });
+        btn.addEventListener('click', function(){ panelOpen ? closePanel() : openPanel(); });
+        var themeBtn = document.getElementById('theme-toggle');
+        if (themeBtn) actions.insertBefore(btn, themeBtn);
+        else          actions.prepend(btn);
+      }
+    }
+
+    // ── Sidebar entry (under Overview section) ──
+    if (!document.getElementById('anSidebarItem')) {
+      function tryInjectSidebar() {
+        var tasksLink = document.querySelector('.sidebar-nav a[href*="admin-tasks"]');
+        if (!tasksLink) return; // not ready yet
+        var sideItem = document.createElement('button');
+        sideItem.id = 'anSidebarItem';
+        sideItem.style.cssText = 'display:flex;align-items:center;gap:10px;width:100%;padding:8px 12px;background:transparent;border:none;border-radius:8px;cursor:pointer;color:var(--text-secondary);font-size:13px;font-weight:500;font-family:inherit;text-align:left;transition:background .15s,color .15s;';
+        sideItem.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span style="flex:1">Quick Notes</span><span id="anSidebarBadge" style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;background:#f59e0b22;color:#f59e0b;display:none"></span>';
+        sideItem.addEventListener('mouseenter', function(){ sideItem.style.background='var(--bg-active)'; sideItem.style.color='var(--text-primary)'; });
+        sideItem.addEventListener('mouseleave', function(){ sideItem.style.background='transparent'; sideItem.style.color='var(--text-secondary)'; });
+        sideItem.addEventListener('click', function(){ panelOpen ? closePanel() : openPanel(); });
+        tasksLink.parentNode.insertBefore(sideItem, tasksLink.nextSibling);
+        updateBadge();
+      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', tryInjectSidebar);
+      else tryInjectSidebar();
+    }
+
     updateBadge();
   }
 
