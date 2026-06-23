@@ -127,9 +127,30 @@
     } catch(ex) {}
   }, true);
 
+  // ── Known third-party false positives ─────────────────────────────────────
+  var _NOISE_MSG = [
+    '_AutofillCallbackHandler',   // Instagram IAB on iOS injects this reference
+    "Cannot assign to read only property 'pushState'", // Cloudflare beacon.min.js on old Chrome
+  ];
+  var _NOISE_SRC = [
+    'cloudflareinsights.com',     // Cloudflare Web Analytics beacon — not our code
+  ];
+
+  function _isNoise(msg, src) {
+    var m = String(msg || ''), s = String(src || '');
+    for (var i = 0; i < _NOISE_MSG.length; i++) {
+      if (m.indexOf(_NOISE_MSG[i]) !== -1) return true;
+    }
+    for (var j = 0; j < _NOISE_SRC.length; j++) {
+      if (s.indexOf(_NOISE_SRC[j]) !== -1) return true;
+    }
+    return false;
+  }
+
   // ── Global error capture ───────────────────────────────────────────────────
   var _prevOnerror = w.onerror;
   w.onerror = function(msg, src, line, col, err) {
+    if (_isNoise(msg, src)) return false;
     _send('js_error', msg, {
       stack:    err ? err.stack : (String(src || '') + ':' + line + ':' + col),
       severity: 'error',

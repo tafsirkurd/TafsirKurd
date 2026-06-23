@@ -498,6 +498,7 @@
     </div>
     <div class="dp-footer">
         <button class="btn btn-danger" id="dpDeleteBtn" onclick="deleteTask()"><i data-lucide="trash-2"></i> Delete</button>
+        <button class="btn btn-secondary" id="dpToNoteBtn" onclick="taskToNote()" title="Save as a Quick Note"><i data-lucide="sticky-note"></i> Note</button>
         <button class="btn btn-primary" id="dpSaveBtn" onclick="saveDetail()"><i data-lucide="save"></i> Save</button>
     </div>
 </div>
@@ -697,6 +698,16 @@ async function saveDetail(){
         logAudit('task_update', {title: payload.title, status: payload.status});
     } catch(e){
         alert('Error: ' + (e.message || e));
+    }
+}
+
+function taskToNote(){
+    if(!editingTaskId) return;
+    var task = allTasks.find(function(t){return t.id===editingTaskId;});
+    if(!task) return;
+    if(window.AdminNotes){
+        window.AdminNotes.createFromTask(task);
+        closeDetail();
     }
 }
 

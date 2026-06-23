@@ -42,9 +42,13 @@
 
     // ── Quick actions ─────────────────────────────────────────────
     var ACTIONS = [
-        { id: 'theme',   icon: 'moon',     label: 'Toggle Theme',  section: 'Action', keywords: 'dark light mode sakina noor' },
-        { id: 'refresh', icon: 'refresh-cw', label: 'Refresh Page', section: 'Action', keywords: 'reload' },
-        { id: 'logout',  icon: 'log-out',  label: 'Log Out',       section: 'Action', keywords: 'sign out exit' },
+        { id: 'theme',        icon: 'moon',        label: 'Toggle Theme',     section: 'Action', keywords: 'dark light mode sakina noor' },
+        { id: 'refresh',      icon: 'refresh-cw',  label: 'Refresh Page',     section: 'Action', keywords: 'reload' },
+        { id: 'logout',       icon: 'log-out',     label: 'Log Out',          section: 'Action', keywords: 'sign out exit' },
+        { id: 'note-open',    icon: 'sticky-note', label: 'Open Notes',       section: 'Notes',  keywords: 'notes panel open quick' },
+        { id: 'note-capture', icon: 'file-plus',   label: 'New Note',         section: 'Notes',  keywords: 'create note idea add capture write' },
+        { id: 'note-focus',   icon: 'target',      label: "Today's Focus",    section: 'Notes',  keywords: 'focus goal priority today aim' },
+        { id: 'note-search',  icon: 'search',      label: 'Search Notes',     section: 'Notes',  keywords: 'find note search lookup' },
     ];
 
     var SECTION_COLORS = {
@@ -56,6 +60,7 @@
         Security:   '#ef4444',
         Settings:   '#6b7280',
         Action:     '#a855f7',
+        Notes:      '#f59e0b',
     };
 
     var RECENT_KEY = 'admin_cp_recent';
@@ -347,6 +352,16 @@
             window.location.reload();
         } else if (id === 'logout') {
             if (window.adminAuth && window.adminAuth.logout) window.adminAuth.logout();
+        } else if (id === 'note-open' && window.AdminNotes) {
+            window.AdminNotes.open();
+        } else if (id === 'note-capture' && window.AdminNotes) {
+            window.AdminNotes.capture();
+        } else if (id === 'note-focus' && window.AdminNotes) {
+            window.AdminNotes.open();
+            setTimeout(function(){ var el=document.getElementById('anFocusWidget'); if(el) el.click(); }, 350);
+        } else if (id === 'note-search' && window.AdminNotes) {
+            window.AdminNotes.open();
+            setTimeout(function(){ var el=document.getElementById('anSearch'); if(el) el.focus(); }, 300);
         }
     }
 
