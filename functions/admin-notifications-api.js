@@ -45,6 +45,15 @@ async function _handleRequest(context) {
             }
         }
 
+        // Auto-recover notifications stuck in 'sending' from a previous Worker crash.
+        // When Cloudflare kills a Worker (CPU/wall-clock timeout), catch blocks never run,
+        // so status stays 'sending' forever. Reset to 'failed' before claiming new ones
+        // so they surface in the dashboard and auto-content can re-attempt on the next run.
+        await supabase.from('admin_notifications')
+            .update({ status: 'failed', error_message: 'Send timed out — auto-recovered by cron' })
+            .eq('status', 'sending')
+            .is('sent_at', null);
+
         const { data: due } = await supabase
             .from('admin_notifications')
             .select('*')
@@ -196,7 +205,13 @@ async function _handleRequest(context) {
             if (error?.code === '23505') return { skipped: true }; // fallback for unique constraint
             if (error || !notif) return { error: error?.message || 'insert failed' };
             if (scheduledAt) return { scheduled: true, scheduled_at: scheduledAt };
-            return await doSend(supabase, env, notif, notif.id, 'auto');
+            try { return await doSend(supabase, env, notif, notif.id, 'auto'); }
+            catch (e) {
+                await supabase.from('admin_notifications')
+                    .update({ status: 'failed', error_message: 'Auto-send error: ' + e.message })
+                    .eq('id', notif.id).catch(() => {});
+                return { error: e.message };
+            }
         }
 
         // Helper: assign a slot, call sendAutoNotif, update usage counter
@@ -928,9 +943,9 @@ async function doSend(supabase, env, notif, trackingId, sentBy) {
 
     const deepLinkData = buildDeepLinkData(notif.deep_link_type, notif.deep_link_id);
     const FCM_URL = `https://fcm.googleapis.com/v1/projects/${env.FCM_PROJECT_ID}/messages:send`;
+    let successCount = 0, failCount = 0;
     const staleTokens = [], apnsErrors = [], fcmErrors = [];
     if (fcmAuthError) { fcmErrors.push(fcmAuthError); failCount += fcmTokens.length; }
-    let successCount = 0, failCount = 0;
 
     // Send in chunks of 200 to stay within Cloudflare's 1000-subrequest limit
     const CHUNK = 200;
