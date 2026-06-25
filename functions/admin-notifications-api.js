@@ -53,8 +53,9 @@ async function _handleRequest(context) {
         const targetNotifId = body.notif_id ?? null;
         const PAGE_SIZE = 40;
 
-        // Recovery only on batch 0 — subsequent batches must not interfere with in-flight sends
-        if (batchNum === 0) {
+        // Recovery only on generic cron batch_0 — not when targeting a specific notification,
+        // to avoid accidentally recovering a legitimately in-flight cron send.
+        if (batchNum === 0 && !targetNotifId) {
             await supabase.from('admin_notifications')
                 .update({ status: 'sent', sent_at: new Date().toISOString(),
                           tokens_sent: 0, tokens_failed: 0,
