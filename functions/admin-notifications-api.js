@@ -46,12 +46,18 @@ async function _handleRequest(context) {
         }
 
         // Auto-recover notifications stuck in 'sending' from a previous Worker crash.
-        // When Cloudflare kills a Worker (CPU/wall-clock timeout), catch blocks never run,
-        // so status stays 'sending' forever. Reset to 'failed' before claiming new ones
-        // so they surface in the dashboard and auto-content can re-attempt on the next run.
+        // tokens_targeted > 0: send started/completed but final DB write failed → mark 'sent'
+        // tokens_targeted = 0: Worker crashed before reaching send phase → mark 'failed'
+        await supabase.from('admin_notifications')
+            .update({ status: 'sent', sent_at: new Date().toISOString(),
+                      error_message: 'Auto-recovered: sent but final DB update timed out' })
+            .eq('status', 'sending')
+            .gt('tokens_targeted', 0)
+            .is('sent_at', null);
         await supabase.from('admin_notifications')
             .update({ status: 'failed', error_message: 'Send timed out — auto-recovered by cron' })
             .eq('status', 'sending')
+            .eq('tokens_targeted', 0)
             .is('sent_at', null);
 
         const { data: due } = await supabase
@@ -907,6 +913,12 @@ async function doSend(supabase, env, notif, trackingId, sentBy) {
             .eq('id', trackingId);
         return { error: 'Token fetch failed: ' + e.message };
     }
+
+    // Write tokens_targeted immediately so recovery can distinguish
+    // "crashed before sending" (0) from "crashed after sending" (>0).
+    await supabase.from('admin_notifications')
+        .update({ tokens_targeted: tokens.length })
+        .eq('id', trackingId).catch(() => {});
 
     if (!tokens.length) {
         await supabase.from('admin_notifications')
