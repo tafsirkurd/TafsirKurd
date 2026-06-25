@@ -45,54 +45,149 @@ async function _handleRequest(context) {
             }
         }
 
-        // Auto-recover notifications stuck in 'sending' from a previous Worker crash.
-        // tokens_targeted > 0: send started/completed but final DB write failed → mark 'sent'
-        // tokens_targeted = 0: Worker crashed before reaching send phase → mark 'failed'
-        await supabase.from('admin_notifications')
-            .update({ status: 'sent', sent_at: new Date().toISOString(),
-                      error_message: 'Auto-recovered: sent but final DB update timed out' })
-            .eq('status', 'sending')
-            .gt('tokens_targeted', 0)
-            .is('sent_at', null);
-        await supabase.from('admin_notifications')
-            .update({ status: 'failed', error_message: 'Send timed out — auto-recovered by cron' })
-            .eq('status', 'sending')
-            .eq('tokens_targeted', 0)
-            .is('sent_at', null);
+        // Each batch is a separate Pages Function invocation with its own 50 subrequest budget.
+        // PAGE_SIZE=40: 8 batches × 40 = 320 slots covers all users with budget headroom.
+        const batchNum = Number(body.batch_num ?? 0);
+        const PAGE_SIZE = 40;
 
-        const { data: due } = await supabase
-            .from('admin_notifications')
-            .select('*')
-            .eq('status', 'scheduled')
-            .eq('is_template', false)
-            .lte('scheduled_at', new Date().toISOString())
-            .limit(20);
-
-        if (!due?.length) return json({ success: true, processed: 0 });
-
-        const results = [];
-        for (const notif of due) {
-            try {
-                // Atomically claim the notification (prevent double-send)
-                const { data: claimed } = await supabase
-                    .from('admin_notifications')
-                    .update({ status: 'sending' })
-                    .eq('id', notif.id)
-                    .eq('status', 'scheduled')
-                    .select()
-                    .single();
-                if (!claimed) continue; // already claimed by another run
-
-                const r = await doSend(supabase, env, notif, notif.id, 'cron');
-                results.push({ id: notif.id, ...r });
-            } catch (e) {
-                try { await supabase.from('admin_notifications')
-                    .update({ status: 'failed', error_message: 'Cron error: ' + e.message })
-                    .eq('id', notif.id); } catch (_) {}
-                results.push({ id: notif.id, error: e.message });
-            }
+        // Recovery only on batch 0 — subsequent batches must not interfere with in-flight sends
+        if (batchNum === 0) {
+            await supabase.from('admin_notifications')
+                .update({ status: 'sent', sent_at: new Date().toISOString(),
+                          error_message: 'Auto-recovered: sent but final DB update timed out' })
+                .eq('status', 'sending').gt('tokens_targeted', 0).is('sent_at', null);
+            await supabase.from('admin_notifications')
+                .update({ status: 'failed', error_message: 'Send timed out — auto-recovered by cron' })
+                .eq('status', 'sending').eq('tokens_targeted', 0).is('sent_at', null);
         }
-        return json({ success: true, processed: results.length, results });
+
+        let notif;
+        if (batchNum === 0) {
+            // Find and atomically claim a due notification
+            const { data: due } = await supabase
+                .from('admin_notifications')
+                .select('*')
+                .eq('status', 'scheduled')
+                .eq('is_template', false)
+                .lte('scheduled_at', new Date().toISOString())
+                .limit(1);
+            if (!due?.length) return json({ success: true, processed: 0 });
+            const { data: claimed } = await supabase
+                .from('admin_notifications')
+                .update({ status: 'sending' })
+                .eq('id', due[0].id)
+                .eq('status', 'scheduled')
+                .select()
+                .single();
+            if (!claimed) return json({ success: true, processed: 0 });
+            notif = claimed;
+        } else {
+            // Resume the in-flight notification from the previous batch
+            const { data: inFlight } = await supabase
+                .from('admin_notifications')
+                .select('*')
+                .eq('status', 'sending')
+                .gt('tokens_targeted', 0)
+                .is('sent_at', null)
+                .limit(1)
+                .single();
+            if (!inFlight) return json({ success: true, processed: 0 });
+            notif = inFlight;
+        }
+
+        let allTokens;
+        try { allTokens = await getTokensForAudience(env, notif.audience, notif.platform); }
+        catch (e) {
+            if (batchNum === 0) {
+                await supabase.from('admin_notifications')
+                    .update({ status: 'failed', error_message: 'Token fetch: ' + e.message })
+                    .eq('id', notif.id);
+            }
+            return json({ error: 'Token fetch failed: ' + e.message });
+        }
+
+        // Interleave FCM and APNs so both platforms share each batch's subrequest budget
+        const _apns = allTokens.filter(t => isApnsToken(t.token));
+        const _fcm  = allTokens.filter(t => !isApnsToken(t.token));
+        const interleaved = [];
+        for (let i = 0; i < Math.max(_fcm.length, _apns.length); i++) {
+            if (i < _fcm.length)  interleaved.push({ ..._fcm[i],  _type: 'fcm' });
+            if (i < _apns.length) interleaved.push({ ..._apns[i], _type: 'apns' });
+        }
+
+        // Write total count on batch 0 as crash-recovery checkpoint
+        if (batchNum === 0) {
+            await supabase.from('admin_notifications')
+                .update({ tokens_targeted: allTokens.length })
+                .eq('id', notif.id).catch(() => {});
+        }
+
+        const batchSlice = interleaved.slice(batchNum * PAGE_SIZE, (batchNum + 1) * PAGE_SIZE);
+        const hasMore = interleaved.length > (batchNum + 1) * PAGE_SIZE;
+
+        const batchResult = await sendBatch(env, notif, batchSlice);
+
+        return json({
+            notif_id: notif.id,
+            total_targeted: allTokens.length,
+            batch_sent: batchResult.sent,
+            batch_failed: batchResult.failed,
+            stale_tokens: batchResult.staleTokens,
+            has_more: hasMore,
+        });
+    }
+
+    // ── FINALIZE SEND (cron secret only — called after all batches complete) ──
+    if (body.action === 'finalize_send') {
+        const authHeader = request.headers.get('Authorization') || '';
+        const isCron = [env.CRON_SECRET, env.NOTIF_CRON_SECRET]
+            .filter(Boolean)
+            .some(s => authHeader === `Bearer ${s}`);
+        if (!isCron) return json({ error: 'Unauthorized' }, 401);
+
+        const { notif_id, tokens_sent, tokens_failed, stale_tokens, error_msg } = body;
+        if (!notif_id) return json({ error: 'Missing notif_id' }, 400);
+
+        const { data: notif } = await supabase.from('admin_notifications')
+            .select('*').eq('id', notif_id).single();
+        if (!notif) return json({ error: 'Notification not found' }, 404);
+
+        if (stale_tokens?.length) await removeStaleTokens(env, stale_tokens).catch(() => {});
+
+        await supabase.from('admin_notifications').update({
+            status: 'sent', sent_at: new Date().toISOString(),
+            tokens_sent: tokens_sent ?? 0,
+            tokens_failed: tokens_failed ?? 0,
+            stale_removed: stale_tokens?.length ?? 0,
+            error_message: error_msg || null,
+        }).eq('id', notif_id);
+
+        if (notif.recurrence && notif.recurrence !== 'none') {
+            try {
+                const nextAt = nextOccurrence(notif.recurrence, notif.recurrence_day, notif.scheduled_at);
+                if (nextAt) {
+                    const { count: dupCount } = await supabase
+                        .from('admin_notifications')
+                        .select('id', { count: 'exact', head: true })
+                        .eq('title', notif.title)
+                        .eq('recurrence', notif.recurrence)
+                        .eq('scheduled_at', nextAt)
+                        .in('status', ['scheduled', 'sending']);
+                    if (!dupCount) {
+                        await supabase.from('admin_notifications').insert({
+                            title: notif.title, body: notif.body, image_url: notif.image_url || null,
+                            platform: notif.platform || 'all', audience: notif.audience || 'all',
+                            deep_link_type: notif.deep_link_type || 'none', deep_link_id: notif.deep_link_id || null,
+                            recurrence: notif.recurrence, recurrence_day: notif.recurrence_day || null,
+                            notes: notif.notes || null, created_by: 'cron',
+                            status: 'scheduled', scheduled_at: nextAt, is_template: false,
+                        });
+                    }
+                }
+            } catch (e) { console.error('nextOccurrence error:', e.message); }
+        }
+
+        return json({ success: true, finalized: notif_id });
     }
 
     // ── AUTO-NOTIFY NEW CONTENT (cron — no admin auth) ────────────
@@ -901,6 +996,63 @@ function validateScheduledAt(scheduled_at, recurrence, is_template) {
         return 'Scheduled time is in the past. Please pick a future time.';
     }
     return null;
+}
+
+async function sendBatch(env, notif, batchTokens) {
+    if (!batchTokens.length) return { sent: 0, failed: 0, staleTokens: [], errors: [] };
+
+    const apnsInBatch = batchTokens.filter(t => t._type === 'apns');
+    const fcmInBatch  = batchTokens.filter(t => t._type === 'fcm');
+
+    let accessToken = null, fcmAuthError = null;
+    if (fcmInBatch.length && env.FCM_SERVICE_ACCOUNT) {
+        try { accessToken = await getFCMAccessToken(env.FCM_SERVICE_ACCOUNT); }
+        catch (e) { fcmAuthError = 'FCM auth: ' + e.message; }
+    }
+
+    let apnsJwt = null, apnsJwtError = null;
+    if (apnsInBatch.length && env.APNS_KEY_P8) {
+        try { apnsJwt = await getAPNsJWT(env.APNS_KEY_P8, env.APNS_KEY_ID || 'KLG2RRCRNR', env.APNS_TEAM_ID || '8KA7UDSC9D'); }
+        catch (e) { apnsJwtError = 'APNs JWT: ' + e.message; }
+    }
+
+    const deepLinkData = buildDeepLinkData(notif.deep_link_type, notif.deep_link_id);
+    const FCM_URL = `https://fcm.googleapis.com/v1/projects/${env.FCM_PROJECT_ID}/messages:send`;
+    let successCount = 0, failCount = fcmAuthError ? fcmInBatch.length : 0;
+    const staleTokens = [], errors = [];
+    if (fcmAuthError) errors.push(fcmAuthError);
+
+    const jobs = batchTokens.map(t => async () => {
+        if (t._type === 'fcm') {
+            if (!accessToken) { failCount++; return; }
+            const res = await fetch(FCM_URL, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: buildFCMMessage(t.token, t.platform, notif.title, notif.body, notif.image_url, deepLinkData) }),
+            });
+            if (res.ok) { successCount++; }
+            else {
+                const err = await res.json().catch(() => ({}));
+                errors.push(`FCM ${res.status} ${err?.error?.status || ''}: ${err?.error?.message || ''}`);
+                if (err?.error?.status === 'NOT_FOUND' || err?.error?.status === 'UNREGISTERED') staleTokens.push(t.token);
+                failCount++;
+            }
+        } else {
+            if (!apnsJwt) { errors.push(apnsJwtError || 'APNs JWT missing'); failCount++; return; }
+            const res = await sendApns(t.token, notif.title, notif.body, deepLinkData, apnsJwt, 'com.tafsirkurd.app');
+            if (res.ok) { successCount++; }
+            else {
+                const errText = await res.text().catch(() => '');
+                const err = (() => { try { return JSON.parse(errText || '{}'); } catch { return {}; } })();
+                errors.push(`APNs ${res.status}: ${err?.reason || errText}`);
+                if (res.status === 410 || err?.reason === 'BadDeviceToken' || err?.reason === 'Unregistered') staleTokens.push(t.token);
+                failCount++;
+            }
+        }
+    });
+
+    await Promise.allSettled(jobs.map(fn => fn()));
+    return { sent: successCount, failed: failCount, staleTokens, errors };
 }
 
 async function doSend(supabase, env, notif, trackingId, sentBy) {

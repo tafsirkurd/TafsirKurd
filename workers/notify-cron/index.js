@@ -28,13 +28,43 @@ export default {
     }).catch(e => ({ ok: false, _err: e.message }));
     const syncBody = syncRes.ok ? await syncRes.json().catch(() => ({})) : {};
 
-    // 2. Dispatch any scheduled notifications whose time has arrived
-    const schedRes = await fetch(`${site}/admin-notifications-api`, {
-      method:  'POST',
-      headers,
-      body:    JSON.stringify({ action: 'process_scheduled' }),
-    }).catch(e => ({ ok: false, _err: e.message }));
-    const schedBody = schedRes.ok ? await schedRes.json().catch(() => ({})) : {};
+    // 2. Dispatch scheduled notifications in batches of 40 tokens.
+    //    Each process_scheduled call is a separate Pages Function invocation with its own
+    //    50 subrequest budget. 8 batches × 40 = 320 slots covers all current users.
+    let schedNotifId = null, schedTotalSent = 0, schedTotalFailed = 0, schedTotal = 0;
+    const schedStale = [], schedErrors = [];
+    for (let batchNum = 0; batchNum < 8; batchNum++) {
+      const bRes = await fetch(`${site}/admin-notifications-api`, {
+        method:  'POST',
+        headers,
+        body:    JSON.stringify({ action: 'process_scheduled', batch_num: batchNum }),
+      }).catch(e => ({ ok: false, _err: e.message }));
+      const bBody = bRes.ok ? await bRes.json().catch(() => ({})) : {};
+      if (batchNum === 0) {
+        schedNotifId = bBody.notif_id ?? null;
+        schedTotal   = bBody.total_targeted ?? 0;
+      }
+      schedTotalSent   += bBody.batch_sent ?? 0;
+      schedTotalFailed += bBody.batch_failed ?? 0;
+      if (bBody.stale_tokens?.length) schedStale.push(...bBody.stale_tokens);
+      if (bBody.error) schedErrors.push(bBody.error);
+      if (!bBody.has_more || !schedNotifId) break;
+    }
+    if (schedNotifId) {
+      await fetch(`${site}/admin-notifications-api`, {
+        method:  'POST',
+        headers,
+        body:    JSON.stringify({
+          action:        'finalize_send',
+          notif_id:      schedNotifId,
+          tokens_sent:   schedTotalSent,
+          tokens_failed: schedTotalFailed,
+          stale_tokens:  schedStale,
+          error_msg:     schedErrors[0] || null,
+        }),
+      }).catch(() => {});
+    }
+    const schedBody = { processed: schedNotifId ? 1 : 0, tokens_sent: schedTotalSent, total: schedTotal };
 
     // 3. Auto-notify new content (videos + books + hadiths added in last 8 h)
     //    One notification per series per run — series dedup handled server-side.
@@ -60,7 +90,7 @@ export default {
 
     console.log('[notify-cron]', ts,
       `sync=${syncRes.ok ? 'ok' : 'FAIL'} new_eps=${syncBody.totalNewEpisodes ?? '?'}`,
-      `scheduled=${schedRes.ok ? 'ok' : 'FAIL'} processed=${schedBody.processed ?? '?'}`,
+      `scheduled=${schedNotifId ? 'ok' : 'none'} sent=${schedTotalSent}/${schedTotal} failed=${schedTotalFailed}`,
       `notify=${notifRes.ok ? 'ok' : 'FAIL'} notified=${notifBody.notified ?? '?'}`);
   },
 
