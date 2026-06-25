@@ -3257,6 +3257,8 @@ function initPushToken(){
       localStorage.setItem('push_token_preview',token.slice(0,20)+'…');
       localStorage.setItem('push_token_platform',platform);
       if(!token){_pushLog('ERROR: empty token');return;}
+      // Persist full token so we can re-register with user_id after login
+      try{localStorage.setItem('push_token_current',JSON.stringify({token:token,platform:platform}));}catch(e){}
       // Persist for cross-session retry (cleared on success)
       try{localStorage.setItem('push_token_pending',JSON.stringify({token:token,platform:platform}));}catch(e){}
       _registerPushToken(token,platform,0);
@@ -4613,7 +4615,7 @@ function renderMushafView(){
           if(!best)best=banners[0];
           var sn=parseInt(best.dataset.surah);
           var ns=SURAHS[sn-1];
-          if(ns&&$('readerName')){var _rnm=$('readerName'),_rnn=ns.en+' - '+ns.ar;if(_rnm.textContent!==_rnn){_rnm.style.opacity='0';(function(_t){setTimeout(function(){_rnm.textContent=_t;_rnm.style.opacity='1';},140);}(_rnn));}}}
+          if(ns&&$('readerName')){var _rnm=$('readerName'),_rnn=ns.en+' - '+ns.ar;if(_rnm.textContent!==_rnn){_rnm.style.opacity='0';(function(_t){setTimeout(function(){_rnm.textContent=_t;_rnm.style.opacity='1';},140);}(_rnn));}}
         },200);
       }
       view.addEventListener('scroll',_updateHeaderFromScroll,{passive:true});
@@ -11397,6 +11399,14 @@ function checkAuthSession(){
       _renderHash.settings=null;
       startCloudSync();
       if(S.tab==='settings')renderSettings();
+      // Re-register push token with the logged-in session so user_id is saved in DB.
+      // Token registration fires on app startup before the session is restored,
+      // which is why all tokens default to user_id=null. Re-registering here
+      // patches the row with the verified user_id.
+      try{
+        var _ptc=JSON.parse(localStorage.getItem('push_token_current')||'null');
+        if(_ptc&&_ptc.token)_registerPushToken(_ptc.token,_ptc.platform,0);
+      }catch(_e){}
     }else if(event==='SIGNED_OUT'){
       S.user=null;_clearProfileCache();
       _renderHash.settings=null;
