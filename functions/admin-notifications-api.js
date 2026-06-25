@@ -959,40 +959,51 @@ async function doSend(supabase, env, notif, trackingId, sentBy) {
     const staleTokens = [], apnsErrors = [], fcmErrors = [];
     if (fcmAuthError) { fcmErrors.push(fcmAuthError); failCount += fcmTokens.length; }
 
-    // Send in chunks of 200 to stay within Cloudflare's 1000-subrequest limit
-    const CHUNK = 200;
-    const allJobs = [
-        ...fcmTokens.map(({ token, platform }) => async () => {
-            if (!accessToken) { failCount++; return; }
-            const res = await fetch(FCM_URL, {
-                method: 'POST',
-                headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: buildFCMMessage(token, platform, notif.title, notif.body, notif.image_url, deepLinkData) }),
-            });
-            if (res.ok) { successCount++; }
-            else {
-                const err = await res.json().catch(() => ({}));
-                fcmErrors.push(`FCM ${res.status} ${err?.error?.status || ''}: ${err?.error?.message || JSON.stringify(err)}`);
-                if (err?.error?.status === 'NOT_FOUND' || err?.error?.status === 'UNREGISTERED') staleTokens.push(token);
-                failCount++;
-            }
-        }),
-        ...apnsTokens.map(({ token }) => async () => {
-            if (!apnsJwt) { apnsErrors.push(apnsJwtError || 'JWT missing'); failCount++; return; }
-            const res = await sendApns(token, notif.title, notif.body, deepLinkData, apnsJwt, 'com.tafsirkurd.app');
-            if (res.ok) { successCount++; }
-            else {
-                const errText = await res.text().catch(() => '');
-                const err = (() => { try { return JSON.parse(errText || '{}'); } catch { return {}; } })();
-                apnsErrors.push(`APNs ${res.status}: ${err?.reason || errText}`);
-                if (res.status === 410 || err?.reason === 'BadDeviceToken' || err?.reason === 'Unregistered') staleTokens.push(token);
-                failCount++;
-            }
-        }),
-    ];
-    for (let i = 0; i < allJobs.length; i += CHUNK) {
-        await Promise.allSettled(allJobs.slice(i, i + CHUNK).map(fn => fn()));
+    // Interleave Android (FCM) and iOS (APNs) jobs so both platforms get a fair share
+    // of Cloudflare's per-invocation subrequest budget. Previously all FCM jobs ran
+    // first, exhausting the budget before a single APNs request could be made.
+    const makeFCMJob = ({ token, platform }) => async () => {
+        if (!accessToken) { failCount++; return; }
+        const res = await fetch(FCM_URL, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: buildFCMMessage(token, platform, notif.title, notif.body, notif.image_url, deepLinkData) }),
+        });
+        if (res.ok) { successCount++; }
+        else {
+            const err = await res.json().catch(() => ({}));
+            fcmErrors.push(`FCM ${res.status} ${err?.error?.status || ''}: ${err?.error?.message || JSON.stringify(err)}`);
+            if (err?.error?.status === 'NOT_FOUND' || err?.error?.status === 'UNREGISTERED') staleTokens.push(token);
+            failCount++;
+        }
+    };
+    const makeAPNsJob = ({ token }) => async () => {
+        if (!apnsJwt) { apnsErrors.push(apnsJwtError || 'JWT missing'); failCount++; return; }
+        const res = await sendApns(token, notif.title, notif.body, deepLinkData, apnsJwt, 'com.tafsirkurd.app');
+        if (res.ok) { successCount++; }
+        else {
+            const errText = await res.text().catch(() => '');
+            const err = (() => { try { return JSON.parse(errText || '{}'); } catch { return {}; } })();
+            apnsErrors.push(`APNs ${res.status}: ${err?.reason || errText}`);
+            if (res.status === 410 || err?.reason === 'BadDeviceToken' || err?.reason === 'Unregistered') staleTokens.push(token);
+            failCount++;
+        }
+    };
+    // Interleave: FCM[0], APNs[0], FCM[1], APNs[1], ...
+    const maxLen = Math.max(fcmTokens.length, apnsTokens.length);
+    const allJobs = [];
+    for (let i = 0; i < maxLen; i++) {
+        if (i < fcmTokens.length) allJobs.push(makeFCMJob(fcmTokens[i]));
+        if (i < apnsTokens.length) allJobs.push(makeAPNsJob(apnsTokens[i]));
     }
+    // Cloudflare free plan: 50 subrequests per Worker invocation.
+    // Budget: 3 before sends (token fetch, tokens_targeted write, FCM auth)
+    //       + 4 after sends (stale removal, final DB update, next-occurrence check+insert)
+    //       = 43 available for actual sends.
+    // We cap at 42 for a safety margin so the final DB update always succeeds.
+    // Upgrade to Cloudflare Workers Paid ($5/mo) for 1000 subrequests — removes this cap.
+    const SEND_CAP = 42;
+    await Promise.allSettled(allJobs.slice(0, SEND_CAP).map(fn => fn()));
 
     if (staleTokens.length) await removeStaleTokens(env, staleTokens).catch(() => {});
 
