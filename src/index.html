@@ -5896,7 +5896,7 @@ class FloatingActionButtons {
         this.setupEventListeners();
         this.setupScrollVisibility();
         // Mark active theme dot
-        SiteTheme.set(SiteTheme.current());
+        if (window.SiteTheme) SiteTheme.set(SiteTheme.current());
     }
 
     setupEventListeners() {
@@ -6978,7 +6978,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Global theme picker — used by FAB dot onclick attributes
     window.pickTheme = function(id) {
-        SiteTheme.set(id);
+        if (window.SiteTheme) SiteTheme.set(id);
         var fg = document.getElementById('fabGroup');
         if (fg) fg.classList.remove('active');
     };
