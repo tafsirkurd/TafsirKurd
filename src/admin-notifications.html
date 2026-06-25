@@ -2823,11 +2823,7 @@
             try {
                 var result = await notifAPI('send', { id: id });
                 loadPage();
-                if (result.queued) {
-                    showToast('Queued for delivery — sending to all devices in ≤5 min');
-                } else {
-                    showToast('Sent to ' + result.sent + ' of ' + result.total + ' devices');
-                }
+                showToast('Sent to ' + result.sent + ' of ' + result.total + ' devices');
             } catch(e) { showToast('Send failed: ' + e.message, true); }
         }
 

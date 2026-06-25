@@ -130,17 +130,60 @@ async function _handleRequest(context) {
 
         const batchResult = await sendBatch(env, notif, batchSlice);
 
+        // Last batch: finalize in-place. Pages Functions run to completion independently,
+        // so this executes even if the cron Worker that called us hits its 30s wall-clock
+        // limit. Eliminates the need for a separate finalize_send call from the Worker.
+        if (!hasMore) {
+            if (batchResult.staleTokens.length) {
+                await removeStaleTokens(env, batchResult.staleTokens).catch(() => {});
+            }
+            const { error: finErr } = await supabase.from('admin_notifications').update({
+                status: 'sent',
+                sent_at: new Date().toISOString(),
+                error_message: batchResult.errors.length ? batchResult.errors.slice(0, 3).join('; ') : null,
+            }).eq('id', notif.id);
+            if (finErr) console.error('[process_scheduled] finalize failed:', finErr.message);
+
+            if (notif.recurrence && notif.recurrence !== 'none') {
+                try {
+                    const nextAt = nextOccurrence(notif.recurrence, notif.recurrence_day, notif.scheduled_at);
+                    if (nextAt) {
+                        const { count: dupCount } = await supabase
+                            .from('admin_notifications')
+                            .select('id', { count: 'exact', head: true })
+                            .eq('title', notif.title)
+                            .eq('recurrence', notif.recurrence)
+                            .eq('scheduled_at', nextAt)
+                            .in('status', ['scheduled', 'sending']);
+                        if (!dupCount) {
+                            await supabase.from('admin_notifications').insert({
+                                title: notif.title, body: notif.body, image_url: notif.image_url || null,
+                                platform: notif.platform || 'all', audience: notif.audience || 'all',
+                                deep_link_type: notif.deep_link_type || 'none', deep_link_id: notif.deep_link_id || null,
+                                recurrence: notif.recurrence, recurrence_day: notif.recurrence_day || null,
+                                notes: notif.notes || null, created_by: 'cron',
+                                status: 'scheduled', scheduled_at: nextAt, is_template: false,
+                            });
+                        }
+                    }
+                } catch (e) { console.error('[process_scheduled] nextOccurrence error:', e.message); }
+            }
+        }
+
         return json({
+            success: true,
             notif_id: notif.id,
             total_targeted: allTokens.length,
             batch_sent: batchResult.sent,
             batch_failed: batchResult.failed,
             stale_tokens: batchResult.staleTokens,
             has_more: hasMore,
+            finalized: !hasMore,
         });
     }
 
-    // ── FINALIZE SEND (cron secret only — called after all batches complete) ──
+    // ── FINALIZE SEND (cron secret only — kept for backward compat; no longer called
+    //    by notify-cron since the last batch now finalizes in-place) ──────────────────
     if (body.action === 'finalize_send') {
         const authHeader = request.headers.get('Authorization') || '';
         const isCron = [env.CRON_SECRET, env.NOTIF_CRON_SECRET]
@@ -842,7 +885,7 @@ async function _handleRequest(context) {
         const now = new Date().toISOString();
         let trackingId = body.id;
         if (notif.is_template) {
-            // Create a non-template copy queued for immediate delivery.
+            // Create a non-template copy, scheduled for immediate pickup below.
             const { data: copy } = await supabase.from('admin_notifications').insert({
                 title: notif.title, body: notif.body, image_url: notif.image_url,
                 platform: notif.platform, audience: notif.audience,
@@ -854,9 +897,7 @@ async function _handleRequest(context) {
             if (!copy) return json({ error: 'Failed to create send record' }, 500);
             trackingId = copy.id;
         } else {
-            // Optimistic lock: set scheduled_at=now so the next cron run picks it up
-            // immediately. Using the optimistic-lock pattern prevents two simultaneous
-            // Send clicks from double-queuing.
+            // Optimistic lock: claim this row before the batch loop starts.
             const { data: claimed } = await supabase
                 .from('admin_notifications')
                 .update({ status: 'scheduled', scheduled_at: now })
@@ -867,10 +908,70 @@ async function _handleRequest(context) {
             if (!claimed) return json({ error: 'Concurrent send detected — refresh and try again' }, 409);
         }
 
-        // Notification is now queued for the next cron run (≤5 min). The cron's
-        // process_scheduled pipeline sends to ALL tokens via multi-batch Pages Functions,
-        // so there is no SEND_CAP and no 50-subrequest limit risk here.
-        return json({ success: true, queued: true, notification_id: trackingId });
+        // Immediately run the full multi-batch pipeline — same as the cron does, but
+        // triggered right now from this Pages Function invocation.
+        //
+        // Subrequest budget for THIS invocation:
+        //   3 above (auth + get + claim) + 1 (batch 0) + N-1 (batches 1..N, concurrent)
+        //   + 1 (finalize) = well within 50 for any realistic user count.
+        //
+        // Each batch call is a SEPARATE Pages Function invocation with its own
+        // 50-subrequest budget, so token sends are not constrained by this invocation.
+        const siteOrigin = new URL(request.url).origin;
+        const cronHeaders = {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${env.CRON_SECRET}`,
+        };
+        const PAGE_SIZE = 40;
+
+        let totalSent = 0, totalFailed = 0, totalTargeted = 0;
+        const allStale = [];
+
+        // Batch 0 — sequential: recovery + atomic claim + first token slice
+        const b0Res = await fetch(`${siteOrigin}/admin-notifications-api`, {
+            method: 'POST', headers: cronHeaders,
+            body: JSON.stringify({ action: 'process_scheduled', batch_num: 0 }),
+        }).catch(() => null);
+        const b0 = b0Res?.ok ? await b0Res.json().catch(() => ({})) : {};
+        totalSent   += b0.batch_sent   ?? 0;
+        totalFailed += b0.batch_failed ?? 0;
+        totalTargeted = b0.total_targeted ?? 0;
+        if (b0.stale_tokens?.length) allStale.push(...b0.stale_tokens);
+
+        // Batches 1..N — run concurrently (each has its own subrequest budget)
+        if (b0.notif_id && b0.has_more) {
+            const totalBatches = Math.ceil(totalTargeted / PAGE_SIZE);
+            const batchResults = await Promise.all(
+                Array.from({ length: totalBatches - 1 }, (_, i) => i + 1).map(bn =>
+                    fetch(`${siteOrigin}/admin-notifications-api`, {
+                        method: 'POST', headers: cronHeaders,
+                        body: JSON.stringify({ action: 'process_scheduled', batch_num: bn }),
+                    })
+                    .then(r => r.ok ? r.json().catch(() => ({})) : {})
+                    .catch(() => ({}))
+                )
+            );
+            for (const b of batchResults) {
+                totalSent   += b.batch_sent   ?? 0;
+                totalFailed += b.batch_failed ?? 0;
+                if (b.stale_tokens?.length) allStale.push(...b.stale_tokens);
+            }
+        }
+
+        // Finalize — mark sent + create next recurrence
+        if (b0.notif_id) {
+            await fetch(`${siteOrigin}/admin-notifications-api`, {
+                method: 'POST', headers: cronHeaders,
+                body: JSON.stringify({
+                    action: 'finalize_send', notif_id: b0.notif_id,
+                    tokens_sent: totalSent, tokens_failed: totalFailed,
+                    stale_tokens: allStale, error_msg: null,
+                }),
+            }).catch(() => {});
+        }
+
+        return json({ success: true, sent: totalSent, failed: totalFailed,
+                      total: totalTargeted, notification_id: trackingId });
     }
 
     // ── SEND TEST (admin's own devices only — no DB status change) ─
