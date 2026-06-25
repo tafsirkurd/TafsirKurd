@@ -9,26 +9,40 @@
 //   Step 2 (token upsert): insert or update by token string — always safe since token is unique.
 //   Together these ensure exactly one row per device installation at all times.
 
-const CORS = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Content-Type': 'application/json',
-};
+const ALLOWED_ORIGINS = new Set([
+    'https://tafsirkurd.com',
+    'capacitor://localhost',  // iOS Capacitor WebView
+    'http://localhost',       // Android Capacitor WebView
+]);
+
+function getCORS(origin) {
+    const allowed = ALLOWED_ORIGINS.has(origin) ? origin : 'https://tafsirkurd.com';
+    return {
+        'Access-Control-Allow-Origin': allowed,
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Content-Type': 'application/json',
+        'Vary': 'Origin',
+    };
+}
 
 export async function onRequest(context) {
     const { request, env } = context;
+    const origin = request.headers.get('Origin') || '';
+    const CORS = getCORS(origin);
     if (request.method === 'OPTIONS') return new Response(null, { status: 200, headers: CORS });
-    if (request.method !== 'POST') return json({ error: 'POST only' }, 405);
+    const j = (obj, status = 200) => new Response(JSON.stringify(obj), { status, headers: CORS });
+
+    if (request.method !== 'POST') return j({ error: 'POST only' }, 405);
 
     let body;
-    try { body = await request.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
+    try { body = await request.json(); } catch { return j({ error: 'Invalid JSON' }, 400); }
 
     const { token, platform, install_id } = body || {};
     if (!token || typeof token !== 'string' || token.length < 32)
-        return json({ error: 'Invalid token' }, 400);
+        return j({ error: 'Invalid token' }, 400);
     if (!platform || !['ios', 'android'].includes(platform))
-        return json({ error: 'platform must be ios or android' }, 400);
+        return j({ error: 'platform must be ios or android' }, 400);
 
     // Verify the Supabase JWT (if supplied) to get the authenticated user_id.
     // user_id from the body is intentionally ignored — only the verified JWT sub is used.
@@ -100,11 +114,7 @@ export async function onRequest(context) {
 
     if (!res.ok) {
         const err = await res.text().catch(() => '');
-        return json({ error: 'DB error: ' + err }, 500);
+        return j({ error: 'DB error: ' + err }, 500);
     }
-    return json({ success: true });
-}
-
-function json(obj, status = 200) {
-    return new Response(JSON.stringify(obj), { status, headers: CORS });
+    return j({ success: true });
 }

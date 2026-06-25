@@ -904,7 +904,7 @@ async function doSend(supabase, env, notif, trackingId, sentBy) {
     const apnsTokens = tokens.filter(t => isApnsToken(t.token));
     const fcmTokens  = tokens.filter(t => !isApnsToken(t.token));
 
-    let accessToken = null;
+    let accessToken = null, fcmAuthError = null;
     if (fcmTokens.length && env.FCM_SERVICE_ACCOUNT) {
         try { accessToken = await getFCMAccessToken(env.FCM_SERVICE_ACCOUNT); }
         catch (e) {
@@ -914,6 +914,9 @@ async function doSend(supabase, env, notif, trackingId, sentBy) {
                     .eq('id', trackingId);
                 return { error: 'FCM auth error: ' + e.message };
             }
+            // APNs tokens exist — continue for iOS but record FCM failure
+            fcmAuthError = 'FCM auth failed (' + fcmTokens.length + ' Android skipped): ' + e.message;
+            console.error('[sendNotification] FCM auth failed, Android tokens skipped:', e.message);
         }
     }
 
@@ -926,6 +929,7 @@ async function doSend(supabase, env, notif, trackingId, sentBy) {
     const deepLinkData = buildDeepLinkData(notif.deep_link_type, notif.deep_link_id);
     const FCM_URL = `https://fcm.googleapis.com/v1/projects/${env.FCM_PROJECT_ID}/messages:send`;
     const staleTokens = [], apnsErrors = [], fcmErrors = [];
+    if (fcmAuthError) { fcmErrors.push(fcmAuthError); failCount += fcmTokens.length; }
     let successCount = 0, failCount = 0;
 
     // Send in chunks of 200 to stay within Cloudflare's 1000-subrequest limit
@@ -1009,10 +1013,14 @@ async function doSendTokenList(env, notif, tokens) {
     const apnsTokens = tokens.filter(t => isApnsToken(t.token));
     const fcmTokens  = tokens.filter(t => !isApnsToken(t.token));
 
-    let accessToken = null;
+    let accessToken = null, fcmAuthErr = null;
     if (fcmTokens.length && env.FCM_SERVICE_ACCOUNT) {
         try { accessToken = await getFCMAccessToken(env.FCM_SERVICE_ACCOUNT); }
-        catch (e) { if (!apnsTokens.length) return { error: 'FCM auth: ' + e.message }; }
+        catch (e) {
+            if (!apnsTokens.length) return { error: 'FCM auth: ' + e.message };
+            fcmAuthErr = e.message;
+            console.error('[doSendTokenList] FCM auth failed, Android skipped:', e.message);
+        }
     }
 
     let apnsJwt = null;
@@ -1023,7 +1031,7 @@ async function doSendTokenList(env, notif, tokens) {
 
     const deepLinkData = buildDeepLinkData(notif.deep_link_type, notif.deep_link_id);
     const FCM_URL = `https://fcm.googleapis.com/v1/projects/${env.FCM_PROJECT_ID}/messages:send`;
-    let successCount = 0, failCount = 0;
+    let successCount = 0, failCount = fcmAuthErr ? fcmTokens.length : 0;
 
     const CHUNK = 200;
     const allJobs = [
@@ -1062,17 +1070,23 @@ async function getTokensForAudience(env, audience, platform) {
     else if (audience === 'android') url += '&platform=eq.android';
     else if (audience === 'ios') url += '&platform=eq.ios';
 
-    // Max 10k tokens
-    url += '&limit=10000';
-
-    const res = await fetch(url, {
-        headers: {
-            apikey: env.SUPABASE_SERVICE_ROLE_KEY,
-            Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
-        },
-    });
-    if (!res.ok) throw new Error(`Supabase ${res.status}`);
-    return await res.json();
+    // Paginate — Supabase returns at most 1000 rows by default; fetch all pages
+    const PAGE = 1000;
+    const allTokens = [];
+    for (let offset = 0; ; offset += PAGE) {
+        const pageUrl = url + `&limit=${PAGE}&offset=${offset}`;
+        const res = await fetch(pageUrl, {
+            headers: {
+                apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+                Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+            },
+        });
+        if (!res.ok) throw new Error(`Supabase ${res.status}`);
+        const page = await res.json();
+        allTokens.push(...page);
+        if (page.length < PAGE) break;
+    }
+    return allTokens;
 }
 
 async function removeStaleTokens(env, tokens) {

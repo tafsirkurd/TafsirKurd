@@ -3,6 +3,18 @@
 
 const ALLOWED_DOMAIN = 'r2.dev';
 
+// Per-IP rate limit: max 30 requests per 10 minutes (per isolate instance)
+const _pdfRateMap = new Map();
+function _checkPdfRate(ip) {
+    const now = Date.now(), window = 10 * 60 * 1000, limit = 30;
+    const entry = _pdfRateMap.get(ip) || { count: 0, start: now };
+    if (now - entry.start > window) { entry.count = 0; entry.start = now; }
+    entry.count++;
+    _pdfRateMap.set(ip, entry);
+    if (_pdfRateMap.size > 500) { const oldest = _pdfRateMap.keys().next().value; _pdfRateMap.delete(oldest); }
+    return entry.count <= limit;
+}
+
 export async function onRequest(context) {
     const { request, env } = context;
     const url = new URL(request.url);
@@ -15,6 +27,11 @@ export async function onRequest(context) {
 
     if (request.method === 'OPTIONS') {
         return new Response(null, { status: 200, headers: corsHeaders });
+    }
+
+    const clientIp = request.headers.get('CF-Connecting-IP') || 'unknown';
+    if (!_checkPdfRate(clientIp)) {
+        return new Response('Rate limit exceeded', { status: 429, headers: corsHeaders });
     }
 
     // Direct key access — used when pdf_url is stored as /pdf-proxy?key=pdfs/...

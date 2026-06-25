@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v1264';
+const CACHE_NAME = 'tafsir-kurd-v1265';
 
 // All files required to run the app fully offline.
 // IMPORTANT: version strings here must match the ?v= params in index.html exactly.
@@ -6,7 +6,7 @@ const CACHE_NAME = 'tafsir-kurd-v1264';
 const PRECACHE = [
   // Core app shell — index.html intentionally excluded: always served fresh from APK
   '/utils/app-hardening.js?v=2',
-  '/app/app.min.js?v=1211',
+  '/app/app.min.js?v=1213',
   '/utils/book-spotlight.js?v=12',
   '/app/app-styles.min.css?v=8',
   // Prayer module
@@ -16,10 +16,10 @@ const PRECACHE = [
   '/prayer/prayer.notifications.android.js?v=20260602b',
   '/prayer/prayer.ui.js?v=20260616d',
   // Gencine / books module (lazily loaded but pre-cached for offline)
-  '/dhikr/dhikr.js?v=20260620b',
+  '/dhikr/dhikr.js?v=20260622',
   '/dhikr/pdf-store.js?v=20260612a',
   '/dhikr/dua-data.js?v=20260326b',
-  '/dhikr/smart-dhikr.js?v=88',
+  '/dhikr/smart-dhikr.js?v=89',
   // i18n
   '/i18n/i18n.min.js?v=20260619a',
   '/i18n/kmr-bundled.js?v=20260620b',
@@ -102,6 +102,7 @@ const PRECACHE = [
   // Font manager
   '/app/quran-font-manager.js?v=20260506',
   // Images
+  '/assets/images/favicon-96x96.png',
   '/assets/images/logo.png',
   '/assets/images/TafsirKurd.png?v=3',
   '/assets/images/TafsirKurd-green.png',
@@ -230,7 +231,7 @@ self.addEventListener('fetch', event => {
   // (no real network latency), fetch() is instant and always returns the current build.
   if (req.mode === 'navigate' || req.destination === 'document' || url.endsWith('.html')) {
     event.respondWith(
-      fetch(req).catch(() => caches.match(req))
+      fetch(req).catch(() => caches.match(req).then(r => r || new Response('Offline', { status: 503 })))
     );
     return;
   }

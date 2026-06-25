@@ -5104,7 +5104,7 @@ function renderAyahs(surahNum,scrollTo){
       var _gctrl=new AbortController();
       var _gtid=setTimeout(function(){_gctrl.abort();},_sn.ms(12000,22000));
       fetch('https://api.quran.com/api/v4/verses/by_chapter/'+surahNum+'?words=true&word_fields=code_v2,page_number,char_type_name&per_page=300'+(_isV4?'&mushaf=19':''),{signal:_gctrl.signal})
-        .then(function(r){clearTimeout(_gtid);return r.json();})
+        .then(function(r){if(!r.ok)throw new Error(r.status);clearTimeout(_gtid);return r.json();})
         .then(function(d){
           delete S.glyphFetching[_gkey];
           var vs=d.verses||[];
@@ -11728,8 +11728,9 @@ function mergeSyncData(local,cloud){
   Object.keys(local).forEach(function(k){if(k.indexOf('pdfProg_')===0)_allBpKeys[k]=true;});
   Object.keys(cloud).forEach(function(k){if(k.indexOf('pdfProg_')===0)_allBpKeys[k]=true;});
   Object.keys(_allBpKeys).forEach(function(k){
-    var lv=local[k]?JSON.parse(local[k]):null;
-    var cv=cloud[k]?JSON.parse(cloud[k]):null;
+    var lv=null,cv=null;
+    try{lv=local[k]?JSON.parse(local[k]):null;}catch(_){}
+    try{cv=cloud[k]?JSON.parse(cloud[k]):null;}catch(_){}
     if(!lv)result[k]=cloud[k];
     else if(!cv)result[k]=local[k];
     else result[k]=(cv.ts||0)>(lv.ts||0)?cloud[k]:local[k];
