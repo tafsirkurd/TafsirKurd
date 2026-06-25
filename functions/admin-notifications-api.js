@@ -307,22 +307,19 @@ async function _handleRequest(context) {
                     audience:       'all',
                     deep_link_type: dlType,
                     deep_link_id:   String(dlId),
-                    status:         scheduledAt ? 'scheduled' : 'sending',
-                    scheduled_at:   scheduledAt || null,
+                    // Always insert as 'scheduled' — the cron's process_scheduled pipeline
+                    // sends to ALL tokens via multi-batch Pages Functions (no SEND_CAP).
+                    // When scheduledAt is null (isToday), scheduled_at=now() makes it
+                    // immediately due so the batch loop in the same cron run picks it up.
+                    status:         'scheduled',
+                    scheduled_at:   scheduledAt || new Date().toISOString(),
                     created_by:     'auto',
                 })
                 .select()
                 .single();
             if (error?.code === '23505') return { skipped: true }; // fallback for unique constraint
             if (error || !notif) return { error: error?.message || 'insert failed' };
-            if (scheduledAt) return { scheduled: true, scheduled_at: scheduledAt };
-            try { return await doSend(supabase, env, notif, notif.id, 'auto'); }
-            catch (e) {
-                await supabase.from('admin_notifications')
-                    .update({ status: 'failed', error_message: 'Auto-send error: ' + e.message })
-                    .eq('id', notif.id).catch(() => {});
-                return { error: e.message };
-            }
+            return { scheduled: true, scheduled_at: scheduledAt || notif.scheduled_at };
         }
 
         // Helper: assign a slot, call sendAutoNotif, update usage counter
@@ -839,37 +836,30 @@ async function _handleRequest(context) {
         if (notif.status === 'sending') return json({ error: 'Already sending' }, 400);
         if (notif.status === 'sent' && !body.force_resend) return json({ error: 'Already sent. Pass force_resend:true to resend.' }, 400);
         if (notif.status === 'cancelled') return json({ error: 'Cannot send cancelled notification' }, 400);
-        if (notif.status === 'scheduled' && !body.override_schedule) {
-            const schedTime = notif.scheduled_at
-                ? new Date(notif.scheduled_at).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })
-                : 'a future time';
-            return json({
-                error: `This notification is scheduled for ${schedTime}. It will be delivered automatically by the scheduler. Cancel the schedule first, or pass override_schedule:true to send immediately.`,
-                is_scheduled: true,
-                scheduled_at: notif.scheduled_at,
-            }, 400);
-        }
+        // Explicit Send is always an override — skip the scheduled-time guard.
         if (!env.FCM_SERVICE_ACCOUNT || !env.FCM_PROJECT_ID) return json({ error: 'FCM not configured' }, 503);
 
+        const now = new Date().toISOString();
         let trackingId = body.id;
         if (notif.is_template) {
+            // Create a non-template copy queued for immediate delivery.
             const { data: copy } = await supabase.from('admin_notifications').insert({
                 title: notif.title, body: notif.body, image_url: notif.image_url,
                 platform: notif.platform, audience: notif.audience,
                 deep_link_type: notif.deep_link_type, deep_link_id: notif.deep_link_id,
                 recurrence: notif.recurrence, recurrence_day: notif.recurrence_day,
                 notes: notif.notes, created_by: adminEmail,
-                status: 'sending', is_template: false,
+                status: 'scheduled', scheduled_at: now, is_template: false,
             }).select().single();
             if (!copy) return json({ error: 'Failed to create send record' }, 500);
             trackingId = copy.id;
         } else {
-            // Optimistic lock: only claim the row if its status hasn't changed since
-            // we read it above — prevents two simultaneous Send requests from both
-            // proceeding (same class of race that caused the original double-delivery).
+            // Optimistic lock: set scheduled_at=now so the next cron run picks it up
+            // immediately. Using the optimistic-lock pattern prevents two simultaneous
+            // Send clicks from double-queuing.
             const { data: claimed } = await supabase
                 .from('admin_notifications')
-                .update({ status: 'sending' })
+                .update({ status: 'scheduled', scheduled_at: now })
                 .eq('id', body.id)
                 .eq('status', notif.status)
                 .select('id')
@@ -877,10 +867,10 @@ async function _handleRequest(context) {
             if (!claimed) return json({ error: 'Concurrent send detected — refresh and try again' }, 409);
         }
 
-        const r = await doSend(supabase, env, notif, trackingId, adminEmail);
-        if (r.error) return json({ error: r.error }, 500);
-        return json({ success: true, sent: r.sent, failed: r.failed, total: r.total,
-                      stale_removed: r.stale_removed, next_scheduled: notif.recurrence !== 'none' });
+        // Notification is now queued for the next cron run (≤5 min). The cron's
+        // process_scheduled pipeline sends to ALL tokens via multi-batch Pages Functions,
+        // so there is no SEND_CAP and no 50-subrequest limit risk here.
+        return json({ success: true, queued: true, notification_id: trackingId });
     }
 
     // ── SEND TEST (admin's own devices only — no DB status change) ─
