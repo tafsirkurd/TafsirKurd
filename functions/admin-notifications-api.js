@@ -115,11 +115,14 @@ async function _handleRequest(context) {
             if (i < _apns.length) interleaved.push({ ..._apns[i], _type: 'apns' });
         }
 
-        // Write total count on batch 0 as crash-recovery checkpoint
+        // Write total count on batch 0 as crash-recovery checkpoint.
+        // If this write fails, recovery will see tokens_targeted=0 and mark the notification
+        // 'failed' even though sends proceed — log so we know, but don't abort.
         if (batchNum === 0) {
-            await supabase.from('admin_notifications')
+            const { error: ttErr } = await supabase.from('admin_notifications')
                 .update({ tokens_targeted: allTokens.length })
-                .eq('id', notif.id).catch(() => {});
+                .eq('id', notif.id);
+            if (ttErr) console.error('[process_scheduled] tokens_targeted write failed:', ttErr.message);
         }
 
         const batchSlice = interleaved.slice(batchNum * PAGE_SIZE, (batchNum + 1) * PAGE_SIZE);
@@ -151,6 +154,13 @@ async function _handleRequest(context) {
         const { data: notif } = await supabase.from('admin_notifications')
             .select('*').eq('id', notif_id).single();
         if (!notif) return json({ error: 'Notification not found' }, 404);
+
+        // Idempotency guard: if crash-recovery already resolved this notification, don't
+        // overwrite its status/timestamp/counts with the partial data we accumulated.
+        // (Recovery fires if the cron Worker crashes between batches, before finalize_send.)
+        if (notif.status !== 'sending') {
+            return json({ success: true, finalized: notif_id, skipped: true, reason: notif.status });
+        }
 
         if (stale_tokens?.length) await removeStaleTokens(env, stale_tokens).catch(() => {});
 
@@ -1247,7 +1257,11 @@ async function doSendTokenList(env, notif, tokens) {
 }
 
 async function getTokensForAudience(env, audience, platform) {
-    let url = `${env.SUPABASE_URL}/rest/v1/push_tokens?select=token,platform`;
+    // ORDER BY id ASC is critical for multi-batch sends: it makes the token list stable
+    // across repeated calls within the same cron run. Without it, Postgres heap order can
+    // shift between calls, causing a token to appear in two batch slices (duplicate send)
+    // or fall through the gap between slices (missed send).
+    let url = `${env.SUPABASE_URL}/rest/v1/push_tokens?select=token,platform&order=id.asc`;
 
     // Platform filter (from notification's platform field)
     if (platform === 'android') url += '&platform=eq.android';

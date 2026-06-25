@@ -30,10 +30,10 @@ export default {
 
     // 2. Dispatch scheduled notifications in batches of 40 tokens.
     //    Each process_scheduled call is a separate Pages Function invocation with its own
-    //    50 subrequest budget. 8 batches × 40 = 320 slots covers all current users.
+    //    50 subrequest budget. 20 batches × 40 = 800 slots; has_more breaks early when done.
     let schedNotifId = null, schedTotalSent = 0, schedTotalFailed = 0, schedTotal = 0;
     const schedStale = [], schedErrors = [];
-    for (let batchNum = 0; batchNum < 8; batchNum++) {
+    for (let batchNum = 0; batchNum < 20; batchNum++) {
       const bRes = await fetch(`${site}/admin-notifications-api`, {
         method:  'POST',
         headers,
