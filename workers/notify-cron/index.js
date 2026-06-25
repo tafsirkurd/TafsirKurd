@@ -45,6 +45,19 @@ export default {
     }).catch(e => ({ ok: false, _err: e.message }));
     const notifBody = notifRes.ok ? await notifRes.json().catch(() => ({})) : {};
 
+    // 4. Daily DB cleanup — runs once per day at 02:00 UTC only
+    let cleanBody = {};
+    const nowUtc = new Date();
+    if (nowUtc.getUTCHours() === 2 && nowUtc.getUTCMinutes() < 5) {
+      const cleanRes = await fetch(`${site}/db-cleanup`, {
+        method:  'POST',
+        headers,
+        body:    '{}',
+      }).catch(e => ({ ok: false, _err: e.message }));
+      cleanBody = cleanRes.ok ? await cleanRes.json().catch(() => ({})) : {};
+      console.log('[notify-cron] db-cleanup', cleanBody.totalDeleted ?? 'FAIL', 'rows deleted');
+    }
+
     console.log('[notify-cron]', ts,
       `sync=${syncRes.ok ? 'ok' : 'FAIL'} new_eps=${syncBody.totalNewEpisodes ?? '?'}`,
       `scheduled=${schedRes.ok ? 'ok' : 'FAIL'} processed=${schedBody.processed ?? '?'}`,
