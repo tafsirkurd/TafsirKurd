@@ -48,12 +48,16 @@ async function _handleRequest(context) {
         // Each batch is a separate Pages Function invocation with its own 50 subrequest budget.
         // PAGE_SIZE=40: 8 batches × 40 = 320 slots covers all users with budget headroom.
         const batchNum = Number(body.batch_num ?? 0);
+        // Optional: caller (admin Send action) may pass the exact notification to target,
+        // preventing the discovery query from accidentally claiming a different overdue notification.
+        const targetNotifId = body.notif_id ?? null;
         const PAGE_SIZE = 40;
 
         // Recovery only on batch 0 — subsequent batches must not interfere with in-flight sends
         if (batchNum === 0) {
             await supabase.from('admin_notifications')
                 .update({ status: 'sent', sent_at: new Date().toISOString(),
+                          tokens_sent: 0, tokens_failed: 0,
                           error_message: 'Auto-recovered: sent but final DB update timed out' })
                 .eq('status', 'sending').gt('tokens_targeted', 0).is('sent_at', null);
             await supabase.from('admin_notifications')
@@ -63,34 +67,40 @@ async function _handleRequest(context) {
 
         let notif;
         if (batchNum === 0) {
-            // Find and atomically claim a due notification
-            const { data: due } = await supabase
-                .from('admin_notifications')
-                .select('*')
-                .eq('status', 'scheduled')
-                .eq('is_template', false)
-                .lte('scheduled_at', new Date().toISOString())
-                .limit(1);
-            if (!due?.length) return json({ success: true, processed: 0 });
+            // Find and atomically claim the target notification.
+            // targetNotifId: direct claim (admin Send) — bypasses discovery so we never
+            // accidentally pick a different overdue notification instead.
+            // No targetNotifId: cron path — claim the oldest overdue scheduled notification.
+            let candidateId;
+            if (targetNotifId) {
+                candidateId = targetNotifId;
+            } else {
+                const { data: due } = await supabase
+                    .from('admin_notifications')
+                    .select('id')
+                    .eq('status', 'scheduled')
+                    .eq('is_template', false)
+                    .lte('scheduled_at', new Date().toISOString())
+                    .order('scheduled_at', { ascending: true })
+                    .limit(1);
+                if (!due?.length) return json({ success: true, processed: 0 });
+                candidateId = due[0].id;
+            }
             const { data: claimed } = await supabase
                 .from('admin_notifications')
                 .update({ status: 'sending' })
-                .eq('id', due[0].id)
+                .eq('id', candidateId)
                 .eq('status', 'scheduled')
                 .select()
                 .single();
             if (!claimed) return json({ success: true, processed: 0 });
             notif = claimed;
         } else {
-            // Resume the in-flight notification from the previous batch
-            const { data: inFlight } = await supabase
-                .from('admin_notifications')
-                .select('*')
-                .eq('status', 'sending')
-                .gt('tokens_targeted', 0)
-                .is('sent_at', null)
-                .limit(1)
-                .single();
+            // Resume the in-flight notification — use targetNotifId when provided for safety.
+            let q = supabase.from('admin_notifications').select('*').eq('status', 'sending')
+                .gt('tokens_targeted', 0).is('sent_at', null);
+            if (targetNotifId) q = q.eq('id', targetNotifId);
+            const { data: inFlight } = await q.limit(1).single();
             if (!inFlight) return json({ success: true, processed: 0 });
             notif = inFlight;
         }
@@ -130,46 +140,14 @@ async function _handleRequest(context) {
 
         const batchResult = await sendBatch(env, notif, batchSlice);
 
-        // Last batch: finalize in-place. Pages Functions run to completion independently,
-        // so this executes even if the cron Worker that called us hits its 30s wall-clock
-        // limit. Eliminates the need for a separate finalize_send call from the Worker.
-        if (!hasMore) {
-            if (batchResult.staleTokens.length) {
-                await removeStaleTokens(env, batchResult.staleTokens).catch(() => {});
-            }
-            const { error: finErr } = await supabase.from('admin_notifications').update({
-                status: 'sent',
-                sent_at: new Date().toISOString(),
-                error_message: batchResult.errors.length ? batchResult.errors.slice(0, 3).join('; ') : null,
-            }).eq('id', notif.id);
-            if (finErr) console.error('[process_scheduled] finalize failed:', finErr.message);
-
-            if (notif.recurrence && notif.recurrence !== 'none') {
-                try {
-                    const nextAt = nextOccurrence(notif.recurrence, notif.recurrence_day, notif.scheduled_at);
-                    if (nextAt) {
-                        const { count: dupCount } = await supabase
-                            .from('admin_notifications')
-                            .select('id', { count: 'exact', head: true })
-                            .eq('title', notif.title)
-                            .eq('recurrence', notif.recurrence)
-                            .eq('scheduled_at', nextAt)
-                            .in('status', ['scheduled', 'sending']);
-                        if (!dupCount) {
-                            await supabase.from('admin_notifications').insert({
-                                title: notif.title, body: notif.body, image_url: notif.image_url || null,
-                                platform: notif.platform || 'all', audience: notif.audience || 'all',
-                                deep_link_type: notif.deep_link_type || 'none', deep_link_id: notif.deep_link_id || null,
-                                recurrence: notif.recurrence, recurrence_day: notif.recurrence_day || null,
-                                notes: notif.notes || null, created_by: 'cron',
-                                status: 'scheduled', scheduled_at: nextAt, is_template: false,
-                            });
-                        }
-                    }
-                } catch (e) { console.error('[process_scheduled] nextOccurrence error:', e.message); }
-            }
+        // Stale tokens: remove eagerly per-batch so subsequent batches don't retry them.
+        if (batchResult.staleTokens.length) {
+            await removeStaleTokens(env, batchResult.staleTokens).catch(() => {});
         }
 
+        // Status is finalized by finalize_send (called by cron/send after all batches).
+        // This keeps token count accumulation accurate: each batch reports its slice,
+        // finalize_send sums them and writes tokens_sent/tokens_failed/status='sent'.
         return json({
             success: true,
             notif_id: notif.id,
@@ -178,12 +156,10 @@ async function _handleRequest(context) {
             batch_failed: batchResult.failed,
             stale_tokens: batchResult.staleTokens,
             has_more: hasMore,
-            finalized: !hasMore,
         });
     }
 
-    // ── FINALIZE SEND (cron secret only — kept for backward compat; no longer called
-    //    by notify-cron since the last batch now finalizes in-place) ──────────────────
+    // ── FINALIZE SEND (cron secret only) ─────────────────────────────
     if (body.action === 'finalize_send') {
         const authHeader = request.headers.get('Authorization') || '';
         const isCron = [env.CRON_SECRET, env.NOTIF_CRON_SECRET]
@@ -198,17 +174,21 @@ async function _handleRequest(context) {
             .select('*').eq('id', notif_id).single();
         if (!notif) return json({ error: 'Notification not found' }, 404);
 
-        // Idempotency guard: if crash-recovery already resolved this notification, don't
-        // overwrite its status/timestamp/counts with the partial data we accumulated.
-        // (Recovery fires if the cron Worker crashes between batches, before finalize_send.)
-        if (notif.status !== 'sending') {
+        // Idempotency guard: skip only if already fully finalized with counts.
+        // Allow re-entry when status='sent' but tokens_sent is still null (crash-recovery
+        // set status='sent' without counts — finalize_send must still write the counts).
+        if (notif.status === 'sent' && notif.tokens_sent != null) {
+            return json({ success: true, finalized: notif_id, skipped: true, reason: 'already_finalized' });
+        }
+        // Never touch a failed/cancelled row.
+        if (['failed', 'cancelled', 'scheduled', 'draft'].includes(notif.status)) {
             return json({ success: true, finalized: notif_id, skipped: true, reason: notif.status });
         }
 
         if (stale_tokens?.length) await removeStaleTokens(env, stale_tokens).catch(() => {});
 
         await supabase.from('admin_notifications').update({
-            status: 'sent', sent_at: new Date().toISOString(),
+            status: 'sent', sent_at: notif.sent_at || new Date().toISOString(),
             tokens_sent: tokens_sent ?? 0,
             tokens_failed: tokens_failed ?? 0,
             stale_removed: stale_tokens?.length ?? 0,
@@ -927,10 +907,12 @@ async function _handleRequest(context) {
         let totalSent = 0, totalFailed = 0, totalTargeted = 0;
         const allStale = [];
 
-        // Batch 0 — sequential: recovery + atomic claim + first token slice
+        // Batch 0 — sequential: recovery + direct claim of trackingId + first token slice.
+        // Pass notif_id so process_scheduled claims exactly this notification, not any other
+        // overdue 'scheduled' row that might be in the DB at the same time.
         const b0Res = await fetch(`${siteOrigin}/admin-notifications-api`, {
             method: 'POST', headers: cronHeaders,
-            body: JSON.stringify({ action: 'process_scheduled', batch_num: 0 }),
+            body: JSON.stringify({ action: 'process_scheduled', batch_num: 0, notif_id: trackingId }),
         }).catch(() => null);
         const b0 = b0Res?.ok ? await b0Res.json().catch(() => ({})) : {};
         totalSent   += b0.batch_sent   ?? 0;
@@ -938,14 +920,15 @@ async function _handleRequest(context) {
         totalTargeted = b0.total_targeted ?? 0;
         if (b0.stale_tokens?.length) allStale.push(...b0.stale_tokens);
 
-        // Batches 1..N — run concurrently (each has its own subrequest budget)
+        // Batches 1..N — run concurrently (each has its own subrequest budget).
+        // Pass notif_id so each batch resumes exactly this notification.
         if (b0.notif_id && b0.has_more) {
             const totalBatches = Math.ceil(totalTargeted / PAGE_SIZE);
             const batchResults = await Promise.all(
                 Array.from({ length: totalBatches - 1 }, (_, i) => i + 1).map(bn =>
                     fetch(`${siteOrigin}/admin-notifications-api`, {
                         method: 'POST', headers: cronHeaders,
-                        body: JSON.stringify({ action: 'process_scheduled', batch_num: bn }),
+                        body: JSON.stringify({ action: 'process_scheduled', batch_num: bn, notif_id: trackingId }),
                     })
                     .then(r => r.ok ? r.json().catch(() => ({})) : {})
                     .catch(() => ({}))
