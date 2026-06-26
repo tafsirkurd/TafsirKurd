@@ -211,7 +211,7 @@ async function _handleRequest(context) {
             .select('status')
             .eq('notification_id', notif_id);
         const logSent   = logRows?.filter(r => r.status === 'sent').length   ?? tokens_sent   ?? 0;
-        const logFailed = logRows?.filter(r => r.status === 'failed' || r.status === 'pending').length ?? tokens_failed ?? 0;
+        const logFailed = logRows?.filter(r => r.status === 'failed' || r.status === 'pending' || r.status === 'retrying').length ?? tokens_failed ?? 0;
         const logStale  = logRows?.filter(r => r.status === 'stale').length  ?? stale_tokens?.length ?? 0;
 
         await supabase.from('admin_notifications').update({
@@ -271,15 +271,17 @@ async function _handleRequest(context) {
         const stats = {
             has_log: true,
             total: rows.length,
-            sent:    rows.filter(r => r.status === 'sent').length,
-            failed:  rows.filter(r => r.status === 'failed').length,
-            pending: rows.filter(r => r.status === 'pending').length,
-            stale:   rows.filter(r => r.status === 'stale').length,
+            sent:     rows.filter(r => r.status === 'sent').length,
+            failed:   rows.filter(r => r.status === 'failed').length,
+            pending:  rows.filter(r => r.status === 'pending').length,
+            retrying: rows.filter(r => r.status === 'retrying').length,
+            stale:    rows.filter(r => r.status === 'stale').length,
             android_sent:   rows.filter(r => r.platform === 'android' && r.status === 'sent').length,
             android_failed: rows.filter(r => r.platform === 'android' && (r.status === 'failed' || r.status === 'pending')).length,
             ios_sent:   rows.filter(r => r.platform === 'ios' && r.status === 'sent').length,
             ios_failed: rows.filter(r => r.platform === 'ios' && (r.status === 'failed' || r.status === 'pending')).length,
         };
+        // retry_count excludes 'retrying' rows — they're already in-flight
         stats.retry_count = stats.failed + stats.pending;
         stats.delivery_rate = nonStale.length > 0 ? Math.round(stats.sent / nonStale.length * 100) : 0;
         return json(stats);
@@ -378,17 +380,29 @@ async function _handleRequest(context) {
         const { notif_id, tokens } = body;
         if (!notif_id || !tokens?.length) return json({ error: 'notif_id and tokens required' }, 400);
 
+        // Atomically claim tokens by transitioning failed/pending → retrying.
+        // If two concurrent retry_failed calls both dispatched this token,
+        // only the first claim succeeds; the second gets an empty result and
+        // skips the send — guaranteeing at-most-one delivery per retry click.
+        const { data: claimed } = await supabase.rpc('claim_retry_tokens', {
+            p_notification_id: notif_id,
+            p_tokens: tokens.map(t => t.token),
+        });
+        if (!claimed?.length) {
+            return json({ success: true, sent: 0, failed: 0, stale: 0, skipped: tokens.length });
+        }
+
         const { data: notif } = await supabase.from('admin_notifications').select('*').eq('id', notif_id).single();
         if (!notif) return json({ error: 'Notification not found' }, 404);
 
-        const retryTokens = tokens.map(t => ({
+        const retryTokens = claimed.map(t => ({
             token: t.token, platform: t.platform,
             _type: t.platform === 'ios' ? 'apns' : 'fcm',
         }));
         const result = await sendBatch(env, supabase, notif, retryTokens);
         if (result.staleTokens.length) await removeStaleTokens(env, result.staleTokens).catch(() => {});
 
-        return json({ success: true, sent: result.sent, failed: result.failed, stale: result.staleTokens.length });
+        return json({ success: true, sent: result.sent, failed: result.failed, stale: result.staleTokens.length, skipped: tokens.length - claimed.length });
     }
 
     // ── PUBLIC INBOX (no auth — app users fetch recent sent notifications) ──
