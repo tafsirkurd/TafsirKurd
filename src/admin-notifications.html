@@ -145,8 +145,9 @@
         .nc-date-icon { width:13px; height:13px; opacity:.5; }
         .nc-target { font-size:11px; color:var(--n-text3); }
         .nc-delivery { margin-left:auto; font-family:var(--n-mono); font-size:12px; }
-        .nc-delivery--ok  { color:var(--n-green); }
-        .nc-delivery--bad { color:var(--n-red); }
+        .nc-delivery--ok         { color:var(--n-green); }
+        .nc-delivery--bad        { color:var(--n-red); }
+        .nc-delivery--impossible { color:#fff; background:#e53e3e; border-radius:4px; padding:1px 6px; font-weight:600; cursor:help; }
         .nc-loading { text-align:center; padding:48px 20px; color:var(--n-text3); font-size:14px; }
         .nc-empty  { text-align:center; padding:60px 20px; color:var(--n-text3); font-size:14px; }
 
@@ -2177,9 +2178,12 @@
                 var _stale = n.stale_removed || 0;
                 var _live = (n.tokens_targeted || 0) - _stale;
                 var _rate = _live > 0 ? Math.round(((n.tokens_sent || 0) / _live) * 100) : 100;
+                // Impossible state: SENT but 0 tokens delivered with non-zero audience
+                var _isImpossible = (n.tokens_sent || 0) === 0 && (n.tokens_targeted || 0) > 0;
                 var delivEl = document.createElement('div');
-                delivEl.className = 'nc-delivery ' + (_rate >= 80 ? 'nc-delivery--ok' : 'nc-delivery--bad');
+                delivEl.className = 'nc-delivery ' + (_isImpossible ? 'nc-delivery--impossible' : _rate >= 80 ? 'nc-delivery--ok' : 'nc-delivery--bad');
                 delivEl.textContent = (n.tokens_sent || 0) + ' / ' + (n.tokens_targeted || 0) + ' (' + _rate + '%)';
+                if (_isImpossible) delivEl.title = 'Impossible state: notification marked SENT but 0 tokens were delivered. Check error log.';
                 foot.appendChild(delivEl);
             }
 

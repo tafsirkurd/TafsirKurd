@@ -56,15 +56,11 @@ async function _handleRequest(context) {
 
         // Recovery only on generic cron batch_0 — not when targeting a specific notification,
         // to avoid accidentally recovering a legitimately in-flight cron send.
+        // Uses a single RPC (1 subrequest) to stay within the 50-subrequest budget.
+        // The RPC reads delivery log counts before deciding status — never emits SENT 0/X.
         if (batchNum === 0 && !targetNotifId) {
-            await supabase.from('admin_notifications')
-                .update({ status: 'sent', sent_at: new Date().toISOString(),
-                          tokens_sent: 0, tokens_failed: 0,
-                          error_message: 'Auto-recovered: sent but final DB update timed out' })
-                .eq('status', 'sending').gt('tokens_targeted', 0).is('sent_at', null);
-            await supabase.from('admin_notifications')
-                .update({ status: 'failed', error_message: 'Send timed out — auto-recovered by cron' })
-                .eq('status', 'sending').eq('tokens_targeted', 0).is('sent_at', null);
+            await supabase.rpc('recover_stuck_notifications')
+                .catch(e => console.error('[recovery] rpc failed:', e.message));
         }
 
         let notif;
@@ -136,8 +132,10 @@ async function _handleRequest(context) {
                 .eq('id', notif.id);
             if (ttErr) console.error('[process_scheduled] tokens_targeted write failed:', ttErr.message);
 
-            // Insert all tokens as 'pending' in delivery log (ON CONFLICT DO NOTHING so retries
-            // don't reset rows that were already updated to sent/failed in a previous attempt).
+            // Insert all tokens as 'pending' in delivery log.
+            // ON CONFLICT DO NOTHING: retries don't reset rows already updated to sent/failed.
+            // Uses raw fetch (same pattern as getTokensForAudience) — Supabase JS client
+            // resolves (not rejects) on PostgREST HTTP errors, making .catch() unreliable.
             const logRows = allTokens.map(t => ({
                 notification_id: notif.id,
                 token: t.token,
@@ -146,9 +144,23 @@ async function _handleRequest(context) {
                 attempt_count: 0,
             }));
             if (logRows.length) {
-                await supabase.from('admin_notification_delivery_logs')
-                    .upsert(logRows, { onConflict: 'notification_id,token', ignoreDuplicates: true })
-                    .catch(e => console.error('[delivery_log] insert pending failed:', e.message));
+                const dlRes = await fetch(
+                    `${env.SUPABASE_URL}/rest/v1/admin_notification_delivery_logs?on_conflict=notification_id,token`,
+                    {
+                        method: 'POST',
+                        headers: {
+                            apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+                            Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+                            'Content-Type': 'application/json',
+                            Prefer: 'return=minimal,resolution=ignore-duplicates',
+                        },
+                        body: JSON.stringify(logRows),
+                    }
+                ).catch(e => ({ ok: false, _err: e.message }));
+                if (!dlRes.ok) {
+                    const errBody = await dlRes.text?.().catch(() => '') ?? dlRes._err ?? '';
+                    console.error('[delivery_log] insert pending failed:', dlRes.status ?? 'network', errBody.slice(0, 300));
+                }
             }
         }
 
@@ -214,12 +226,24 @@ async function _handleRequest(context) {
         const logFailed = logRows?.filter(r => r.status === 'failed' || r.status === 'pending' || r.status === 'retrying').length ?? tokens_failed ?? 0;
         const logStale  = logRows?.filter(r => r.status === 'stale').length  ?? stale_tokens?.length ?? 0;
 
+        const finalSent   = logRows?.length ? logSent   : (tokens_sent   ?? 0);
+        const finalFailed = logRows?.length ? logFailed : (tokens_failed ?? 0);
+        const finalStale  = logRows?.length ? logStale  : (stale_tokens?.length ?? 0);
+
+        // Hard rule: SENT 0/X (when X > 0) is an impossible state.
+        // If no tokens were delivered but the audience was non-empty, mark failed.
+        const finalStatus = (finalSent === 0 && (notif.tokens_targeted ?? 0) > 0) ? 'failed' : 'sent';
+        const finalError  = finalStatus === 'failed' && !error_msg
+            ? `0 of ${notif.tokens_targeted} tokens delivered`
+            : (error_msg || null);
+
         await supabase.from('admin_notifications').update({
-            status: 'sent', sent_at: notif.sent_at || new Date().toISOString(),
-            tokens_sent: logRows?.length ? logSent : (tokens_sent ?? 0),
-            tokens_failed: logRows?.length ? logFailed : (tokens_failed ?? 0),
-            stale_removed: logRows?.length ? logStale : (stale_tokens?.length ?? 0),
-            error_message: error_msg || null,
+            status: finalStatus,
+            sent_at: notif.sent_at || new Date().toISOString(),
+            tokens_sent:   finalSent,
+            tokens_failed: finalFailed,
+            stale_removed: finalStale,
+            error_message: finalError,
         }).eq('id', notif_id);
 
         if (notif.recurrence && notif.recurrence !== 'none') {
