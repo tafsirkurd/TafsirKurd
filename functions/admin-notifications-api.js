@@ -1103,7 +1103,7 @@ async function _handleRequest(context) {
             // Optimistic lock: claim this row before the batch loop starts.
             const { data: claimed } = await supabase
                 .from('admin_notifications')
-                .update({ status: 'scheduled', scheduled_at: now })
+                .update({ status: 'scheduled', scheduled_at: now, sent_at: null })
                 .eq('id', body.id)
                 .eq('status', notif.status)
                 .select('id')
@@ -1376,13 +1376,14 @@ async function sendBatch(env, supabase, notif, batchTokens) {
         const failedErrors = Object.fromEntries(
             failedList.map(t => [t.token, (t.error || '').slice(0, 500)])
         );
-        await supabase.rpc('upsert_delivery_results', {
+        const { error: rpcErr } = await supabase.rpc('upsert_delivery_results', {
             p_notification_id: notif.id,
             p_sent_tokens:   sentList.map(t => t.token),
             p_failed_tokens: failedList.map(t => t.token),
             p_failed_errors: failedErrors,
             p_stale_tokens:  staleTokens,
-        }).catch(e => console.error('[delivery_log] rpc upsert_delivery_results failed:', e.message));
+        });
+        if (rpcErr) console.error('[delivery_log] upsert_delivery_results error:', rpcErr.message, rpcErr.code);
     }
 
     return { sent: successCount, failed: failCount, staleTokens, errors };
