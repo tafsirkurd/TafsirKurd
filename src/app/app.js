@@ -1477,7 +1477,7 @@ function init(){
   setTimeout(function(){_warmAboutCache();},2000);
   _initPushTapListener(); // register tap listener immediately — never miss cold-start events
   setTimeout(function(){initPushToken();},3000);
-  setTimeout(function(){_reportAppVersion();},5000);
+  AppRuntime.Scheduler.timeout(function(){_reportAppVersion();},5000,'reportVersion');
   // Load Gencine scripts immediately — all three are SW-precached so this is near-instant.
   // Pre-render runs as soon as scripts are ready so buttons are always there on first tap.
   _loadGencineScripts(function(){
@@ -7762,10 +7762,7 @@ function syncFullPlayer(){
 }
 
 function _fpTick(ts){
-  if(!_fpOpen){_fpRafId=null;return;}
-  // Skip expensive work when app is backgrounded — RAF pauses anyway but
-  // when it resumes (tab focus) avoid a burst of stale-delta updates.
-  if(document.hidden){_fpRafId=requestAnimationFrame(_fpTick);return;}
+  if(!_fpOpen){_fpRafId=null;return false;} // return false signals Scheduler to stop loop
   var dt=ts-_fpLastTick;_fpLastTick=ts;
   var ae=S.audio.el;
   if(ae&&ae.duration>0&&!isNaN(ae.duration)){
@@ -7781,7 +7778,7 @@ function _fpTick(ts){
       var dur=$('fpDuration');if(dur)dur.textContent=_fmtTime(ae.duration);
     }
   }
-  _fpRafId=requestAnimationFrame(_fpTick);
+  // Scheduler owns rescheduling — do not call requestAnimationFrame here
 }
 
 function _buildRecPicker(){
@@ -7979,7 +7976,7 @@ App.openFP=function(){
   syncFullPlayer(); // _fpUpdateAyahs inside hits the guard and returns early — no animation
   ov.classList.add('open');
   pl.classList.add('open');
-  if(!_fpRafId)_fpRafId=requestAnimationFrame(_fpTick);
+  if(!_fpRafId)_fpRafId=AppRuntime.Scheduler.raf(_fpTick,'fullPlayer');
 };
 
 App.closeFP=function(){
@@ -7988,7 +7985,7 @@ App.closeFP=function(){
   _fpLastSurah=0;_fpLastAyah=0;_fpAnimating=false;_fpGen=0;
   var ov=$('fpOverlay'),pl=$('fullPlayer');
   if(ov)ov.classList.remove('open');
-  if(_fpRafId){cancelAnimationFrame(_fpRafId);_fpRafId=null;}
+  if(_fpRafId){_fpRafId.cancel();_fpRafId=null;}
   App.closeRecPicker();
   if(!pl||!pl.classList.contains('open'))return;
   // Slide player back down before hiding — mirrors the slideUp entry animation
@@ -14997,8 +14994,8 @@ function startApp(){
   // for the whole session (battery + data drain, needless backend load).
   // Clear any existing interval before creating — prevents duplicate polls if
   // startApp() is called more than once (hot reload, re-init paths).
-  if(window._forceUpdateInterval)clearInterval(window._forceUpdateInterval);
-  window._forceUpdateInterval=setInterval(function(){ if(!document.hidden) ForceUpdate.check(); }, 15*60*1000);
+  if(window._forceUpdateInterval)window._forceUpdateInterval.cancel();
+  window._forceUpdateInterval=AppRuntime.Scheduler.interval(function(){ ForceUpdate.check(); }, 15*60*1000,'forceUpdate');
 
   // â”€â”€ Runtime jank monitoring — auto-downgrade performance tier â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // Starts 8s after launch so startup pre-renders don't trigger false positives.
