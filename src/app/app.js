@@ -4709,6 +4709,87 @@ function _buildHafsFallbackFrag(verses,pageNum){
   return frag;
 }
 
+function _mushafDbgOverlay(pageEl,pageNum){
+  var OID='_mDbg';
+  var ov=document.getElementById(OID);
+  if(!ov){
+    ov=document.createElement('div');
+    ov.id=OID;
+    ov.style.cssText='position:fixed;bottom:72px;left:6px;right:6px;background:rgba(0,0,0,0.93);color:#fff;font-size:10.5px;font-family:monospace;padding:8px 10px;border-radius:10px;z-index:2147483647;max-height:260px;overflow-y:auto;direction:ltr;text-align:left;box-shadow:0 2px 12px rgba(0,0,0,0.6);';
+    document.body.appendChild(ov);
+  }
+  // CSS sheets
+  var sheets=Array.prototype.slice.call(document.querySelectorAll('link[rel=stylesheet]')).map(function(s){return s.href.replace(location.origin,'');}).join(' | ');
+  var hasV9=sheets.indexOf('v=9')!==-1;
+  var theme=document.documentElement.getAttribute('data-theme')||'(none)';
+  // Elements on the currently rendered page
+  var qLine=pageEl.querySelector('.mushaf-qcf-line');
+  var flowV=pageEl.querySelector('.mushaf-flow-verse');
+  var seg=pageEl.querySelector('.mushaf-ayah-seg');
+  var textPage=pageEl;
+  var isQCF=!!qLine;
+  var isHafs=!qLine&&!!flowV;
+  var lines=[];
+  lines.push('PAGE='+pageNum+'  THEME='+theme+'  CSS-v9='+hasV9);
+  lines.push('CSS: '+(sheets.split('/app/')[1]||sheets));
+  lines.push('RENDERER: '+(isQCF?'QCF4':isHafs?'Hafs-fallback':'EMPTY'));
+  // .mushaf-text-page background + color
+  var tpCs=window.getComputedStyle(textPage);
+  lines.push('page.bg-color: '+tpCs.backgroundColor);
+  lines.push('page.bg-image: '+tpCs.backgroundImage.slice(0,55));
+  lines.push('page.color: '+tpCs.color);
+  if(qLine){
+    var lCs=window.getComputedStyle(qLine);
+    lines.push('qcf-line.cls: '+qLine.className);
+    lines.push('qcf-line.color: '+lCs.color);
+    lines.push('qcf-line.font: '+lCs.fontFamily.slice(0,40));
+  }
+  if(flowV){
+    var fCs=window.getComputedStyle(flowV);
+    lines.push('flow-verse.color: '+fCs.color);
+  }
+  if(seg){
+    var sCs=window.getComputedStyle(seg);
+    lines.push('ayah-seg.color: '+sCs.color);
+    var sp=seg.querySelector('span');
+    if(sp){var spCs=window.getComputedStyle(sp);lines.push('seg>span[0].color: '+spCs.color+'  cls='+sp.className);}
+    else{lines.push('seg>span: none');}
+  }
+  // 18:5 across whole doc
+  var seg185=document.querySelector('.mushaf-ayah-seg[data-surah="18"][data-ayah="5"]');
+  if(seg185){
+    var tc185=seg185.textContent;
+    var cps185=Array.prototype.map.call(Array.from(tc185),function(c){return'U+'+c.codePointAt(0).toString(16).toUpperCase().padStart(4,'0');}).join(' ');
+    lines.push('18:5 rendered ['+Array.from(tc185).length+'cp]: '+cps185.slice(0,80));
+    var seg185Color=window.getComputedStyle(seg185).color;
+    lines.push('18:5 seg.color: '+seg185Color);
+    var c185=S.quranData&&S.quranData['18']&&S.quranData['18'][4];
+    if(c185){var ccps=Array.from(c185.text).map(function(c){return'U+'+c.codePointAt(0).toString(16).toUpperCase().padStart(4,'0');});lines.push('18:5 canonical['+ccps.length+'cp]: '+ccps.slice(0,6).join(' ')+'...');}
+  }else{
+    lines.push('18:5: not in DOM yet (open surah 18)');
+  }
+  // Render
+  ov.innerHTML='';
+  var pre=document.createElement('pre');
+  pre.style.cssText='margin:0;white-space:pre-wrap;word-break:break-all;';
+  pre.textContent=lines.join('\n');
+  ov.appendChild(pre);
+  var btn=document.createElement('button');
+  btn.textContent='COPY DEBUG';
+  btn.style.cssText='margin-top:6px;padding:3px 12px;background:#2563eb;color:#fff;border:none;border-radius:6px;font-size:10px;cursor:pointer;font-family:monospace;';
+  btn.onclick=function(){
+    var txt=lines.join('\n');
+    if(navigator.clipboard){navigator.clipboard.writeText(txt).then(function(){btn.textContent='COPIED!';setTimeout(function(){btn.textContent='COPY DEBUG';},2000);});}
+    else{try{var ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);btn.textContent='COPIED!';setTimeout(function(){btn.textContent='COPY DEBUG';},2000);}catch(e){}}
+  };
+  ov.appendChild(btn);
+  var cls=document.createElement('button');
+  cls.textContent='X';
+  cls.style.cssText='margin-top:6px;margin-left:6px;padding:3px 8px;background:#64748b;color:#fff;border:none;border-radius:6px;font-size:10px;cursor:pointer;font-family:monospace;';
+  cls.onclick=function(){ov.style.display='none';};
+  ov.appendChild(cls);
+}
+
 function loadMushafPageQCF(pageEl,pageNum){
   var font=S.mushafFont||'qcf4';
   var pf=_getPageFields();
@@ -4961,6 +5042,7 @@ function loadMushafPageQCF(pageEl,pageNum){
           expected:result.expected,missing:result.missing
         };
         console.log('[MushafPerf] page='+pageNum+' dataMs='+_dataMs+' fontMs='+(fontMs||0)+' renderMs='+_renderMs+' total='+_total+' ok='+result.ok+(result.missing.length?' MISSING='+result.missing.join(','):''));
+        _mushafDbgOverlay(pageEl,pageNum);
       });
     };
 
