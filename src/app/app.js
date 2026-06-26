@@ -9780,7 +9780,118 @@ setTimeout(function(){
   _updateGoalsBadge();
   _updatePrayerBadge();
   _updateMushafBadge();
+  _initInbox();
 },500);
+
+/* ===== NOTIFICATION INBOX ===== */
+(function(){
+  var INBOX_SEEN_KEY='notif_inbox_last_seen';
+  var _inboxItems=[];
+
+  function _getLastSeen(){
+    try{return parseInt(localStorage.getItem(INBOX_SEEN_KEY)||'0',10);}catch(e){return 0;}
+  }
+  function _markSeen(){
+    try{localStorage.setItem(INBOX_SEEN_KEY,Date.now().toString());}catch(e){}
+  }
+
+  async function _fetchInbox(){
+    try{
+      var resp=await fetch('/admin-notifications-api',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'public_inbox'}),
+      });
+      if(!resp.ok)return[];
+      var d=await resp.json();
+      return d.notifications||[];
+    }catch(e){return[];}
+  }
+
+  function _inboxBadgeUpdate(items){
+    var lastSeen=_getLastSeen();
+    var unread=items.filter(function(n){
+      return n.sent_at&&new Date(n.sent_at).getTime()>lastSeen;
+    }).length;
+    var badge=$('inboxBadge');
+    if(!badge)return;
+    if(unread>0){badge.style.display='';badge.textContent=unread>9?'9+':String(unread);}
+    else{badge.style.display='none';}
+  }
+
+  function _renderInbox(items){
+    var list=$('inbox-list');
+    if(!list)return;
+    while(list.firstChild)list.removeChild(list.firstChild);
+    if(!items.length){
+      var empty=document.createElement('div');
+      empty.style.cssText='text-align:center;padding:40px 20px;color:var(--text-secondary);font-size:14px';
+      empty.textContent='هیچ ئاگادارکرنەوەیەک نینە';
+      list.appendChild(empty);
+      return;
+    }
+    var lastSeen=_getLastSeen();
+    items.forEach(function(n){
+      var isNew=n.sent_at&&new Date(n.sent_at).getTime()>lastSeen;
+      var item=document.createElement('div');
+      item.style.cssText='padding:14px 20px;border-bottom:1px solid var(--border-light);cursor:pointer;position:relative'+(isNew?';background:rgba(var(--primary-rgb,79,142,247),.04)':'');
+      if(isNew){
+        var dot=document.createElement('span');
+        dot.style.cssText='position:absolute;top:16px;inset-inline-start:8px;width:6px;height:6px;border-radius:50%;background:var(--accent,#4f8ef7)';
+        item.appendChild(dot);
+      }
+      var title=document.createElement('div');
+      title.style.cssText='font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:4px';
+      title.textContent=n.title||'';
+      var body=document.createElement('div');
+      body.style.cssText='font-size:13px;color:var(--text-secondary);line-height:1.4;margin-bottom:6px';
+      body.textContent=(n.body||'').slice(0,120)+((n.body||'').length>120?'…':'');
+      var date=document.createElement('div');
+      date.style.cssText='font-size:11px;color:var(--text-tertiary)';
+      date.textContent=n.sent_at?new Date(n.sent_at).toLocaleDateString('ku',{year:'numeric',month:'short',day:'numeric'}):'';
+      item.appendChild(title);
+      item.appendChild(body);
+      item.appendChild(date);
+      // Tap to open deep link if any
+      item.addEventListener('click',function(){
+        if(n.deep_link_type&&n.deep_link_type!=='none'){
+          try{App.handleNotifTap&&App.handleNotifTap({type:n.deep_link_type,id:n.deep_link_id});}catch(e){}
+        }
+        App.closeInbox();
+      });
+      list.appendChild(item);
+    });
+  }
+
+  function _initInbox(){
+    _fetchInbox().then(function(items){
+      _inboxItems=items;
+      _inboxBadgeUpdate(items);
+    });
+  }
+
+  App.openInbox=function(){
+    var modal=$('inbox-modal');
+    if(!modal)return;
+    modal.style.display='block';
+    _renderInbox(_inboxItems);
+    _markSeen();
+    var badge=$('inboxBadge');
+    if(badge)badge.style.display='none';
+    // Refresh in background
+    _fetchInbox().then(function(items){
+      _inboxItems=items;
+      _renderInbox(items);
+    });
+  };
+
+  App.closeInbox=function(){
+    var modal=$('inbox-modal');
+    if(modal)modal.style.display='none';
+  };
+
+  window._initInbox=_initInbox;
+})();
 
 /* ===== WIDGET DATA PUSH ===== */
 

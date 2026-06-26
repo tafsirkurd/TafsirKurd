@@ -162,7 +162,7 @@
      not the network â€” eliminates the data-loading wait on first launch -->
 <link rel="preload" href="/data/quran.json" as="fetch" crossorigin="anonymous">
 <link rel="preload" href="/i18n/kmr-bundled.js?v=20260620b" as="script">
-<link rel="preload" href="/app/app.min.js?v=1214" as="script">
+<link rel="preload" href="/app/app.min.js?v=1215" as="script">
 <link rel="preload" href="/prayer/prayer.ui.js?v=20260616d" as="script">
 <!-- platform.js inlined: eliminates one parser-blocking network request -->
 <script>window.isNativePlatform=(function(){try{return window.Capacitor&&window.Capacitor.isNativePlatform();}catch(e){return false;}})();</script>
@@ -271,6 +271,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
       <div class="hdr-actions">
         <button class="hdr-btn" id="hdrGoalsBtn" onclick="App.tab('goals')" title="Goals"><i class="fas fa-bullseye"></i><span class="hdr-badge" id="goalsBadge"></span></button>
         <button class="hdr-btn" onclick="App.tab('bookmarks')" title="Bookmarks"><i class="fas fa-bookmark"></i></button>
+        <button class="hdr-btn" id="inboxBtn" onclick="App.openInbox()" title="Notifications"><i class="fas fa-bell"></i><span class="hdr-badge" id="inboxBadge" style="display:none"></span></button>
         <button class="hdr-btn" onclick="App.toggleSearch()"><i class="fas fa-search"></i></button>
       </div>
     </div>
@@ -839,7 +840,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 <script>(function(){try{var _r=indexedDB.open('tk-data-v1',1);_r.onupgradeneeded=function(e){e.target.result.createObjectStore('files');};_r.onsuccess=function(e){window._tkIDBConn=e.target.result;try{var _g=e.target.result.transaction('files','readonly').objectStore('files').get('quran_v1');_g.onsuccess=function(){window._tkQuranPreload=_g.result||false;};}catch(e2){};};}catch(e){}})();</script>
 <script src="/img-cache.js?v=1"></script>
 <script src="/utils/app-hardening.js?v=2"></script>
-<script src="/app/app.min.js?v=1214"></script>
+<script src="/app/app.min.js?v=1215"></script>
 <script>
 /* Register service worker — web/PWA only; native Capacitor loads from bundle, no SW needed */
 if ('serviceWorker' in navigator && !(window.Capacitor && window.Capacitor.isNativePlatform())) {
@@ -919,4 +920,14 @@ setTimeout(function(){
 </script>
 
 
+<!-- ── Notification Inbox Modal ────────────────────────────── -->
+<div id="inbox-modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.55);backdrop-filter:blur(4px)" onclick="if(event.target===this)App.closeInbox()">
+  <div style="position:absolute;bottom:0;left:0;right:0;max-height:80vh;background:var(--bg);border-radius:18px 18px 0 0;overflow:hidden;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid var(--border-light)">
+      <span style="font-size:16px;font-weight:700;color:var(--text-primary)" data-i18n="inbox.title">ئاگادارکرنەوەیین</span>
+      <button onclick="App.closeInbox()" style="background:none;border:none;cursor:pointer;color:var(--text-secondary);font-size:18px;padding:4px"><i class="fas fa-times"></i></button>
+    </div>
+    <div id="inbox-list" style="overflow-y:auto;flex:1;padding:12px 0"></div>
+  </div>
+</div>
 </body></html>

@@ -134,12 +134,27 @@ async function _handleRequest(context) {
                 .update({ tokens_targeted: allTokens.length })
                 .eq('id', notif.id);
             if (ttErr) console.error('[process_scheduled] tokens_targeted write failed:', ttErr.message);
+
+            // Insert all tokens as 'pending' in delivery log (ON CONFLICT DO NOTHING so retries
+            // don't reset rows that were already updated to sent/failed in a previous attempt).
+            const logRows = allTokens.map(t => ({
+                notification_id: notif.id,
+                token: t.token,
+                platform: isApnsToken(t.token) ? 'ios' : 'android',
+                status: 'pending',
+                attempt_count: 0,
+            }));
+            if (logRows.length) {
+                await supabase.from('admin_notification_delivery_logs')
+                    .upsert(logRows, { onConflict: 'notification_id,token', ignoreDuplicates: true })
+                    .catch(e => console.error('[delivery_log] insert pending failed:', e.message));
+            }
         }
 
         const batchSlice = interleaved.slice(batchNum * PAGE_SIZE, (batchNum + 1) * PAGE_SIZE);
         const hasMore = interleaved.length > (batchNum + 1) * PAGE_SIZE;
 
-        const batchResult = await sendBatch(env, notif, batchSlice);
+        const batchResult = await sendBatch(env, supabase, notif, batchSlice);
 
         // Stale tokens: remove eagerly per-batch so subsequent batches don't retry them.
         if (batchResult.staleTokens.length) {
@@ -188,11 +203,21 @@ async function _handleRequest(context) {
 
         if (stale_tokens?.length) await removeStaleTokens(env, stale_tokens).catch(() => {});
 
+        // Read counts from delivery log for accuracy; fall back to worker-aggregated values
+        // for notifications that predate delivery logging.
+        const { data: logRows } = await supabase
+            .from('admin_notification_delivery_logs')
+            .select('status')
+            .eq('notification_id', notif_id);
+        const logSent   = logRows?.filter(r => r.status === 'sent').length   ?? tokens_sent   ?? 0;
+        const logFailed = logRows?.filter(r => r.status === 'failed' || r.status === 'pending').length ?? tokens_failed ?? 0;
+        const logStale  = logRows?.filter(r => r.status === 'stale').length  ?? stale_tokens?.length ?? 0;
+
         await supabase.from('admin_notifications').update({
             status: 'sent', sent_at: notif.sent_at || new Date().toISOString(),
-            tokens_sent: tokens_sent ?? 0,
-            tokens_failed: tokens_failed ?? 0,
-            stale_removed: stale_tokens?.length ?? 0,
+            tokens_sent: logRows?.length ? logSent : (tokens_sent ?? 0),
+            tokens_failed: logRows?.length ? logFailed : (tokens_failed ?? 0),
+            stale_removed: logRows?.length ? logStale : (stale_tokens?.length ?? 0),
             error_message: error_msg || null,
         }).eq('id', notif_id);
 
@@ -222,6 +247,118 @@ async function _handleRequest(context) {
         }
 
         return json({ success: true, finalized: notif_id });
+    }
+
+    // ── DELIVERY STATS ────────────────────────────────────────────
+    if (action === 'delivery_stats') {
+        const adminToken = (request.headers.get('Authorization') || '').replace('Bearer ', '').trim();
+        const { data: adminSess } = await supabase.from('admin_sessions').select('user_id')
+            .eq('token', adminToken).gt('expires_at', new Date().toISOString()).single();
+        if (!adminSess) return json({ error: 'Unauthorized' }, 401);
+
+        const { notif_id } = body;
+        if (!notif_id) return json({ error: 'notif_id required' }, 400);
+
+        const { data: rows } = await supabase
+            .from('admin_notification_delivery_logs')
+            .select('status, platform')
+            .eq('notification_id', notif_id);
+
+        if (!rows?.length) return json({ has_log: false });
+
+        const nonStale = rows.filter(r => r.status !== 'stale');
+        const stats = {
+            has_log: true,
+            total: rows.length,
+            sent:    rows.filter(r => r.status === 'sent').length,
+            failed:  rows.filter(r => r.status === 'failed').length,
+            pending: rows.filter(r => r.status === 'pending').length,
+            stale:   rows.filter(r => r.status === 'stale').length,
+            android_sent:   rows.filter(r => r.platform === 'android' && r.status === 'sent').length,
+            android_failed: rows.filter(r => r.platform === 'android' && (r.status === 'failed' || r.status === 'pending')).length,
+            ios_sent:   rows.filter(r => r.platform === 'ios' && r.status === 'sent').length,
+            ios_failed: rows.filter(r => r.platform === 'ios' && (r.status === 'failed' || r.status === 'pending')).length,
+        };
+        stats.retry_count = stats.failed + stats.pending;
+        stats.delivery_rate = nonStale.length > 0 ? Math.round(stats.sent / nonStale.length * 100) : 0;
+        return json(stats);
+    }
+
+    // ── RETRY FAILED ──────────────────────────────────────────────
+    if (action === 'retry_failed') {
+        const adminToken = (request.headers.get('Authorization') || '').replace('Bearer ', '').trim();
+        const { data: adminSess } = await supabase.from('admin_sessions').select('user_id')
+            .eq('token', adminToken).gt('expires_at', new Date().toISOString()).single();
+        if (!adminSess) return json({ error: 'Unauthorized' }, 401);
+
+        const { notif_id, confirm } = body;
+        if (!notif_id) return json({ error: 'notif_id required' }, 400);
+
+        const { data: notif } = await supabase.from('admin_notifications').select('*').eq('id', notif_id).single();
+        if (!notif) return json({ error: 'Notification not found' }, 404);
+
+        const { data: logRows } = await supabase
+            .from('admin_notification_delivery_logs')
+            .select('status, platform, token')
+            .eq('notification_id', notif_id);
+
+        if (!logRows?.length) return json({ error: 'No delivery log for this notification — only notifications sent after the delivery-tracking update support retry.' }, 404);
+
+        const summary = {
+            sent:    logRows.filter(r => r.status === 'sent').length,
+            failed:  logRows.filter(r => r.status === 'failed').length,
+            pending: logRows.filter(r => r.status === 'pending').length,
+            stale:   logRows.filter(r => r.status === 'stale').length,
+        };
+        summary.retry_count = summary.failed + summary.pending;
+
+        // Without confirm: return summary only (used by UI to show the confirmation modal)
+        if (!confirm) return json({ success: true, summary, notif_id });
+
+        if (summary.retry_count === 0) return json({ success: true, retried: 0, sent: 0, message: 'No failed tokens to retry' });
+
+        // Take up to 35 failed/pending tokens (budget-safe: 35 sends + overhead = ~45 subrequests)
+        const retryRows = logRows.filter(r => r.status === 'failed' || r.status === 'pending').slice(0, 35);
+        const retryTokens = retryRows.map(r => ({
+            token: r.token, platform: r.platform,
+            _type: r.platform === 'ios' ? 'apns' : 'fcm',
+        }));
+
+        const result = await sendBatch(env, supabase, notif, retryTokens);
+
+        // Refresh notification totals from delivery log
+        const { data: newLog } = await supabase
+            .from('admin_notification_delivery_logs').select('status').eq('notification_id', notif_id);
+        if (newLog?.length) {
+            const newSent  = newLog.filter(r => r.status === 'sent').length;
+            const newFailed = newLog.filter(r => r.status === 'failed' || r.status === 'pending').length;
+            const newStale  = newLog.filter(r => r.status === 'stale').length;
+            await supabase.from('admin_notifications').update({
+                tokens_sent: newSent, tokens_failed: newFailed, stale_removed: newStale,
+            }).eq('id', notif_id);
+        }
+
+        if (result.staleTokens.length) await removeStaleTokens(env, result.staleTokens).catch(() => {});
+
+        return json({
+            success: true,
+            retried: retryRows.length,
+            sent: result.sent,
+            failed: result.failed,
+            stale: result.staleTokens.length,
+            remaining_failed: Math.max(0, summary.retry_count - retryRows.length),
+        });
+    }
+
+    // ── PUBLIC INBOX (no auth — app users fetch recent sent notifications) ──
+    if (action === 'public_inbox') {
+        const { data: notifications } = await supabase
+            .from('admin_notifications')
+            .select('id, title, body, deep_link_type, deep_link_id, sent_at, image_url')
+            .eq('status', 'sent').eq('is_template', false).eq('audience', 'all')
+            .gte('sent_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+            .order('sent_at', { ascending: false }).limit(20);
+        return json({ notifications: notifications || [] });
     }
 
     // ── AUTO-NOTIFY NEW CONTENT (cron — no admin auth) ────────────
@@ -1083,7 +1220,7 @@ function validateScheduledAt(scheduled_at, recurrence, is_template) {
     return null;
 }
 
-async function sendBatch(env, notif, batchTokens) {
+async function sendBatch(env, supabase, notif, batchTokens) {
     if (!batchTokens.length) return { sent: 0, failed: 0, staleTokens: [], errors: [] };
 
     const apnsInBatch = batchTokens.filter(t => t._type === 'apns');
@@ -1105,38 +1242,74 @@ async function sendBatch(env, notif, batchTokens) {
     const FCM_URL = `https://fcm.googleapis.com/v1/projects/${env.FCM_PROJECT_ID}/messages:send`;
     let successCount = 0, failCount = fcmAuthError ? fcmInBatch.length : 0;
     const staleTokens = [], errors = [];
-    if (fcmAuthError) errors.push(fcmAuthError);
+    // Per-token result tracking for delivery log
+    const sentList = [], failedList = [];
+    if (fcmAuthError) {
+        errors.push(fcmAuthError);
+        fcmInBatch.forEach(t => failedList.push({ token: t.token, platform: 'android', error: fcmAuthError }));
+    }
 
     const jobs = batchTokens.map(t => async () => {
+        const platform = t._type === 'fcm' ? 'android' : 'ios';
         if (t._type === 'fcm') {
-            if (!accessToken) { failCount++; return; }
+            if (!accessToken) { failCount++; failedList.push({ token: t.token, platform, error: 'No FCM token' }); return; }
             const res = await fetch(FCM_URL, {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message: buildFCMMessage(t.token, t.platform, notif.title, notif.body, notif.image_url, deepLinkData) }),
             });
-            if (res.ok) { successCount++; }
+            if (res.ok) { successCount++; sentList.push({ token: t.token, platform }); }
             else {
                 const err = await res.json().catch(() => ({}));
-                errors.push(`FCM ${res.status} ${err?.error?.status || ''}: ${err?.error?.message || ''}`);
+                const errMsg = `FCM ${res.status} ${err?.error?.status || ''}: ${err?.error?.message || ''}`;
+                errors.push(errMsg);
                 if (err?.error?.status === 'NOT_FOUND' || err?.error?.status === 'UNREGISTERED') staleTokens.push(t.token);
+                else failedList.push({ token: t.token, platform, error: errMsg });
                 failCount++;
             }
         } else {
-            if (!apnsJwt) { errors.push(apnsJwtError || 'APNs JWT missing'); failCount++; return; }
+            if (!apnsJwt) { errors.push(apnsJwtError || 'APNs JWT missing'); failCount++; failedList.push({ token: t.token, platform, error: apnsJwtError || 'APNs JWT missing' }); return; }
             const res = await sendApns(t.token, notif.title, notif.body, deepLinkData, apnsJwt, 'com.tafsirkurd.app');
-            if (res.ok) { successCount++; }
+            if (res.ok) { successCount++; sentList.push({ token: t.token, platform }); }
             else {
                 const errText = await res.text().catch(() => '');
                 const err = (() => { try { return JSON.parse(errText || '{}'); } catch { return {}; } })();
-                errors.push(`APNs ${res.status}: ${err?.reason || errText}`);
+                const errMsg = `APNs ${res.status}: ${err?.reason || errText}`;
+                errors.push(errMsg);
                 if (res.status === 410 || err?.reason === 'BadDeviceToken' || err?.reason === 'Unregistered') staleTokens.push(t.token);
+                else failedList.push({ token: t.token, platform, error: errMsg });
                 failCount++;
             }
         }
     });
 
     await Promise.allSettled(jobs.map(fn => fn()));
+
+    // Bulk upsert delivery log results (one subrequest covers all tokens in this batch)
+    if (supabase && notif?.id) {
+        const now = new Date().toISOString();
+        const logUpdates = [
+            ...sentList.map(t => ({
+                notification_id: notif.id, token: t.token, platform: t.platform,
+                status: 'sent', attempt_count: 1, sent_at: now, updated_at: now,
+            })),
+            ...failedList.map(t => ({
+                notification_id: notif.id, token: t.token, platform: t.platform,
+                status: 'failed', attempt_count: 1, last_error: t.error?.slice(0, 500) || null,
+                failed_at: now, updated_at: now,
+            })),
+            ...staleTokens.map(token => ({
+                notification_id: notif.id, token, platform: isApnsToken(token) ? 'ios' : 'android',
+                status: 'stale', attempt_count: 1, updated_at: now,
+            })),
+        ];
+        if (logUpdates.length) {
+            await supabase.from('admin_notification_delivery_logs')
+                .upsert(logUpdates, { onConflict: 'notification_id,token' })
+                .catch(e => console.error('[delivery_log] upsert failed:', e.message));
+        }
+    }
+
     return { sent: successCount, failed: failCount, staleTokens, errors };
 }
 
