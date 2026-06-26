@@ -1145,133 +1145,87 @@ function init(){
     // Init shared Supabase client and check auth
     initSupabase(function(){ loadReciterPhotos(); });
 
-    // Belt-and-suspenders: write tk_last_bg on visibilitychange too.
-    // appStateChange is the primary writer but may not fire under extreme memory pressure
-    // before the OS kills the process. visibilitychange + pagehide are more reliable.
-    document.addEventListener('visibilitychange',function(){
-      if(document.hidden) localStorage.setItem('tk_last_bg',String(Date.now()));
+    // ── Lifecycle: owned by AppRuntime — one listener per event type ────────────
+    // AppRuntime installs visibilitychange + pagehide + Capacitor appStateChange.
+    // A 600ms dedup window collapses the native double-fire (visibilitychange
+    // fires first, appStateChange ~100ms later) into a single 'background'/'resume'
+    // event, eliminating the previous double audio-pause and double hlRestoreAll.
+    AppRuntime.on('background',function(){
+      localStorage.setItem('tk_last_bg',String(Date.now()));
+      console.log('[APP_LIFECYCLE] background');
+      if(!S.bgAudio&&S.audio.playing){
+        S.audio.el.pause();S.audio.playing=false;
+        document.body.classList.remove('mushaf-audio-playing');
+        var ic=$('audioPlayIcon');if(ic)ic.className='fas fa-play';
+      }
+      var _skyEl=document.getElementById('prayerSkyScene');
+      if(_skyEl)_skyEl.classList.add('sky-paused');
+      if(S.user)syncToCloud();
     });
-    window.addEventListener('pagehide',function(){
+    AppRuntime.on('pagehide',function(){
+      // Belt-and-suspenders write before page unload (may fire after 'background' ran)
       localStorage.setItem('tk_last_bg',String(Date.now()));
     });
-
-    // Pause audio and sky animations when app goes to background
-    document.addEventListener('visibilitychange',function(){
-      if(document.hidden){
-        if(!S.bgAudio&&S.audio.playing){
-          S.audio.el.pause();S.audio.playing=false;
-          document.body.classList.remove('mushaf-audio-playing');
-          var ic=$('audioPlayIcon');if(ic)ic.className='fas fa-play';
-        }
-        // Pause GPU-expensive sky animations when screen off/background
+    AppRuntime.on('resume',function(){
+      // Sky: unpause only on prayer tab
+      if(S.tab==='prayer'){
         var _skyEl=document.getElementById('prayerSkyScene');
-        if(_skyEl)_skyEl.classList.add('sky-paused');
-      } else {
-        // Resume sky only if prayer tab is active
-        if(S.tab==='prayer'){
-          var _skyEl=document.getElementById('prayerSkyScene');
-          if(_skyEl)_skyEl.classList.remove('sky-paused');
-          // Re-render prayer panel on foreground — handles overnight stale date for web users.
-          // Capacitor users get this via appStateChange below; this covers desktop/PWA.
-          // Skipped on Capacitor (appStateChange fires there instead — avoids double render).
-          if(!window.Capacitor&&window.PrayerUI){
-            requestAnimationFrame(function(){PrayerUI.render();_renderHash.prayer=_tabHash('prayer');});
-          }
+        if(_skyEl)_skyEl.classList.remove('sky-paused');
+        // Web/PWA: re-render prayer on foreground (native handled in block below)
+        if(!window.Capacitor&&window.PrayerUI){
+          requestAnimationFrame(function(){PrayerUI.render();_renderHash.prayer=_tabHash('prayer');});
         }
-        // Restore playback highlight state if Quran tab is visible (handles browser bg/fg)
-        if(S.tab==='quran')requestAnimationFrame(_hlRestoreAll);
+      }
+      // Restore Quran playback highlight after background
+      if(S.tab==='quran')requestAnimationFrame(_hlRestoreAll);
+      // Native resume: full refresh sequence (runs once per foreground — dedup prevents double)
+      if(window.Capacitor){
+        console.log('[APP_LIFECYCLE] resume_refresh_start');
+        ForceUpdate.check();
+        initTodayVerses();
+        (function(){
+          var _AA=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.AthanAlarm;
+          if(_AA&&window.PrayerUI&&window.S&&window.S.prayerAthanEnabled){
+            _AA.canScheduleExact().then(function(r){
+              if(r&&r.canSchedule===false){
+                if(window._showAthanAlarmPermWarning)window._showAthanAlarmPermWarning();
+              } else if(r&&r.canSchedule===true&&localStorage.getItem('athanExactAlarmWarned')){
+                localStorage.removeItem('athanExactAlarmWarned');
+                localStorage.removeItem('prayerLastScheduleTs');
+                PrayerUI.initScheduleOnStart();
+              }
+            }).catch(function(){});
+            var _bwAge=parseInt(localStorage.getItem('batteryOptWarnedAt')||'0');
+            if(Date.now()-_bwAge>7*24*60*60*1000){
+              _AA.isIgnoringBatteryOpts&&_AA.isIgnoringBatteryOpts().then(function(r){
+                if(r&&r.ignoring===false&&window._showBatteryOptWarning)window._showBatteryOptWarning();
+              }).catch(function(){});
+            }
+          }
+        })();
+        if(window.PrayerUI)PrayerUI.initScheduleOnStart();
+        var _fgPlatform=window.Capacitor&&Capacitor.getPlatform?Capacitor.getPlatform():'';
+        if(window.PrayerUI&&S.tab==='prayer'&&_fgPlatform!=='mac'){
+          requestAnimationFrame(function(){PrayerUI.render();_renderHash.prayer=_tabHash('prayer');});
+        } else if(window.PrayerUI&&_fgPlatform!=='mac'){
+          _renderHash.prayer=null;
+        }
+        if(window.PrayerUI)PrayerUI.pushWidgetIfStale();
+        pushGoalDataToWidget();
+        pushAutoAyahSchedule();
+        syncWidgetTranslations();
+        initDailyVerse();
+        scheduleStreakReminder();
+        (function(){
+          var _now=Date.now(),_lp=parseInt(localStorage.getItem('tk_prefetch_ts')||'0');
+          if(_now-_lp>600000){
+            localStorage.setItem('tk_prefetch_ts',String(_now));
+            if(window.PrayerUI&&PrayerUI.prefetchAllCities)PrayerUI.prefetchAllCities();
+          }
+        })();
+        console.log('[APP_LIFECYCLE] resume_refresh_done');
       }
     });
-    try{
-      if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.App){
-        window.Capacitor.Plugins.App.addListener('appStateChange',function(state){
-          if(!state.isActive){
-            // Save background timestamp — used by startApp() warm-resume detection
-            // when iOS/Android kills the WebView under memory pressure and reloads it.
-            localStorage.setItem('tk_last_bg', String(Date.now()));
-            console.log('[APP_LIFECYCLE] background');
-            if(!S.bgAudio&&S.audio.playing){
-              S.audio.el.pause();S.audio.playing=false;
-              var ic=$('audioPlayIcon');
-              if(ic)ic.className='fas fa-play';
-            }
-            // Sync data when app goes to background
-            if(S.user)syncToCloud();
-          } else {
-            console.log('[APP_LIFECYCLE] warm_resume — appStateChange foreground');
-            console.log('[APP_LIFECYCLE] resume_refresh_start');
-            // Check immediately on resume — enforce lock blocks UI synchronously
-            ForceUpdate.check();
-            // Refresh today's verse set so the date is correct after overnight open.
-            // Without this, S.todayVerses stays as yesterday's Set and re-read ayahs
-            // are skipped for today's goal count.
-            initTodayVerses();
-            // On every foreground resume: check exact alarm permission via native bridge.
-            // If it was revoked → show warning; if it was just granted → clear rate-limit
-            // and reschedule immediately (covers the case where user came back from Settings).
-            (function(){
-              var _AA=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.AthanAlarm;
-              if(_AA&&window.PrayerUI&&window.S&&window.S.prayerAthanEnabled){
-                _AA.canScheduleExact().then(function(r){
-                  if(r&&r.canSchedule===false){
-                    if(window._showAthanAlarmPermWarning)window._showAthanAlarmPermWarning();
-                  } else if(r&&r.canSchedule===true&&localStorage.getItem('athanExactAlarmWarned')){
-                    // Just got permission back — reschedule right now
-                    localStorage.removeItem('athanExactAlarmWarned');
-                    localStorage.removeItem('prayerLastScheduleTs');
-                    PrayerUI.initScheduleOnStart();
-                  }
-                }).catch(function(){});
-                // Check battery optimization on resume — re-check every 7 days in case user
-                // reverted the exemption (Samsung OEM can reset it after OS updates).
-                // Re-check battery opt every 7 days — Samsung OEM can silently revoke exemption
-                var _bwAge=parseInt(localStorage.getItem('batteryOptWarnedAt')||'0');
-                if(Date.now()-_bwAge>7*24*60*60*1000){
-                  _AA.isIgnoringBatteryOpts&&_AA.isIgnoringBatteryOpts().then(function(r){
-                    if(r&&r.ignoring===false&&window._showBatteryOptWarning)window._showBatteryOptWarning();
-                  }).catch(function(){});
-                }
-              }
-            })();
-            // Reschedule athan + daily verse if new day
-            if(window.PrayerUI)PrayerUI.initScheduleOnStart();
-            // Rebuild prayer panel if active — handles overnight stale date.
-            // Skipped on macOS: athan notifications bring app to foreground automatically;
-            // re-rendering would cause a visible "refresh" the user didn't ask for.
-            var _fgPlatform=window.Capacitor&&Capacitor.getPlatform?Capacitor.getPlatform():'';
-            if(window.PrayerUI&&S.tab==='prayer'&&_fgPlatform!=='mac'){
-              requestAnimationFrame(function(){PrayerUI.render();_renderHash.prayer=_tabHash('prayer');});
-            } else if(window.PrayerUI&&_fgPlatform!=='mac'){
-              // Not on prayer tab — just invalidate hash so it rebuilds fresh on next visit
-              _renderHash.prayer=null;
-            }
-            // Push fresh widget data if date or city changed since last push
-            if(window.PrayerUI)PrayerUI.pushWidgetIfStale();
-            pushGoalDataToWidget();
-            pushAutoAyahSchedule();
-            syncWidgetTranslations();
-            initDailyVerse();
-            scheduleStreakReminder();
-            // checkNewVideoNotif removed (2026-06-12): it duplicated the server
-            // FCM push — users got the real push in background, then a second
-            // local "ڤیدیۆیەکی نوی 🎬" on app open whenever the push had been
-            // dismissed (the lastVideoNotifId dedup only saw tapped/in-tray pushes).
-            // Re-run prefetch — capped to once per 10 min to avoid spawning 20 city
-            // fetches on every single foreground event (rapid background/foreground cycles).
-            (function(){
-              var _now=Date.now(),_lp=parseInt(localStorage.getItem('tk_prefetch_ts')||'0');
-              if(_now-_lp>600000){
-                localStorage.setItem('tk_prefetch_ts',String(_now));
-                if(window.PrayerUI&&PrayerUI.prefetchAllCities)PrayerUI.prefetchAllCities();
-              }
-            })();
-            console.log('[APP_LIFECYCLE] resume_refresh_done');
-            // Restore playback highlight state if Quran tab is active
-            if(S.tab==='quran')requestAnimationFrame(_hlRestoreAll);
-          }
-        });
-      }
-    }catch(e){console.warn('App state listener not available',e)}
 
     // Handle iOS widget tap → deep link to prayer tab (tafsirkurd://prayer)
     try{
@@ -1491,17 +1445,7 @@ function init(){
       }
     });
 
-    // Scroll-pause: add tk-scrolling class during active scroll so CSS can
-    // pause heavy GPU animations (sky, audio wave, etc.) — reduces compositor
-    // work that causes scroll jank on mid-range Android devices.
-    (function(){
-      var _st=null;
-      document.addEventListener('scroll',function(){
-        document.body.classList.add('tk-scrolling');
-        if(_st)clearTimeout(_st);
-        _st=setTimeout(function(){_st=null;document.body.classList.remove('tk-scrolling');},120);
-      },{passive:true,capture:true});
-    })();
+    // Scroll-pause: owned by AppRuntime (scroll listener installed in app-runtime.js)
   }catch(e){
     console.error('App init error:',e);
   }
