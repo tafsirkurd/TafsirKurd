@@ -4045,15 +4045,25 @@ function ensureQCFV4Font(pageNum){
   }
   if(!document.fonts||!document.fonts.load){
     _qcfV4FontLoadP[pageNum]=Promise.resolve(false);
+    if(pageNum===294)console.warn('[RendererDiag] p294 ensureQCFV4Font: document.fonts API unavailable → fontOk=false');
     return _qcfV4FontLoadP[pageNum];
   }
   var loadP=_qcfFontSlot(function(){
     return document.fonts.load('1em "'+fontName+'"').then(function(faces){
-      if(!faces||!faces.length)return false;
-      return _sentinelOk();
-    }).catch(function(){return false;});
+      if(pageNum===294)console.log('[RendererDiag] p294 fonts.load resolved: faces.length='+(faces?faces.length:'null'));
+      if(!faces||!faces.length){if(pageNum===294)console.warn('[RendererDiag] p294 no faces returned → fontOk=false');return false;}
+      var _s=_sentinelOk();
+      if(pageNum===294)console.log('[RendererDiag] p294 sentinel='+_s);
+      return _s;
+    }).catch(function(e){
+      if(pageNum===294)console.warn('[RendererDiag] p294 fonts.load threw:',e&&e.message||e);
+      return false;
+    });
   });
-  var timeoutP=new Promise(function(res){setTimeout(function(){res(false);},5000);});
+  var timeoutP=new Promise(function(res){setTimeout(function(){
+    if(pageNum===294)console.warn('[RendererDiag] p294 font load TIMED OUT (5 s) → fontOk=false');
+    res(false);
+  },5000);});
   _qcfV4FontLoadP[pageNum]=Promise.race([loadP,timeoutP]).then(function(ok){
     if(!ok){
       // Log the EXACT failure reason: probe the local file the @font-face points
@@ -4736,11 +4746,40 @@ function _buildHafsFallbackFrag(verses,pageNum){
     var sd=S.quranData&&S.quranData[String(sn)];
     var ao=sd&&sd[vn-1];
     var txt=(ao&&ao.text)||('('+sn+':'+vn+')');
+    if(sn===18&&vn===5){
+      // [2] Canonical source / [1] active renderer (Hafs path)
+      var _src=ao?'S.quranData':'MISSING(placeholder)';
+      var _hex=[...txt].map(function(c){return'U+'+c.codePointAt(0).toString(16).toUpperCase().padStart(4,'0');}).join(' ');
+      console.warn('[RendererDiag] [1-renderer] HAFS-FALLBACK is active for 18:5');
+      console.warn('[RendererDiag] [2-canonical] HAFS source='+_src+' text='+JSON.stringify(txt.slice(0,60)));
+      console.warn('[RendererDiag] [2-canonical] source codepoints=['+_hex+']');
+    }
     var ve=el('div','mushaf-flow-verse');
     ve.style.fontFamily="'KFGQPC Hafs','Amiri Quran',serif";
     ve.textContent=txt+' ﴿'+toArabicNum(vn)+'﴾';
     (function(v,s){on(ve,'click',function(e){e.stopPropagation();App.showMushafVerseTafsir(v,s);});})(vn,sn);
     frag.appendChild(ve);
+    if(sn===18&&vn===5){
+      // [4] DOM readback + [5] code points + [6] equality — Hafs path (delayed until in DOM)
+      (function(_ve,_txtSrc){
+        setTimeout(function(){
+          if(!_ve.parentNode)return;
+          var _tc=_ve.textContent;
+          var _cs=window.getComputedStyle(_ve);
+          var _tcCPs=[..._tc].map(function(c){return'U+'+c.codePointAt(0).toString(16).toUpperCase().padStart(4,'0');});
+          var _canonStripped=_tc.replace(/\s*[)﴾﴿][^]*$/,'').trim(); // strip ﴿N﴾ suffix
+          var _c18v5h=S.quranData&&S.quranData['18']&&S.quranData['18'][4];
+          var _canonH=(_c18v5h&&_c18v5h.text)||'';
+          console.warn('[RendererDiag] p294 [4-dom] HAFS 18:5 textContent='+JSON.stringify(_tc.slice(0,60)));
+          console.warn('[RendererDiag] p294 [4-dom] HAFS innerText='+JSON.stringify(typeof _ve.innerText!=='undefined'?_ve.innerText.slice(0,60):'(n/a)'));
+          console.warn('[RendererDiag] p294 [4-dom] HAFS computed font-family='+_cs.fontFamily);
+          console.warn('[RendererDiag] p294 [4-dom] HAFS computed direction='+_cs.direction+' unicode-bidi='+_cs.unicodeBidi+' white-space='+_cs.whiteSpace);
+          console.warn('[RendererDiag] p294 [5-codepoints] HAFS DOM textContent codepoints=['+_tcCPs.join(' ')+']');
+          console.warn('[RendererDiag] p294 [6-equality] HAFS canonical===domText(stripped)='+(_canonH===_canonStripped));
+          console.warn('[RendererDiag] p294 [6-equality] HAFS canonNFC===domNFC='+(_canonH.normalize('NFC')===_canonStripped.normalize('NFC')));
+        },500);
+      })(ve,txt);
+    }
   }
   if(verses&&verses.length){
     verses.forEach(function(v){
@@ -4790,8 +4829,19 @@ function loadMushafPageQCF(pageEl,pageNum){
   return dataP.then(function(json){
     var _dataMs=Date.now()-_dataT;
     var verses=json.verses||[];
+    if(pageNum===294){
+      // [2] Canonical source text
+      var _c18=S.quranData&&S.quranData['18'];
+      var _c18v5=_c18&&_c18[4];
+      var _canonTxt=(_c18v5&&_c18v5.text)||'(S.quranData not loaded)';
+      var _canonCPs=[..._canonTxt].map(function(c){return'U+'+c.codePointAt(0).toString(16).toUpperCase().padStart(4,'0');});
+      console.log('[RendererDiag] p294 [2-canonical] 18:5 S.quranData[18][4].text='+JSON.stringify(_canonTxt.slice(0,60)));
+      console.log('[RendererDiag] p294 [2-canonical] codepoints=['+_canonCPs.join(' ')+']');
+      console.log('[RendererDiag] p294 [1-renderer] font='+font+' verses-in-page-data='+verses.length);
+    }
     if(!verses.length){
       // No page data — render Hafs Arabic text as fallback (never show ×)
+      if(pageNum===294)console.warn('[RendererDiag] p294: HAFS-FALLBACK (no-data) — page data returned 0 verses');
       if(font==='qcf4'){
         var _nd=_buildHafsFallbackFrag([],pageNum);
         clear(pageEl);pageEl.classList.add('mushaf-page-hafs-fallback');pageEl.appendChild(_nd);
@@ -4864,7 +4914,20 @@ function loadMushafPageQCF(pageEl,pageNum){
           seg.className='mushaf-ayah-seg';
           seg.setAttribute('data-surah',String(g.sn));
           seg.setAttribute('data-ayah',String(g.vn));
-          seg.textContent=g.words.join('');
+          var _glyphStr=g.words.join('');
+          if(pageNum===294&&g.sn===18&&g.vn===5){
+            // [3] QCF4 source data
+            var _perWord=g.words.map(function(w,i){
+              return i+':['+[...w].map(function(c){return'U+'+c.codePointAt(0).toString(16).toUpperCase().padStart(4,'0');}).join(',')+']';
+            }).join('  ');
+            var _glyphCPs=[..._glyphStr].map(function(c){return'U+'+c.codePointAt(0).toString(16).toUpperCase().padStart(4,'0');});
+            console.log('[RendererDiag] p294 [3-qcf4] 18:5 ln='+ln+' wordCount='+g.words.length+' codeField='+codeField+' fontFam='+fontFam);
+            console.log('[RendererDiag] p294 [3-qcf4] per-word codes: '+_perWord);
+            console.log('[RendererDiag] p294 [3-qcf4] join separator='+JSON.stringify('')+' (empty string — confirmed)');
+            console.log('[RendererDiag] p294 [3-qcf4] joined glyphs codepoints=['+_glyphCPs.join(' ')+']');
+            console.log('[RendererDiag] p294 [3-qcf4] raw textContent value='+JSON.stringify(_glyphStr));
+          }
+          seg.textContent=_glyphStr;
           var k=String(g.sn)+':'+String(g.vn);
           if(!window._mushafVerseElements[k])window._mushafVerseElements[k]=[];
           window._mushafVerseElements[k].push(seg);
@@ -5016,6 +5079,30 @@ function loadMushafPageQCF(pageEl,pageNum){
           expected:result.expected,missing:result.missing
         };
         console.log('[MushafPerf] page='+pageNum+' dataMs='+_dataMs+' fontMs='+(fontMs||0)+' renderMs='+_renderMs+' total='+_total+' ok='+result.ok+(result.missing.length?' MISSING='+result.missing.join(','):''));
+        if(pageNum===294){
+          // [4] Rendered DOM text + [5] code points + [6] equality — QCF4 path
+          var _seg185=pageEl.querySelector('.mushaf-ayah-seg[data-surah="18"][data-ayah="5"]');
+          if(_seg185){
+            var _domTC=_seg185.textContent;
+            var _domIT=(typeof _seg185.innerText!=='undefined')?_seg185.innerText:'(n/a)';
+            var _cs185=window.getComputedStyle(_seg185);
+            var _domCPs=[..._domTC].map(function(c){return'U+'+c.codePointAt(0).toString(16).toUpperCase().padStart(4,'0');});
+            var _c18v5q=S.quranData&&S.quranData['18']&&S.quranData['18'][4];
+            var _canonQ=(_c18v5q&&_c18v5q.text)||'';
+            var _fontLoaded=!!(_qcfV4FontLoadP&&_qcfV4FontLoadP[pageNum]);
+            console.log('[RendererDiag] p294 [4-dom] QCF4 18:5 textContent='+JSON.stringify(_domTC));
+            console.log('[RendererDiag] p294 [4-dom] QCF4 18:5 innerText='+JSON.stringify(_domIT));
+            console.log('[RendererDiag] p294 [4-dom] computed font-family='+_cs185.fontFamily);
+            console.log('[RendererDiag] p294 [4-dom] computed direction='+_cs185.direction+' unicode-bidi='+_cs185.unicodeBidi+' white-space='+_cs185.whiteSpace);
+            console.log('[RendererDiag] p294 [5-codepoints] DOM textContent codepoints=['+_domCPs.join(' ')+']');
+            console.log('[RendererDiag] p294 [6-equality] canonical===domTextContent='+(_canonQ===_domTC));
+            console.log('[RendererDiag] p294 [6-equality] canonNFC===domNFC='+(_canonQ.normalize('NFC')===_domTC.normalize('NFC')));
+            console.log('[RendererDiag] p294 [6-equality] qcfGlyphDataExists='+(!!_seg185.textContent.length)+' qcfFontPromiseExists='+_fontLoaded);
+          }else{
+            var _fvCount=pageEl.querySelectorAll('.mushaf-flow-verse').length;
+            console.warn('[RendererDiag] p294 [4-dom] no .mushaf-ayah-seg[18:5] — page is in HAFS mode, flow-verse count='+_fvCount);
+          }
+        }
       });
     };
 
@@ -5023,9 +5110,11 @@ function loadMushafPageQCF(pageEl,pageNum){
     return fontP.then(function(fontOk){
       var QFM=window.QuranFontManager;
       var _fontMs=Date.now()-_t0-_dataMs;
+      if(pageNum===294)console.log('[RendererDiag] p294 fontP resolved: fontOk='+fontOk+' font='+font+' fontFam='+(typeof fontFam!=='undefined'?fontFam:'(not qcf)'));
       if(font==='qcf4'&&!fontOk){
         // QCF4 font unavailable — sentinel test failed or font timed out.
         // Render readable Hafs Arabic text; never show broken PUA glyph codes.
+        if(pageNum===294)console.warn('[RendererDiag] p294: HAFS-FALLBACK (font-fail) — QCF4 font unavailable, rendering Hafs text');
         if(QFM)QFM.qcfPageFailed(pageNum,'font-unavailable');
         clear(pageEl);
         pageEl.classList.add('mushaf-page-hafs-fallback');
@@ -5049,9 +5138,11 @@ function loadMushafPageQCF(pageEl,pageNum){
         return;
       }
       if(font==='qcf4'&&QFM)QFM.qcfPageLoaded(pageNum,Date.now()-_t0);
+      if(pageNum===294)console.log('[RendererDiag] p294: QCF4-RENDERER active — calling showContent');
       showContent(_fontMs);
     });
   }).catch(function(err){
+    if(pageNum===294)console.warn('[RendererDiag] p294: ERROR-FALLBACK — exception in render pipeline:',err&&err.message||err);
     console.warn('[Mushaf] page='+pageNum+' render error:',err&&err.message||err);
     clear(pageEl);
     // Never show ×: attempt Hafs fallback so users on slow networks see
