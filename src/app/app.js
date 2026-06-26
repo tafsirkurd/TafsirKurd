@@ -12341,8 +12341,48 @@ window.addEventListener('online',function(){
 
 window.addEventListener('offline',function(){ _updateOfflineBanner(true); });
 
-// Persistent offline banner — small non-dismissible chip at top of screen.
-// Created once, toggled with .on class, never shown on Capacitor (native UI handles it).
+// ── Top-banner system ────────────────────────────────────────────────────────
+// showTopBanner(msg, type, autoDismissMs)
+//   type: 'err' | 'warn' | 'info' | 'ok'
+//   Returns a dismiss function.
+// All top banners appear below the safe-area / notch / Dynamic Island.
+var _topBnrHost=null;
+function _getTopBnrHost(){
+  if(!_topBnrHost){
+    _topBnrHost=document.createElement('div');
+    _topBnrHost.className='top-bnr-host';
+    _topBnrHost.setAttribute('aria-live','assertive');
+    document.body.appendChild(_topBnrHost);
+  }
+  return _topBnrHost;
+}
+function showTopBanner(msg,type,autoDismissMs){
+  var host=_getTopBnrHost();
+  var card=document.createElement('div');
+  card.className='top-bnr '+(type||'err');
+  var txt=document.createElement('span');
+  txt.className='top-bnr-txt';
+  txt.textContent=msg;
+  var xBtn=document.createElement('button');
+  xBtn.className='top-bnr-x';
+  xBtn.setAttribute('aria-label','Close');
+  xBtn.textContent='✕';
+  card.appendChild(txt);
+  card.appendChild(xBtn);
+  host.appendChild(card);
+  requestAnimationFrame(function(){ card.classList.add('in'); });
+  function dismiss(){
+    card.classList.remove('in');
+    setTimeout(function(){ if(card.parentNode)card.parentNode.removeChild(card); },300);
+  }
+  xBtn.addEventListener('click',function(e){ e.stopPropagation(); dismiss(); });
+  if(autoDismissMs>0)setTimeout(dismiss,autoDismissMs);
+  return dismiss;
+}
+App.showTopBanner=showTopBanner;
+
+// Persistent offline banner — card style, safe-area-aware, dismissible.
+// Only shown in the web context; Capacitor native layer handles it on iOS/Android.
 (function(){
   var _b=null;
   function _mkBanner(){
@@ -12350,7 +12390,19 @@ window.addEventListener('offline',function(){ _updateOfflineBanner(true); });
     _b.id='offlineBanner';
     _b.setAttribute('role','status');
     _b.setAttribute('aria-live','polite');
-    _b.textContent=t('toast.offline_cached','بەبێ ئینتەرنێت — ناوەرۆکی کاشێ');
+    var txt=document.createElement('span');
+    txt.className='offline-bnr-txt';
+    txt.textContent=t('toast.offline_cached','بەبێ ئینتەرنێت — ناوەرۆکی کاشێ');
+    var xBtn=document.createElement('button');
+    xBtn.className='offline-bnr-x';
+    xBtn.setAttribute('aria-label','Close');
+    xBtn.textContent='✕';
+    xBtn.addEventListener('click',function(e){
+      e.stopPropagation();
+      _b.classList.remove('on');
+    });
+    _b.appendChild(txt);
+    _b.appendChild(xBtn);
     document.body.appendChild(_b);
   }
   window._updateOfflineBanner=function(isOffline){
