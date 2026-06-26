@@ -234,6 +234,120 @@
     };
   }
 
+  // ── Scheduler ────────────────────────────────────────────────────────────
+  // Centralizes all setInterval / setTimeout / requestAnimationFrame.
+  // Intervals and rAF loops auto-pause when the app backgrounds and
+  // auto-resume on foreground. Timeouts are fire-and-forget with cancel().
+  var _intervals   = [];
+  var _rafLoops    = [];
+  var _timeouts    = [];
+  var _schedPaused = false;
+
+  function _schedInterval(fn, ms, label) {
+    var entry = { fn: fn, ms: ms, label: label || '', rawId: null, paused: false };
+    entry.rawId = setInterval(fn, ms);
+    _intervals.push(entry);
+    return {
+      cancel: function() {
+        if (entry.rawId) { clearInterval(entry.rawId); entry.rawId = null; }
+        entry.cancelled = true;
+        var i = _intervals.indexOf(entry);
+        if (i >= 0) _intervals.splice(i, 1);
+      }
+    };
+  }
+
+  function _schedTimeout(fn, ms, label) {
+    var entry = { label: label || '', rawId: null };
+    entry.rawId = setTimeout(function() {
+      entry.rawId = null;
+      var i = _timeouts.indexOf(entry);
+      if (i >= 0) _timeouts.splice(i, 1);
+      fn();
+    }, ms);
+    _timeouts.push(entry);
+    return {
+      cancel: function() {
+        if (entry.rawId) { clearTimeout(entry.rawId); entry.rawId = null; }
+        var i = _timeouts.indexOf(entry);
+        if (i >= 0) _timeouts.splice(i, 1);
+      }
+    };
+  }
+
+  // fn(ts) — called every animation frame. Return false to stop the loop.
+  // The scheduler owns rescheduling; fn must NOT call requestAnimationFrame itself.
+  function _schedRaf(fn, label) {
+    var entry = { fn: fn, label: label || '', rawId: null, alive: true };
+    function _tick(ts) {
+      if (!entry.alive) return;
+      var cont = fn(ts);
+      if (cont === false) {
+        entry.alive = false;
+        entry.rawId = null;
+        var i = _rafLoops.indexOf(entry);
+        if (i >= 0) _rafLoops.splice(i, 1);
+        return;
+      }
+      entry.rawId = requestAnimationFrame(_tick);
+    }
+    entry._tick = _tick;
+    entry.rawId = requestAnimationFrame(_tick);
+    _rafLoops.push(entry);
+    return {
+      cancel: function() {
+        entry.alive = false;
+        if (entry.rawId) { cancelAnimationFrame(entry.rawId); entry.rawId = null; }
+        var i = _rafLoops.indexOf(entry);
+        if (i >= 0) _rafLoops.splice(i, 1);
+      }
+    };
+  }
+
+  function _schedPause() {
+    _schedPaused = true;
+    _intervals.forEach(function(e) {
+      if (e.rawId) { clearInterval(e.rawId); e.rawId = null; e.paused = true; }
+    });
+    _rafLoops.forEach(function(e) {
+      if (e.rawId) { cancelAnimationFrame(e.rawId); e.rawId = null; }
+    });
+  }
+
+  function _schedResume() {
+    _schedPaused = false;
+    _intervals.forEach(function(e) {
+      if (e.paused && !e.cancelled) {
+        e.rawId = setInterval(e.fn, e.ms);
+        e.paused = false;
+      }
+    });
+    _rafLoops.forEach(function(e) {
+      if (e.alive && !e.rawId && e._tick) {
+        e.rawId = requestAnimationFrame(e._tick);
+      }
+    });
+  }
+
+  _on('background', _schedPause);
+  _on('resume',     _schedResume);
+
+  var _Scheduler = {
+    interval: _schedInterval,
+    timeout:  _schedTimeout,
+    raf:      _schedRaf,
+    pause:    _schedPause,
+    resume:   _schedResume,
+    getStats: function() {
+      return {
+        intervals: _intervals.length,
+        rafs:      _rafLoops.length,
+        timeouts:  _timeouts.length,
+        paused:    _schedPaused,
+      };
+    },
+  };
+
   // ── Public API ────────────────────────────────────────────────────────────
   window.AppRuntime = {
     // Event bus
@@ -243,6 +357,9 @@
     // Cleanup registry
     onCleanup: _onCleanup,
     cleanup:   _runCleanup,
+
+    // Scheduler — managed timers that auto-pause/resume with app lifecycle
+    Scheduler: _Scheduler,
 
     // Manual hooks (called by app.js after Capacitor is confirmed ready)
     hookCapacitor: _hookCapacitor,
