@@ -9786,6 +9786,8 @@ setTimeout(function(){
 /* ===== NOTIFICATION INBOX ===== */
 (function(){
   var INBOX_SEEN_KEY='notif_inbox_last_seen';
+  var INBOX_CACHE_KEY='notif_inbox_cache_v2';
+  var INBOX_CURSOR_KEY='notif_inbox_cursor_v2';
   var _inboxItems=[];
 
   function _getLastSeen(){
@@ -9794,18 +9796,56 @@ setTimeout(function(){
   function _markSeen(){
     try{localStorage.setItem(INBOX_SEEN_KEY,Date.now().toString());}catch(e){}
   }
-
-  async function _fetchInbox(){
+  function _loadCache(){
     try{
+      var raw=localStorage.getItem(INBOX_CACHE_KEY);
+      return raw?JSON.parse(raw):[];
+    }catch(e){return[];}
+  }
+  function _saveCache(items){
+    try{localStorage.setItem(INBOX_CACHE_KEY,JSON.stringify(items));}catch(e){}
+  }
+  function _getCursor(){
+    try{return localStorage.getItem(INBOX_CURSOR_KEY)||null;}catch(e){return null;}
+  }
+  function _saveCursor(isoStr){
+    try{localStorage.setItem(INBOX_CURSOR_KEY,isoStr);}catch(e){}
+  }
+
+  // Merge newItems (newer) into cached, deduplicate by id, keep sorted desc by sent_at
+  function _mergeInbox(cached,newItems){
+    var byId={};
+    cached.forEach(function(n){byId[n.id]=n;});
+    newItems.forEach(function(n){byId[n.id]=n;});
+    var merged=Object.values(byId);
+    merged.sort(function(a,b){return new Date(b.sent_at)-new Date(a.sent_at);});
+    return merged.slice(0,50); // cap at 50 to avoid unbounded localStorage growth
+  }
+
+  // Fetch only notifications newer than our cursor; merge into cache.
+  // Falls back to full fetch if no cursor. Returns merged array.
+  async function _fetchAndMerge(){
+    try{
+      var cursor=_getCursor();
+      var reqBody={action:'public_inbox'};
+      if(cursor)reqBody.since=cursor;
       var resp=await fetch('/admin-notifications-api',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({action:'public_inbox'}),
+        body:JSON.stringify(reqBody),
       });
-      if(!resp.ok)return[];
+      if(!resp.ok)return _loadCache(); // offline or error — serve from cache
       var d=await resp.json();
-      return d.notifications||[];
-    }catch(e){return[];}
+      var fresh=d.notifications||[];
+      var cached=_loadCache();
+      var merged=_mergeInbox(cached,fresh);
+      _saveCache(merged);
+      // Advance cursor to the most recent sent_at we now have
+      if(merged.length&&merged[0].sent_at)_saveCursor(merged[0].sent_at);
+      return merged;
+    }catch(e){
+      return _loadCache(); // network error — serve from cache
+    }
   }
 
   function _inboxBadgeUpdate(items){
@@ -9852,7 +9892,6 @@ setTimeout(function(){
       item.appendChild(title);
       item.appendChild(body);
       item.appendChild(date);
-      // Tap to open deep link if any
       item.addEventListener('click',function(){
         if(n.deep_link_type&&n.deep_link_type!=='none'){
           try{App.handleNotifTap&&App.handleNotifTap({type:n.deep_link_type,id:n.deep_link_id});}catch(e){}
@@ -9864,7 +9903,11 @@ setTimeout(function(){
   }
 
   function _initInbox(){
-    _fetchInbox().then(function(items){
+    // Show cached immediately (instant badge, no waiting)
+    var cached=_loadCache();
+    if(cached.length){_inboxItems=cached;_inboxBadgeUpdate(cached);}
+    // Then fetch incremental updates in background
+    _fetchAndMerge().then(function(items){
       _inboxItems=items;
       _inboxBadgeUpdate(items);
     });
@@ -9878,8 +9921,8 @@ setTimeout(function(){
     _markSeen();
     var badge=$('inboxBadge');
     if(badge)badge.style.display='none';
-    // Refresh in background
-    _fetchInbox().then(function(items){
+    // Refresh in background, update view if new items arrive
+    _fetchAndMerge().then(function(items){
       _inboxItems=items;
       _renderInbox(items);
     });

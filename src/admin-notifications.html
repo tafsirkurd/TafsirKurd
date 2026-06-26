@@ -1026,6 +1026,13 @@
                             <label class="form-label">Internal Notes <span style="font-size:10px;color:var(--n-text3);font-weight:400;text-transform:none;letter-spacing:0">(not sent to users)</span></label>
                             <textarea id="f-notes" class="form-input" rows="2" placeholder="Campaign notes, target audience, goals…"></textarea>
                         </div>
+                        <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:12px 14px;background:var(--n-surface2);border:1px solid var(--n-border);border-radius:10px;transition:border-color .15s" onmouseenter="this.style.borderColor='var(--n-green)'" onmouseleave="this.style.borderColor='var(--n-border)'">
+                            <input type="checkbox" id="f-show-in-app" style="width:16px;height:16px;accent-color:var(--n-green);cursor:pointer;flex-shrink:0">
+                            <div>
+                                <div style="font-size:13px;font-weight:600;color:var(--n-text)">🔔 Show in App Inbox</div>
+                                <div style="font-size:11px;color:var(--n-text2);margin-top:2px">Displays this notification inside the app's bell inbox. Off = push-only (not visible in inbox).</div>
+                            </div>
+                        </label>
                         <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:12px 14px;background:var(--n-surface2);border:1px solid var(--n-border);border-radius:10px;transition:border-color .15s" onmouseenter="this.style.borderColor='var(--n-purple)'" onmouseleave="this.style.borderColor='var(--n-border)'">
                             <input type="checkbox" id="f-is-template" style="width:16px;height:16px;accent-color:var(--n-purple);cursor:pointer;flex-shrink:0">
                             <div>
@@ -2421,6 +2428,7 @@
             }
             schedInitPicker(n.scheduled_at || null);
             document.getElementById('f-is-template').checked = !!n.is_template;
+            document.getElementById('f-show-in-app').checked = !!n.show_in_app;
             onDeepLinkChange();
             updateTokenPreview();
             updatePreview();
@@ -2453,6 +2461,7 @@
                 if (r) chip.classList.toggle('active', r.checked);
             });
             document.getElementById('f-is-template').checked = false;
+            document.getElementById('f-show-in-app').checked = false;
             document.getElementById('title-count').textContent = '0/100';
             document.getElementById('body-count').textContent = '0/300';
             document.getElementById('modal-error').style.display = 'none';
@@ -2662,7 +2671,8 @@
                 recurrence: recurrence,
                 recurrence_day: recurrenceDay,
                 notes: document.getElementById('f-notes').value.trim(),
-                is_template: document.getElementById('f-is-template').checked
+                is_template: document.getElementById('f-is-template').checked,
+                show_in_app: document.getElementById('f-show-in-app').checked
             };
         }
 

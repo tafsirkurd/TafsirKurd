@@ -9,12 +9,13 @@ const CORS = {
 };
 
 const RULES = [
-    // table                  keep_days  reason
-    ['prayer_cache_health',   7,         'health monitoring — only recent data is useful'],
-    ['widget_health_reports', 7,         'health monitoring — only recent data is useful'],
-    ['admin_activity_feed',   60,        'admin UX feed — 2 months history is enough'],
-    ['admin_audit_logs',      90,        'audit trail — 3 months retained'],
-    ['app_error_logs',        30,        'error logs — 30 days retained'],
+    // table                              keep_days  reason
+    ['prayer_cache_health',              7,          'health monitoring — only recent data is useful'],
+    ['widget_health_reports',            7,          'health monitoring — only recent data is useful'],
+    ['admin_activity_feed',              60,         'admin UX feed — 2 months history is enough'],
+    ['admin_audit_logs',                 90,         'audit trail — 3 months retained'],
+    ['app_error_logs',                   30,         'error logs — 30 days retained'],
+    ['admin_notification_delivery_logs', 180,        'per-token delivery tracking — 6 months retained'],
 ];
 
 export async function onRequest(context) {
