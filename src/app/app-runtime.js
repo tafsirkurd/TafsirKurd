@@ -235,95 +235,162 @@
   }
 
   // ── Scheduler ────────────────────────────────────────────────────────────
-  // Centralizes all setInterval / setTimeout / requestAnimationFrame.
-  // Intervals and rAF loops auto-pause when the app backgrounds and
-  // auto-resume on foreground. Timeouts are fire-and-forget with cancel().
-  var _intervals   = [];
-  var _rafLoops    = [];
-  var _timeouts    = [];
+  // Owns all setInterval / setTimeout / requestAnimationFrame.
+  //
+  // Priorities (3rd arg or opts.priority):
+  //   'critical'   — never paused (not by background, not by owner-inactive)
+  //   'normal'     — pauses when app backgrounds or owner is inactive  (default)
+  //   'background' — survives app background; pauses on owner-inactive
+  //   'idle'       — like 'normal'; timeouts use requestIdleCallback
+  //
+  // Lifecycle ownership (RAF only):
+  //   Scheduler.raf(fn, { owner: 'myKey', label: '...' })
+  //   Scheduler.setOwnerActive('myKey', false) — suspend all RAFs of that owner
+  //   Scheduler.setOwnerActive('myKey', true)  — resume them (if not bg-paused)
+  //
+  // Backward compat: 3rd arg may still be a plain string label.
+
+  var _ivEntries   = [];   // interval entries
+  var _rafEntries  = [];   // RAF loop entries
+  var _toEntries   = [];   // timeout entries
+  var _owners      = {};   // ownerKey → boolean (true = active)
   var _schedPaused = false;
+  var _dbgMode     = false;
+  var _leakWatchId = null;
 
-  function _schedInterval(fn, ms, label) {
-    var entry = { fn: fn, ms: ms, label: label || '', rawId: null, paused: false };
-    entry.rawId = setInterval(fn, ms);
-    _intervals.push(entry);
+  // Parse 3rd arg: string label (backward compat) OR opts object.
+  function _pOpts(x) {
+    if (!x || x === '') return { label: '', priority: 'normal', owner: null };
+    if (typeof x === 'string') return { label: x, priority: 'normal', owner: null };
+    return { label: x.label || '', priority: x.priority || 'normal', owner: x.owner || null };
+  }
+
+  // ── Interval ──────────────────────────────────────────────────────────────
+  function _schedInterval(fn, ms, labelOrOpts) {
+    var o = _pOpts(labelOrOpts);
+    var e = { fn: fn, ms: ms, label: o.label, priority: o.priority,
+              rawId: null, paused: false, cancelled: false, createdAt: Date.now() };
+    var bgBlock = _schedPaused && o.priority !== 'critical' && o.priority !== 'background';
+    if (bgBlock) { e.paused = true; } else { e.rawId = setInterval(fn, ms); }
+    _ivEntries.push(e);
+    if (_dbgMode && !e.label) console.warn('[Scheduler] interval missing label (ms=' + ms + ')');
     return {
       cancel: function() {
-        if (entry.rawId) { clearInterval(entry.rawId); entry.rawId = null; }
-        entry.cancelled = true;
-        var i = _intervals.indexOf(entry);
-        if (i >= 0) _intervals.splice(i, 1);
+        if (e.rawId) { clearInterval(e.rawId); e.rawId = null; }
+        e.cancelled = true;
+        var i = _ivEntries.indexOf(e); if (i >= 0) _ivEntries.splice(i, 1);
       }
     };
   }
 
-  function _schedTimeout(fn, ms, label) {
-    var entry = { label: label || '', rawId: null };
-    entry.rawId = setTimeout(function() {
-      entry.rawId = null;
-      var i = _timeouts.indexOf(entry);
-      if (i >= 0) _timeouts.splice(i, 1);
+  // ── Timeout ───────────────────────────────────────────────────────────────
+  function _schedTimeout(fn, ms, labelOrOpts) {
+    var o = _pOpts(labelOrOpts);
+    var e = { label: o.label, ms: ms, priority: o.priority,
+              rawId: null, isIdle: false, createdAt: Date.now() };
+    function _fire() {
+      e.rawId = null;
+      var i = _toEntries.indexOf(e); if (i >= 0) _toEntries.splice(i, 1);
       fn();
-    }, ms);
-    _timeouts.push(entry);
+    }
+    if (o.priority === 'idle' && window.requestIdleCallback) {
+      e.rawId = window.requestIdleCallback(_fire, { timeout: ms });
+      e.isIdle = true;
+    } else {
+      e.rawId = setTimeout(_fire, ms);
+    }
+    _toEntries.push(e);
+    if (_dbgMode && !e.label) console.warn('[Scheduler] timeout missing label (ms=' + ms + ')');
     return {
       cancel: function() {
-        if (entry.rawId) { clearTimeout(entry.rawId); entry.rawId = null; }
-        var i = _timeouts.indexOf(entry);
-        if (i >= 0) _timeouts.splice(i, 1);
+        if (e.rawId !== null) {
+          if (e.isIdle && window.cancelIdleCallback) window.cancelIdleCallback(e.rawId);
+          else clearTimeout(e.rawId);
+          e.rawId = null;
+        }
+        var i = _toEntries.indexOf(e); if (i >= 0) _toEntries.splice(i, 1);
       }
     };
   }
 
-  // fn(ts) — called every animation frame. Return false to stop the loop.
-  // The scheduler owns rescheduling; fn must NOT call requestAnimationFrame itself.
-  function _schedRaf(fn, label) {
-    var entry = { fn: fn, label: label || '', rawId: null, alive: true };
+  // ── RAF loop ──────────────────────────────────────────────────────────────
+  // fn(ts) called every frame. Return false to stop. Scheduler owns rescheduling.
+  // Two independent pause flags: bgPaused (app background) + ownerPaused (component).
+  // Loop runs only when alive && !bgPaused && !ownerPaused.
+  function _schedRaf(fn, labelOrOpts) {
+    var o = _pOpts(labelOrOpts);
+    var e = { fn: fn, label: o.label, priority: o.priority, owner: o.owner,
+              rawId: null, alive: true, bgPaused: false, ownerPaused: false,
+              createdAt: Date.now() };
     function _tick(ts) {
-      if (!entry.alive) return;
+      if (!e.alive) return;
       var cont = fn(ts);
       if (cont === false) {
-        entry.alive = false;
-        entry.rawId = null;
-        var i = _rafLoops.indexOf(entry);
-        if (i >= 0) _rafLoops.splice(i, 1);
+        e.alive = false; e.rawId = null;
+        var i = _rafEntries.indexOf(e); if (i >= 0) _rafEntries.splice(i, 1);
         return;
       }
-      entry.rawId = requestAnimationFrame(_tick);
+      e.rawId = requestAnimationFrame(_tick);
     }
-    entry._tick = _tick;
-    entry.rawId = requestAnimationFrame(_tick);
-    _rafLoops.push(entry);
+    e._tick = _tick;
+    if (e.owner && _owners[e.owner] === false) e.ownerPaused = true;
+    if (_schedPaused && o.priority !== 'critical' && o.priority !== 'background') e.bgPaused = true;
+    if (!e.bgPaused && !e.ownerPaused) e.rawId = requestAnimationFrame(_tick);
+    _rafEntries.push(e);
+    if (_dbgMode && !e.label) console.warn('[Scheduler] RAF loop missing label');
     return {
       cancel: function() {
-        entry.alive = false;
-        if (entry.rawId) { cancelAnimationFrame(entry.rawId); entry.rawId = null; }
-        var i = _rafLoops.indexOf(entry);
-        if (i >= 0) _rafLoops.splice(i, 1);
+        e.alive = false;
+        if (e.rawId) { cancelAnimationFrame(e.rawId); e.rawId = null; }
+        var i = _rafEntries.indexOf(e); if (i >= 0) _rafEntries.splice(i, 1);
       }
     };
   }
 
+  // ── Owner control ─────────────────────────────────────────────────────────
+  function _setOwnerActive(key, isActive) {
+    var wasActive = _owners[key] !== false;
+    _owners[key] = isActive;
+    if (!isActive && wasActive) {
+      _rafEntries.forEach(function(e) {
+        if (e.owner !== key || e.priority === 'critical') return;
+        e.ownerPaused = true;
+        if (e.rawId) { cancelAnimationFrame(e.rawId); e.rawId = null; }
+      });
+    } else if (isActive && !wasActive) {
+      _rafEntries.forEach(function(e) {
+        if (e.owner !== key || !e.ownerPaused) return;
+        e.ownerPaused = false;
+        if (e.alive && !e.bgPaused && !e.rawId && e._tick) {
+          e.rawId = requestAnimationFrame(e._tick);
+        }
+      });
+    }
+  }
+
+  // ── Background / resume ───────────────────────────────────────────────────
   function _schedPause() {
     _schedPaused = true;
-    _intervals.forEach(function(e) {
+    _ivEntries.forEach(function(e) {
+      if (e.priority === 'critical' || e.priority === 'background') return;
       if (e.rawId) { clearInterval(e.rawId); e.rawId = null; e.paused = true; }
     });
-    _rafLoops.forEach(function(e) {
+    _rafEntries.forEach(function(e) {
+      if (e.priority === 'critical' || e.priority === 'background') return;
+      e.bgPaused = true;
       if (e.rawId) { cancelAnimationFrame(e.rawId); e.rawId = null; }
     });
   }
 
   function _schedResume() {
     _schedPaused = false;
-    _intervals.forEach(function(e) {
-      if (e.paused && !e.cancelled) {
-        e.rawId = setInterval(e.fn, e.ms);
-        e.paused = false;
-      }
+    _ivEntries.forEach(function(e) {
+      if (e.paused && !e.cancelled) { e.rawId = setInterval(e.fn, e.ms); e.paused = false; }
     });
-    _rafLoops.forEach(function(e) {
-      if (e.alive && !e.rawId && e._tick) {
+    _rafEntries.forEach(function(e) {
+      if (!e.bgPaused) return;
+      e.bgPaused = false;
+      if (e.alive && !e.ownerPaused && !e.rawId && e._tick) {
         e.rawId = requestAnimationFrame(e._tick);
       }
     });
@@ -332,17 +399,81 @@
   _on('background', _schedPause);
   _on('resume',     _schedResume);
 
+  // ── Leak detection ────────────────────────────────────────────────────────
+  var _LEAK_MAX = { iv: 10, raf: 8, to: 20 };
+
+  function _checkLeaks() {
+    if (!_dbgMode) return [];
+    var warns = []; var now = Date.now();
+    if (_ivEntries.length  > _LEAK_MAX.iv)  warns.push('High interval count: '  + _ivEntries.length  + ' (limit ' + _LEAK_MAX.iv  + ')');
+    if (_rafEntries.length > _LEAK_MAX.raf) warns.push('High RAF count: '       + _rafEntries.length + ' (limit ' + _LEAK_MAX.raf + ')');
+    if (_toEntries.length  > _LEAK_MAX.to)  warns.push('High timeout count: '   + _toEntries.length  + ' (limit ' + _LEAK_MAX.to  + ')');
+    _ivEntries.forEach(function(e) {
+      if (!e.label) warns.push('Unlabeled interval (ms=' + e.ms + ')');
+    });
+    _rafEntries.forEach(function(e) {
+      if (!e.label) warns.push('Unlabeled RAF loop');
+      var age = now - e.createdAt;
+      if (age > 600000) warns.push('RAF "' + (e.label || '?') + '" alive ' + Math.round(age / 60000) + 'min — leak?');
+    });
+    _toEntries.forEach(function(e) {
+      var age = now - e.createdAt;
+      var deadline = Math.max(e.ms * 5, 30000);
+      if (age > deadline) warns.push('Timeout "' + (e.label || '?') + '" alive ' + Math.round(age / 1000) + 's (expected ' + e.ms + 'ms) — leak?');
+    });
+    warns.forEach(function(w) { console.warn('[AppRuntime.Scheduler] ' + w); });
+    return warns;
+  }
+
+  function _enableDebug(on) {
+    _dbgMode = on !== false;
+    if (_dbgMode && !_leakWatchId) {
+      _leakWatchId = setInterval(_checkLeaks, 60000);
+    } else if (!_dbgMode && _leakWatchId) {
+      clearInterval(_leakWatchId); _leakWatchId = null;
+    }
+  }
+
+  // ── Diagnostics ───────────────────────────────────────────────────────────
+  function _getDiagnostics() {
+    var now = Date.now();
+    var warns = _checkLeaks();
+    return {
+      paused:    _schedPaused,
+      owners:    _owners,
+      intervals: _ivEntries.map(function(e) {
+        return { label: e.label, ms: e.ms, priority: e.priority, ageMs: now - e.createdAt, paused: !!e.paused };
+      }),
+      rafs: _rafEntries.map(function(e) {
+        return { label: e.label, priority: e.priority, owner: e.owner,
+                 ageMs: now - e.createdAt, alive: e.alive, bgPaused: e.bgPaused, ownerPaused: e.ownerPaused };
+      }),
+      timeouts: _toEntries.map(function(e) {
+        return { label: e.label, ms: e.ms, priority: e.priority, ageMs: now - e.createdAt };
+      }),
+      warnings: warns,
+    };
+  }
+
   var _Scheduler = {
-    interval: _schedInterval,
-    timeout:  _schedTimeout,
-    raf:      _schedRaf,
-    pause:    _schedPause,
-    resume:   _schedResume,
+    // Core scheduling (backward compatible — 3rd arg may still be a plain string label)
+    interval:       _schedInterval,
+    timeout:        _schedTimeout,
+    raf:            _schedRaf,
+    // Owner-based lifecycle control for RAF loops
+    setOwnerActive: _setOwnerActive,
+    // Manual pause/resume (called internally by AppRuntime; exposed for edge cases)
+    pause:          _schedPause,
+    resume:         _schedResume,
+    // Debug and diagnostics
+    enableDebug:    _enableDebug,
+    getDiagnostics: _getDiagnostics,
+    // Backward-compat count summary
     getStats: function() {
       return {
-        intervals: _intervals.length,
-        rafs:      _rafLoops.length,
-        timeouts:  _timeouts.length,
+        intervals: _ivEntries.length,
+        rafs:      _rafEntries.length,
+        timeouts:  _toEntries.length,
         paused:    _schedPaused,
       };
     },
