@@ -12269,39 +12269,148 @@ window.addEventListener('offline',function(){ _updateOfflineBanner(true); });
 // ── Top-banner system ────────────────────────────────────────────────────────
 // showTopBanner(msg, type, autoDismissMs)
 //   type: 'err' | 'warn' | 'info' | 'ok'
-//   Returns a dismiss function.
-// All top banners appear below the safe-area / notch / Dynamic Island.
+//   Returns a dismiss() function.
+//
+// Features: spring entry/exit · swipe-down to dismiss · timer pause on touch ·
+//           haptics by severity · keyboard-aware (Visual Viewport) · a11y
 var _topBnrHost=null;
 function _getTopBnrHost(){
   if(!_topBnrHost){
     _topBnrHost=document.createElement('div');
     _topBnrHost.className='top-bnr-host';
     _topBnrHost.setAttribute('aria-live','assertive');
+    _topBnrHost.setAttribute('aria-atomic','false');
     document.body.appendChild(_topBnrHost);
+    // Keyboard awareness — move host above the software keyboard when it opens.
+    // Visual Viewport shrinks when the keyboard opens; the gap is the KB height.
+    if(window.visualViewport){
+      var _vvTick=null;
+      var _vvUpdate=function(){
+        if(_vvTick)return;
+        _vvTick=requestAnimationFrame(function(){
+          _vvTick=null;
+          var kb=Math.max(0,window.innerHeight-window.visualViewport.height-window.visualViewport.offsetTop);
+          _topBnrHost.style.bottom=kb>80?(kb+10)+'px':'';
+        });
+      };
+      window.visualViewport.addEventListener('resize',_vvUpdate,{passive:true});
+      window.visualViewport.addEventListener('scroll',_vvUpdate,{passive:true});
+    }
   }
   return _topBnrHost;
 }
+// External API: sheets/dialogs call App.setBannerFloor(px) when opening/closing
+// so banners never overlap them. Pass 0 to reset.
+App.setBannerFloor=function(px){
+  var host=_getTopBnrHost();
+  if(px>0){
+    var base='calc(var(--tab-h,60px) + env(safe-area-inset-bottom,0px) + 10px)';
+    host.style.bottom='max('+base+','+(px+10)+'px)';
+  }else{
+    host.style.bottom='';
+  }
+};
 function showTopBanner(msg,type,autoDismissMs){
   var host=_getTopBnrHost();
   var card=document.createElement('div');
   card.className='top-bnr '+(type||'err');
+  // Errors get role=alert for immediate screen-reader announcement
+  card.setAttribute('role',type==='err'?'alert':'status');
+
   var txt=document.createElement('span');
   txt.className='top-bnr-txt';
   txt.textContent=msg;
+
   var xBtn=document.createElement('button');
   xBtn.className='top-bnr-x';
-  xBtn.setAttribute('aria-label','Close');
+  xBtn.setAttribute('aria-label',tSafe('a11y.dismiss')||'Dismiss notification');
   xBtn.textContent='✕';
+
   card.appendChild(txt);
   card.appendChild(xBtn);
   host.appendChild(card);
-  requestAnimationFrame(function(){ card.classList.add('in'); });
-  function dismiss(){
-    card.classList.remove('in');
-    setTimeout(function(){ if(card.parentNode)card.parentNode.removeChild(card); },300);
+
+  // Double rAF: let browser paint the start state before the transition fires.
+  requestAnimationFrame(function(){requestAnimationFrame(function(){card.classList.add('in');});});
+
+  // Haptic feedback keyed to severity
+  try{
+    if(type==='ok')H.success();
+    else if(type==='warn')H.warning();
+    else if(type==='err')H.heavy();
+    else H.light();
+  }catch(e){}
+
+  // ── Auto-dismiss with pause-on-touch ──────────────────────────────────────
+  var _dismissed=false;
+  var _remaining=autoDismissMs>0?autoDismissMs:0;
+  var _timer=null,_timerStart=0,_paused=false;
+  function _startTimer(){
+    if(!_remaining||_paused||_dismissed)return;
+    _timerStart=Date.now();
+    _timer=setTimeout(dismiss,_remaining);
   }
-  xBtn.addEventListener('click',function(e){ e.stopPropagation(); dismiss(); });
-  if(autoDismissMs>0)setTimeout(dismiss,autoDismissMs);
+  function _pauseTimer(){
+    if(!_remaining||_paused)return;
+    _paused=true;clearTimeout(_timer);
+    _remaining=Math.max(0,_remaining-(Date.now()-_timerStart));
+  }
+  function _resumeTimer(){
+    if(!_remaining||!_paused)return;
+    _paused=false;_startTimer();
+  }
+  if(_remaining>0)_startTimer();
+
+  // ── Dismiss ───────────────────────────────────────────────────────────────
+  function dismiss(){
+    if(_dismissed)return;
+    _dismissed=true;clearTimeout(_timer);
+    card.style.transition='';
+    card.classList.remove('in');
+    card.classList.add('out');
+    setTimeout(function(){if(card.parentNode)card.parentNode.removeChild(card);},400);
+  }
+
+  // ── Swipe-down gesture ────────────────────────────────────────────────────
+  // Finger follows card naturally; flick threshold 56 px or velocity > 0.4 px/ms.
+  var _t0Y=0,_t0T=0,_tDelta=0,_tActive=false;
+  card.addEventListener('touchstart',function(e){
+    _t0Y=e.touches[0].clientY;_t0T=Date.now();
+    _tDelta=0;_tActive=true;
+    _pauseTimer();
+    card.style.transition='none'; // follow finger without easing
+    card.style.willChange='transform,opacity';
+  },{passive:true});
+  card.addEventListener('touchmove',function(e){
+    if(!_tActive)return;
+    var d=e.touches[0].clientY-_t0Y;
+    _tDelta=d<0?0:d; // only downward
+    card.style.transform='translateY('+_tDelta+'px)';
+    card.style.opacity=String(Math.max(0,1-_tDelta/110));
+  },{passive:true});
+  function _onTouchEnd(){
+    if(!_tActive)return;_tActive=false;
+    var vel=_tDelta/(Date.now()-_t0T+1); // px/ms
+    if(_tDelta>56||vel>0.4){
+      // Commit dismiss — flick card down off screen
+      _dismissed=true;clearTimeout(_timer);
+      card.style.transition='transform .26s cubic-bezier(.4,0,1,1),opacity .2s';
+      card.style.transform='translateY(140px)';
+      card.style.opacity='0';
+      setTimeout(function(){if(card.parentNode)card.parentNode.removeChild(card);},280);
+    }else{
+      // Snap back with spring
+      card.style.transition='';
+      card.style.transform='';
+      card.style.opacity='';
+      card.style.willChange='';
+      _resumeTimer();
+    }
+  }
+  card.addEventListener('touchend',_onTouchEnd,{passive:true});
+  card.addEventListener('touchcancel',_onTouchEnd,{passive:true});
+
+  xBtn.addEventListener('click',function(e){e.stopPropagation();dismiss();});
   return dismiss;
 }
 App.showTopBanner=showTopBanner;
