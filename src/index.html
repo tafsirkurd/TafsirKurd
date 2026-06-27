@@ -3,6 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <!-- NATIVE FAST-PATH: redirect to app shell before any website scripts or preconnects.
+       window.Capacitor is injected by the iOS/Android bridge before any JS executes,
+       so this fires synchronously as the very first thing on native platforms.
+       Prevents the website page (7000+ lines, remote SDKs) from loading on device. -->
+  <script>try{if(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform()&&window.location.pathname.indexOf('/app/')===-1){window.location.replace('/app/index.html');}}catch(e){}</script>
   <!-- Theme loader inline to prevent flash - no network request -->
   <script src="/utils/site-theme.js"></script>
   <script src="/utils/platform.js"></script>

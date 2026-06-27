@@ -124,16 +124,22 @@ workflows:
       - name: Strip web fonts from iOS bundle (ITMS-90853)
         script: |
           set -e
-          # scripts/strip-ios-fonts.js converts qcf4 woff2 -> qcf4ttf/*.ttf BEFORE
-          # stripping, so Mushaf QCF4 fonts work offline on iOS. The old raw
-          # find-delete below nuked all 604 mushaf fonts without conversion,
-          # which made iOS silently fall back to plain Hafs rendering.
+          # strip-ios-fonts.js converts:
+          #   qcf4/*.woff2   → qcf4ttf/*.ttf   (QCF4 Mushaf, offline)
+          #   qpcv1/*.woff2  → qpcv1ttf/*.ttf  (QPC V1 Mushaf, offline)
+          # Then removes all remaining woff/woff2 files (ITMS-90853 compliance).
           node scripts/strip-ios-fonts.js
           PUBLIC=ios/App/App/public
-          TTF_COUNT=$(find "$PUBLIC/assets/fonts/qcf4ttf" -name "*.ttf" 2>/dev/null | wc -l | tr -d ' ')
-          echo "qcf4ttf TTF files: $TTF_COUNT"
-          if [ "$TTF_COUNT" -ne "604" ]; then
-            echo "ERROR: expected 604 converted mushaf TTFs, got $TTF_COUNT"
+          QCF4_COUNT=$(find "$PUBLIC/assets/fonts/qcf4ttf" -name "*.ttf" 2>/dev/null | wc -l | tr -d ' ')
+          echo "qcf4ttf TTF files: $QCF4_COUNT"
+          if [ "$QCF4_COUNT" -ne "604" ]; then
+            echo "ERROR: expected 604 QCF4 TTFs, got $QCF4_COUNT"
+            exit 1
+          fi
+          V1_COUNT=$(find "$PUBLIC/assets/fonts/qpcv1ttf" -name "*.ttf" 2>/dev/null | wc -l | tr -d ' ')
+          echo "qpcv1ttf TTF files: $V1_COUNT"
+          if [ "$V1_COUNT" -ne "604" ]; then
+            echo "ERROR: expected 604 QPC V1 TTFs, got $V1_COUNT"
             exit 1
           fi
           echo "Verifying no web fonts remain..."
@@ -144,7 +150,7 @@ workflows:
             echo "ERROR: web fonts not fully stripped"
             exit 1
           fi
-          echo "Strip complete — no web fonts remain"
+          echo "Strip complete — QCF4: $QCF4_COUNT TTFs, QPC V1: $V1_COUNT TTFs, woff2 remaining: 0"
 
       - name: Verify iOS project clean
         script: |

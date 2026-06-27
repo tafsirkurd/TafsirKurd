@@ -3,8 +3,10 @@
 // Apple's ITMS-90853 validator detects woff/woff2 by magic bytes and rejects them.
 //
 // For QCF4 mushaf fonts: converts woff2 → TTF using wawoff2 (WASM-based decompressor)
-// and writes them to qcf4ttf/ before removing qcf4/.  The app uses TTF on iOS so
-// Mushaf mode works fully offline (no network needed for fonts).
+// and writes them to qcf4ttf/ before removing qcf4/.
+//
+// For QPC V1 mushaf fonts: same treatment — converts woff2 → TTF into qpcv1ttf/
+// before removing qpcv1/. App uses TTF on iOS so Mushaf works fully offline.
 //
 // Other fonts: CSS already has ttf fallback src entries that survive the strip.
 
@@ -39,10 +41,11 @@ function rmFontsRecursive(dir) {
 }
 
 // Convert all woff2 files in srcDir to TTF files in dstDir using wawoff2.
-async function convertQCF4ToTTF(srcDir, dstDir) {
+// label is used only for logging (e.g. 'qcf4', 'qpcv1').
+async function convertWoff2ToTTF(srcDir, dstDir, label) {
   if (!existsSync(srcDir)) {
-    console.log('  [qcf4] source dir not found, skipping TTF conversion');
-    return;
+    console.log(`  [${label}] source dir not found, skipping TTF conversion`);
+    return 0;
   }
 
   let wawoff2;
@@ -50,17 +53,17 @@ async function convertQCF4ToTTF(srcDir, dstDir) {
     const mod = await import('wawoff2');
     wawoff2 = mod.default || mod;
   } catch (e) {
-    console.warn('  [qcf4] wawoff2 not installed — run: npm install --save-dev wawoff2');
-    console.warn('  [qcf4] Skipping TTF conversion; iOS Mushaf will fall back to network fonts.');
-    return;
+    console.warn(`  [${label}] wawoff2 not installed — run: npm install --save-dev wawoff2`);
+    console.warn(`  [${label}] Skipping TTF conversion; iOS Mushaf will fall back to network fonts.`);
+    return 0;
   }
 
   const files = readdirSync(srcDir).filter(f => f.endsWith('.woff2'));
-  if (!files.length) { console.log('  [qcf4] no woff2 files found'); return; }
+  if (!files.length) { console.log(`  [${label}] no woff2 files found`); return 0; }
 
   mkdirSync(dstDir, { recursive: true });
 
-  console.log(`  [qcf4] converting ${files.length} woff2 → ttf...`);
+  console.log(`  [${label}] converting ${files.length} woff2 → ttf...`);
   let ok = 0, fail = 0;
   for (const file of files) {
     try {
@@ -70,7 +73,7 @@ async function convertQCF4ToTTF(srcDir, dstDir) {
       writeFileSync(join(dstDir, ttfName), Buffer.from(ttfData));
       ok++;
     } catch (e) {
-      console.warn('  [qcf4] failed to convert', file, e.message);
+      console.warn(`  [${label}] failed to convert`, file, e.message);
       fail++;
     }
   }
@@ -78,25 +81,38 @@ async function convertQCF4ToTTF(srcDir, dstDir) {
     readdirSync(dstDir)
       .reduce((s, f) => s + statSync(join(dstDir, f)).size, 0) / 1024
   );
-  console.log(`  [qcf4] ${ok} converted, ${fail} failed — qcf4ttf/ ${totalKB} KB`);
+  console.log(`  [${label}] ${ok} converted, ${fail} failed — ${label}ttf/ ${totalKB} KB`);
+  return ok;
 }
 
 async function main() {
   console.log('\nPreparing iOS font bundle...');
   console.log('  IOS_PUBLIC:', IOS_PUBLIC);
 
-  const qcf4Src = join(IOS_PUBLIC, 'assets', 'fonts', 'qcf4');
-  const qcf4Dst = join(IOS_PUBLIC, 'assets', 'fonts', 'qcf4ttf');
+  const fontsDir  = join(IOS_PUBLIC, 'assets', 'fonts');
+
+  const qcf4Src   = join(fontsDir, 'qcf4');
+  const qcf4Dst   = join(fontsDir, 'qcf4ttf');
+  const qpcv1Src  = join(fontsDir, 'qpcv1');
+  const qpcv1Dst  = join(fontsDir, 'qpcv1ttf');
 
   // Convert QCF4 woff2 → TTF for offline Mushaf on iOS (ITMS-90853 safe)
-  await convertQCF4ToTTF(qcf4Src, qcf4Dst);
+  await convertWoff2ToTTF(qcf4Src, qcf4Dst, 'qcf4');
 
-  // Remove known web-font directories entirely
+  // Convert QPC V1 woff2 → TTF for offline Mushaf on iOS (ITMS-90853 safe)
+  const v1Count = await convertWoff2ToTTF(qpcv1Src, qpcv1Dst, 'qpcv1');
+  if (v1Count > 0 && v1Count !== 604) {
+    console.error(`  [qpcv1] ERROR: expected 604 TTFs, got ${v1Count}`);
+    process.exit(1);
+  }
+
+  // Remove original woff2 directories now that TTF copies exist
   rmDir(qcf4Src);
-  rmDir(join(IOS_PUBLIC, 'assets', 'fonts', 'qcf2'));
+  rmDir(qpcv1Src);
+  rmDir(join(fontsDir, 'qcf2'));
 
   // Recursively strip all remaining .woff / .woff2 from font directories
-  rmFontsRecursive(join(IOS_PUBLIC, 'assets', 'fonts'));
+  rmFontsRecursive(fontsDir);
   rmFontsRecursive(join(IOS_PUBLIC, 'fonts'));
   rmFontsRecursive(join(IOS_PUBLIC, 'assets', 'fontawesome'));
 

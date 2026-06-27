@@ -4020,14 +4020,14 @@ function ensureQCFV4Font(pageNum){
 
 // ── QPC V1 (QUL) font injection + load wait ─────────────────────────────────
 // Mirrors injectQCFV4Font / ensureQCFV4Font exactly.
-// Fonts bundled at src/assets/fonts/qpcv1/p{N}.woff2 (Android/Web).
-// iOS CDN path: static-cdn.tarteel.ai (cached by SW on first load).
+// iOS: woff2 stripped by strip-ios-fonts.js (ITMS-90853); use bundled TTF in qpcv1ttf/
+// Android/Web: use bundled woff2 in qpcv1/ (fully offline — 604 files in APK/public)
 function injectQPCV1Font(pageNum){
   if(_qpcV1FontInjected[pageNum])return;
   _qpcV1FontInjected[pageNum]=true;
   var s=document.createElement('style');
   var localSrc=_isIOSCap
-    ?"url('https://static-cdn.tarteel.ai/qul/fonts/quran_fonts/v1/woff2/p"+pageNum+".woff2') format('woff2'),"
+    ?"url('/assets/fonts/qpcv1ttf/p"+pageNum+".ttf') format('truetype'),"
     :"url('/assets/fonts/qpcv1/p"+pageNum+".woff2') format('woff2'),";
   s.textContent="@font-face{font-family:'QPCv1p"+pageNum+"';src:"+localSrc+"url('https://static-cdn.tarteel.ai/qul/fonts/quran_fonts/v1/woff2/p"+pageNum+".woff2') format('woff2');font-display:block}";
   document.head.appendChild(s);
@@ -4055,7 +4055,7 @@ function ensureQPCV1Font(pageNum){
   _qpcV1FontLoadP[pageNum]=Promise.race([loadP,timeoutP]).then(function(ok){
     if(!ok){
       var probe=_isIOSCap
-        ?('https://static-cdn.tarteel.ai/qul/fonts/quran_fonts/v1/woff2/p'+pageNum+'.woff2')
+        ?('/assets/fonts/qpcv1ttf/p'+pageNum+'.ttf')
         :('/assets/fonts/qpcv1/p'+pageNum+'.woff2');
       fetch(probe).then(function(r){
         console.warn('[QuranFont] QPCv1p'+pageNum+' FAILED — '+probe+' → HTTP '+r.status+(r.ok?' (file ok; face did not apply)':' (font file missing from bundle)'));

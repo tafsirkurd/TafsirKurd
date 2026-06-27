@@ -11,10 +11,11 @@
 // iOS WKWebView ignores Cache-Control: no-store for previously cached pages.
 // On every cold-start (sessionStorage cleared), add a timestamp param so WKWebView
 // treats the URL as new and fetches fresh HTML + versioned JS from the network.
-// Skip for capacitor: scheme — local bundle has no stale-cache issue and the
-// redirect would cause a redundant full page reload on every cold native start.
+// NEVER fire on native Capacitor — local bundle has no stale-cache issue and a
+// network-dependent reload would cause "Cannot Connect" when offline.
 (function(){
-  if(window.webkit&&location.protocol!=='capacitor:'&&!sessionStorage.getItem('_tksr')){
+  var _isNative=!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
+  if(!_isNative&&window.webkit&&location.protocol!=='capacitor:'&&!sessionStorage.getItem('_tksr')){
     sessionStorage.setItem('_tksr','1');
     if(location.search.indexOf('_cb=')===-1){
       location.replace(location.pathname+'?_cb='+Math.floor(Date.now()/60000));
