@@ -174,9 +174,77 @@ async function _handleRequest(context) {
             await removeStaleTokens(env, batchResult.staleTokens).catch(() => {});
         }
 
-        // Status is finalized by finalize_send (called by cron/send after all batches).
-        // This keeps token count accumulation accurate: each batch reports its slice,
-        // finalize_send sums them and writes tokens_sent/tokens_failed/status='sent'.
+        // Batch 0 orchestrates remaining batches + finalize for both cron and admin-send paths.
+        // Batches 1..N just process their slice and return — orchestration happens here only.
+        if (batchNum === 0) {
+            let aggSent  = batchResult.sent;
+            let aggFailed = batchResult.failed;
+            const aggStale = [...batchResult.staleTokens];
+            const _siteOrigin = new URL(request.url).origin;
+            const _cronAuth = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${env.CRON_SECRET}` };
+
+            if (hasMore) {
+                const totalBatches = Math.ceil(interleaved.length / PAGE_SIZE);
+                const orchResults = await Promise.all(
+                    Array.from({ length: totalBatches - 1 }, (_, i) =>
+                        fetch(`${_siteOrigin}/admin-notifications-api`, {
+                            method: 'POST',
+                            headers: _cronAuth,
+                            body: JSON.stringify({ action: 'process_scheduled', batch_num: i + 1, notif_id: notif.id }),
+                        }).then(r => r.ok ? r.json().catch(() => ({})) : {}).catch(() => ({}))
+                    )
+                );
+                for (const b of orchResults) {
+                    aggSent   += b.batch_sent   ?? 0;
+                    aggFailed += b.batch_failed ?? 0;
+                    if (b.stale_tokens?.length) aggStale.push(...b.stale_tokens);
+                }
+            }
+
+            // Finalize: write final counts + status='sent' + next recurrence
+            await fetch(`${_siteOrigin}/admin-notifications-api`, {
+                method: 'POST',
+                headers: _cronAuth,
+                body: JSON.stringify({
+                    action: 'finalize_send', notif_id: notif.id,
+                    tokens_sent: aggSent, tokens_failed: aggFailed,
+                    stale_tokens: aggStale, error_msg: null,
+                }),
+            }).catch(e => console.error('[process_scheduled] finalize_send failed:', e.message));
+
+            // Cron path only: after completing this notification, fire up to 2 more due ones
+            // as fire-and-forget sub-invocations so they don't wait for the next 5-min tick.
+            if (!targetNotifId) {
+                try {
+                    const { data: moreDue } = await supabase
+                        .from('admin_notifications')
+                        .select('id')
+                        .eq('status', 'scheduled')
+                        .eq('is_template', false)
+                        .lte('scheduled_at', new Date().toISOString())
+                        .order('scheduled_at', { ascending: true })
+                        .limit(2);
+                    for (const extra of (moreDue || [])) {
+                        fetch(`${_siteOrigin}/admin-notifications-api`, {
+                            method: 'POST', headers: _cronAuth,
+                            body: JSON.stringify({ action: 'process_scheduled', batch_num: 0, notif_id: extra.id }),
+                        }).catch(() => {});
+                    }
+                } catch (_) {}
+            }
+
+            return json({
+                success: true,
+                notif_id: notif.id,
+                total_targeted: allTokens.length,
+                batch_sent: aggSent,
+                batch_failed: aggFailed,
+                stale_tokens: aggStale,
+                has_more: hasMore,
+            });
+        }
+
+        // Batch > 0: just return this slice's result; batch 0 is the orchestrator.
         return json({
             success: true,
             notif_id: notif.id,
@@ -1111,73 +1179,19 @@ async function _handleRequest(context) {
             if (!claimed) return json({ error: 'Concurrent send detected — refresh and try again' }, 409);
         }
 
-        // Immediately run the full multi-batch pipeline — same as the cron does, but
-        // triggered right now from this Pages Function invocation.
-        //
-        // Subrequest budget for THIS invocation:
-        //   3 above (auth + get + claim) + 1 (batch 0) + N-1 (batches 1..N, concurrent)
-        //   + 1 (finalize) = well within 50 for any realistic user count.
-        //
-        // Each batch call is a SEPARATE Pages Function invocation with its own
-        // 50-subrequest budget, so token sends are not constrained by this invocation.
+        // process_scheduled batch_0 self-orchestrates all remaining batches + finalize_send.
+        // Fire as a sub-invocation so this admin request returns immediately.
         const siteOrigin = new URL(request.url).origin;
         const cronHeaders = {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${env.CRON_SECRET}`,
         };
-        const PAGE_SIZE = 40;
-
-        let totalSent = 0, totalFailed = 0, totalTargeted = 0;
-        const allStale = [];
-
-        // Batch 0 — sequential: recovery + direct claim of trackingId + first token slice.
-        // Pass notif_id so process_scheduled claims exactly this notification, not any other
-        // overdue 'scheduled' row that might be in the DB at the same time.
-        const b0Res = await fetch(`${siteOrigin}/admin-notifications-api`, {
+        fetch(`${siteOrigin}/admin-notifications-api`, {
             method: 'POST', headers: cronHeaders,
             body: JSON.stringify({ action: 'process_scheduled', batch_num: 0, notif_id: trackingId }),
-        }).catch(() => null);
-        const b0 = b0Res?.ok ? await b0Res.json().catch(() => ({})) : {};
-        totalSent   += b0.batch_sent   ?? 0;
-        totalFailed += b0.batch_failed ?? 0;
-        totalTargeted = b0.total_targeted ?? 0;
-        if (b0.stale_tokens?.length) allStale.push(...b0.stale_tokens);
+        }).catch(e => console.error('[send] process_scheduled fire failed:', e.message));
 
-        // Batches 1..N — run concurrently (each has its own subrequest budget).
-        // Pass notif_id so each batch resumes exactly this notification.
-        if (b0.notif_id && b0.has_more) {
-            const totalBatches = Math.ceil(totalTargeted / PAGE_SIZE);
-            const batchResults = await Promise.all(
-                Array.from({ length: totalBatches - 1 }, (_, i) => i + 1).map(bn =>
-                    fetch(`${siteOrigin}/admin-notifications-api`, {
-                        method: 'POST', headers: cronHeaders,
-                        body: JSON.stringify({ action: 'process_scheduled', batch_num: bn, notif_id: trackingId }),
-                    })
-                    .then(r => r.ok ? r.json().catch(() => ({})) : {})
-                    .catch(() => ({}))
-                )
-            );
-            for (const b of batchResults) {
-                totalSent   += b.batch_sent   ?? 0;
-                totalFailed += b.batch_failed ?? 0;
-                if (b.stale_tokens?.length) allStale.push(...b.stale_tokens);
-            }
-        }
-
-        // Finalize — mark sent + create next recurrence
-        if (b0.notif_id) {
-            await fetch(`${siteOrigin}/admin-notifications-api`, {
-                method: 'POST', headers: cronHeaders,
-                body: JSON.stringify({
-                    action: 'finalize_send', notif_id: b0.notif_id,
-                    tokens_sent: totalSent, tokens_failed: totalFailed,
-                    stale_tokens: allStale, error_msg: null,
-                }),
-            }).catch(() => {});
-        }
-
-        return json({ success: true, sent: totalSent, failed: totalFailed,
-                      total: totalTargeted, notification_id: trackingId });
+        return json({ success: true, started: true, notification_id: trackingId });
     }
 
     // ── SEND TEST (admin's own devices only — no DB status change) ─
@@ -1618,15 +1632,20 @@ async function getTokensForAudience(env, audience, platform) {
 }
 
 async function removeStaleTokens(env, tokens) {
-    const inList = tokens.map(t => `"${t}"`).join(',');
-    await fetch(`${env.SUPABASE_URL}/rest/v1/push_tokens?token=in.(${inList})`, {
-        method: 'DELETE',
-        headers: {
-            apikey: env.SUPABASE_SERVICE_ROLE_KEY,
-            Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
-            Prefer: 'return=minimal',
-        },
-    });
+    // Process in chunks to avoid URL length limits on large stale sets
+    const CHUNK = 50;
+    for (let i = 0; i < tokens.length; i += CHUNK) {
+        const chunk = tokens.slice(i, i + CHUNK);
+        const inList = chunk.map(t => `"${t}"`).join(',');
+        await fetch(`${env.SUPABASE_URL}/rest/v1/push_tokens?token=in.(${inList})`, {
+            method: 'DELETE',
+            headers: {
+                apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+                Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+                Prefer: 'return=minimal',
+            },
+        }).catch(e => console.error('[removeStaleTokens] chunk failed:', e.message));
+    }
 }
 
 function buildDeepLinkData(type, id) {
