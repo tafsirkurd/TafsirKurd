@@ -506,15 +506,51 @@
         /* ── 3-Col Content Grid ── */
         .content-grid-3 {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 20px;
             margin-bottom: 28px;
         }
+
+        /* ── Dashboard Main + Sticky Sidebar Layout ── */
+        .db-main-layout {
+            display: grid;
+            grid-template-columns: 1fr 290px;
+            grid-template-areas: "main sidebar";
+            gap: 20px;
+            align-items: start;
+            margin-bottom: 28px;
+        }
+        .db-main-col { grid-area: main; min-width: 0; }
+        .db-sidebar-col {
+            grid-area: sidebar;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            position: sticky;
+            top: 76px;
+            max-height: calc(100vh - 90px);
+            overflow-y: auto;
+            padding-bottom: 8px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-light) transparent;
+        }
+        .db-sidebar-col::-webkit-scrollbar { width: 4px; }
+        .db-sidebar-col::-webkit-scrollbar-track { background: transparent; }
+        .db-sidebar-col::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 4px; }
+        .db-sidebar-col > .section-label { margin-top: 0; }
+        .db-sidebar-col .quick-actions { display: flex; flex-direction: column; gap: 8px; margin-bottom: 0; }
+        .db-sidebar-col .quick-action-card { padding: 10px 13px; gap: 10px; }
+        .db-sidebar-col .quick-action-icon { width: 32px; height: 32px; }
+        .db-sidebar-col .quick-action-label { font-size: 12px; }
+        .db-sidebar-col .quick-action-sub { font-size: 10px; }
+        .db-sidebar-col .ato-card { padding: 14px 16px; margin-bottom: 0; }
         @media (max-width: 1100px) {
-            .content-grid-3 { grid-template-columns: 1fr 1fr; }
+            .db-main-layout { grid-template-columns: 1fr; grid-template-areas: "sidebar" "main"; }
+            .db-sidebar-col { position: static; max-height: none; overflow-y: visible; }
+            .db-sidebar-col .quick-actions { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 10px; }
         }
         @media (max-width: 700px) {
-            .content-grid-3 { grid-template-columns: 1fr; }
+            .db-sidebar-col .quick-actions { grid-template-columns: 1fr 1fr; }
         }
         .content-card {
             background: var(--bg-surface);
@@ -2299,8 +2335,12 @@
                     <div class="heatmap-summary" id="heatmapSummary"></div>
                 </div>
 
+                <!-- ══ Dashboard Main + Sidebar ══ -->
+                <div class="db-main-layout">
+                <div class="db-main-col">
+
                 <!-- ══ User Lifecycle ══ -->
-                <div class="section-label" style="margin-top:16px;"><span class="sl-icon" style="background:rgba(59,130,246,.12);color:#3b82f6;"><i data-lucide="users"></i></span>User Lifecycle</div>
+                <div class="section-label" style="margin-top:0;"><span class="sl-icon" style="background:rgba(59,130,246,.12);color:#3b82f6;"><i data-lucide="users"></i></span>User Lifecycle</div>
                 <div class="ul-stat-strip">
                     <div class="ul-stat-pill pill-green"><div class="ul-stat-val" id="ulNewToday">—</div><div class="ul-stat-lbl">New Today</div></div>
                     <div class="ul-stat-pill pill-blue"><div class="ul-stat-val" id="ulNewWeek">—</div><div class="ul-stat-lbl">New This Week</div></div>
@@ -2343,10 +2383,6 @@
                         </table>
                     </div>
                 </div>
-
-                <!-- ══ Quick Actions ══ -->
-                <div class="section-label"><span class="sl-icon" style="background:rgba(99,102,241,.12);color:#6366f1;"><i data-lucide="clock"></i></span>Recently Visited</div>
-                <div class="quick-actions" id="quickActionsGrid"></div>
 
                 <!-- ══ 3-Col Content Grid ══ -->
                 <div class="section-label"><span class="sl-icon" style="background:rgba(16,185,129,.12);color:#10b981;"><i data-lucide="radio"></i></span>Live Data</div>
@@ -2463,6 +2499,30 @@
                         <a href="/admin-tasks.html" class="my-tasks-view-all">View all →</a>
                     </div>
                 </div>
+                </div><!-- /db-main-col -->
+
+                <!-- ══ Sticky Sidebar ══ -->
+                <div class="db-sidebar-col">
+                    <div class="section-label"><span class="sl-icon" style="background:rgba(99,102,241,.12);color:#6366f1;"><i data-lucide="clock"></i></span>Recently Visited</div>
+                    <div class="quick-actions" id="quickActionsGrid"></div>
+                    <!-- Who's Online -->
+                    <div class="chart-card card-animate" id="whoOnlinePanel" style="display:none;animation-delay:390ms;padding:14px 16px;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                            <div style="font-size:13px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:7px;"><span class="online-pulse"></span>Who's Online</div>
+                            <span style="font-size:11px;color:var(--text-tertiary);" id="whoOnlineCount"></span>
+                        </div>
+                        <div id="whoOnlineList" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;"></div>
+                    </div>
+                    <!-- Admin Team Online -->
+                    <div class="ato-card card-animate" id="adminTeamOnlinePanel" style="display:none;">
+                        <div class="ato-header">
+                            <div class="ato-title"><span class="online-pulse"></span>Admin Team<span class="ato-badge" id="atoCount">0</span></div>
+                            <a href="/admin-account-management.html" class="ato-link">Manage →</a>
+                        </div>
+                        <div class="ato-list" id="atoList"></div>
+                    </div>
+                </div><!-- /db-sidebar-col -->
+                </div><!-- /db-main-layout -->
 
                 <!-- ══ System Widgets Row ══ -->
                 <div class="system-widgets-row" id="systemWidgetsRow">
@@ -2557,7 +2617,7 @@
 
                 <!-- ══ Deployments widgets row ══ -->
                 <div class="section-label"><span class="sl-icon" style="background:rgba(249,115,22,.12);color:#f97316;"><i data-lucide="rocket"></i></span>Deployments</div>
-                <div class="system-widgets-row" style="margin-bottom:28px">
+                <div class="system-widgets-row" style="margin-bottom:28px;grid-template-columns:1fr 1fr;">
 
                     <!-- iOS Builds widget -->
                     <div class="card card-animate" style="animation-delay:450ms">
@@ -2587,31 +2647,6 @@
                         </div>
                     </div>
 
-                </div>
-
-                <!-- ══ Who's Online ══ -->
-                <div class="chart-card card-animate" id="whoOnlinePanel" style="display:none;animation-delay:390ms;margin-bottom:28px;padding:16px 20px;">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-                        <div style="font-size:14px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:8px;">
-                            <span class="online-pulse"></span>
-                            Who's Online
-                        </div>
-                        <span style="font-size:12px;color:var(--text-tertiary);" id="whoOnlineCount"></span>
-                    </div>
-                    <div id="whoOnlineList" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;"></div>
-                </div>
-
-                <!-- ══ Admin Team Online ══ -->
-                <div class="ato-card card-animate" id="adminTeamOnlinePanel" style="display:none;">
-                    <div class="ato-header">
-                        <div class="ato-title">
-                            <span class="online-pulse"></span>
-                            Admin Team Online
-                            <span class="ato-badge" id="atoCount">0</span>
-                        </div>
-                        <a href="/admin-account-management.html" class="ato-link">Manage →</a>
-                    </div>
-                    <div class="ato-list" id="atoList"></div>
                 </div>
 
                 <!-- ══ Admin Actions Log ══ -->
