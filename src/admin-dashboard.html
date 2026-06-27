@@ -2171,6 +2171,64 @@
         .db-brief-val.va { color: #f59e0b; }
         .db-brief-lbl { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--text-tertiary); margin-top: 2px; line-height: 1.2; }
 
+        /* ═══ Batch 8 — Quick Jump Bar + Loading Skeletons ═══ */
+
+        /* Quick Jump Bar: always-visible shortcut row between status bar and metrics */
+        .qjb {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        @media (max-width: 1100px) { .qjb { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 600px)  { .qjb { grid-template-columns: repeat(2, 1fr); } }
+        .qjb-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 7px;
+            padding: 13px 10px 11px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 11px;
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.18s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .qjb-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 2px;
+            background: var(--qjb-c, var(--primary));
+            opacity: 0.8;
+            pointer-events: none;
+        }
+        .qjb-card:hover {
+            border-color: var(--qjb-c, var(--primary));
+            background: var(--bg-active);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+        .qjb-icon {
+            width: 34px; height: 34px;
+            border-radius: 9px;
+            background: var(--qjb-bg, var(--bg-active));
+            color: var(--qjb-c, var(--primary));
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .qjb-icon i { width: 15px; height: 15px; display: block; }
+        .qjb-label { line-height: 1.2; color: var(--text-secondary); }
+
+        /* deployStatus inside status bar */
+        #deployStatus { margin-left: auto; margin-right: 0; }
+
         /* heatmap skeleton cells */
         .hm-cell-skel {
             background: linear-gradient(90deg, var(--bg-hover) 25%, var(--bg-active) 50%, var(--bg-hover) 75%);
@@ -2469,7 +2527,36 @@
                         <span>Last sync: --</span>
                     </div>
                     <div id="healthScoreBadge" style="display:none;" class="health-score-badge green" title="System health score based on errors, DB and sync status"></div>
+                    <div id="deployStatus"></div>
                     <div class="role-badge" id="roleBadge">admin</div>
+                </div>
+
+                <!-- ══ Quick Jump Bar ══ -->
+                <div class="qjb">
+                    <a href="/admin-islamvoice-management.html" class="qjb-card" style="--qjb-c:#ef4444;--qjb-bg:rgba(239,68,68,.1);">
+                        <div class="qjb-icon"><i data-lucide="video"></i></div>
+                        <span class="qjb-label">Add Content</span>
+                    </a>
+                    <a href="/admin-users.html" class="qjb-card" style="--qjb-c:#8b5cf6;--qjb-bg:rgba(139,92,246,.1);">
+                        <div class="qjb-icon"><i data-lucide="users"></i></div>
+                        <span class="qjb-label">View Users</span>
+                    </a>
+                    <a href="/admin-analytics.html" class="qjb-card" style="--qjb-c:#10b981;--qjb-bg:rgba(16,185,129,.1);">
+                        <div class="qjb-icon"><i data-lucide="trending-up"></i></div>
+                        <span class="qjb-label">Analytics</span>
+                    </a>
+                    <a href="/admin-reading-stats.html" class="qjb-card" style="--qjb-c:#14b8a6;--qjb-bg:rgba(20,184,166,.1);">
+                        <div class="qjb-icon"><i data-lucide="book-open"></i></div>
+                        <span class="qjb-label">Reading Stats</span>
+                    </a>
+                    <a href="/admin-errors.html" class="qjb-card" style="--qjb-c:#f59e0b;--qjb-bg:rgba(245,158,11,.1);">
+                        <div class="qjb-icon"><i data-lucide="alert-triangle"></i></div>
+                        <span class="qjb-label">App Errors</span>
+                    </a>
+                    <a href="/admin-release-history.html" class="qjb-card" style="--qjb-c:#6366f1;--qjb-bg:rgba(99,102,241,.1);">
+                        <div class="qjb-icon"><i data-lucide="git-branch"></i></div>
+                        <span class="qjb-label">Releases</span>
+                    </a>
                 </div>
 
                 <!-- ══ Metric Cards ══ -->
@@ -2987,7 +3074,11 @@
                             <a href="/admin-codemagic.html" class="content-card-link">View all</a>
                         </div>
                         <div style="padding:12px 16px 16px" id="cmWidgetBody">
-                            <div style="color:var(--text-tertiary);font-size:13px">Loading…</div>
+                            <div class="card-skel-list" style="padding:4px 0 0;">
+                                <div class="card-skel-item"><div class="card-skel-avatar" style="border-radius:6px;width:28px;height:28px;"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:65%"></div><div class="card-skel-line" style="width:38%"></div></div></div>
+                                <div class="card-skel-item"><div class="card-skel-avatar" style="border-radius:6px;width:28px;height:28px;"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:55%"></div><div class="card-skel-line" style="width:30%"></div></div></div>
+                                <div class="card-skel-item"><div class="card-skel-avatar" style="border-radius:6px;width:28px;height:28px;"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:70%"></div><div class="card-skel-line" style="width:35%"></div></div></div>
+                            </div>
                         </div>
                     </div>
 
@@ -3001,7 +3092,12 @@
                             <a href="/admin-release-history.html" class="content-card-link">View all</a>
                         </div>
                         <div style="padding:12px 16px 16px" id="rhWidgetBody">
-                            <div style="color:var(--text-tertiary);font-size:13px">Loading…</div>
+                            <div class="card-skel-list" style="padding:4px 0 0;">
+                                <div class="card-skel-item"><div class="card-skel-avatar" style="border-radius:6px;width:32px;height:20px;"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:72%"></div><div class="card-skel-line" style="width:40%"></div></div></div>
+                                <div class="card-skel-item"><div class="card-skel-avatar" style="border-radius:6px;width:32px;height:20px;"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:60%"></div><div class="card-skel-line" style="width:34%"></div></div></div>
+                                <div class="card-skel-item"><div class="card-skel-avatar" style="border-radius:6px;width:32px;height:20px;"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:68%"></div><div class="card-skel-line" style="width:42%"></div></div></div>
+                                <div class="card-skel-item"><div class="card-skel-avatar" style="border-radius:6px;width:32px;height:20px;"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:55%"></div><div class="card-skel-line" style="width:30%"></div></div></div>
+                            </div>
                         </div>
                     </div>
 
@@ -3036,7 +3132,12 @@
                         <button class="al-filter-btn"        data-cat="system"  onclick="setActionsFilter('system')">System</button>
                     </div>
                     <div class="timeline-list" id="adminActionsLog" style="max-height:420px;overflow-y:auto;">
-                        <div style="text-align:center;padding:30px;color:var(--text-tertiary);font-size:13px;">Loading...</div>
+                        <div class="card-skel-list">
+                            <div class="card-skel-item"><div class="card-skel-avatar" style="width:30px;height:30px;border-radius:50%;flex-shrink:0;"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:70%"></div><div class="card-skel-line" style="width:40%"></div></div></div>
+                            <div class="card-skel-item"><div class="card-skel-avatar" style="width:30px;height:30px;border-radius:50%;flex-shrink:0;"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:55%"></div><div class="card-skel-line" style="width:35%"></div></div></div>
+                            <div class="card-skel-item"><div class="card-skel-avatar" style="width:30px;height:30px;border-radius:50%;flex-shrink:0;"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:65%"></div><div class="card-skel-line" style="width:45%"></div></div></div>
+                            <div class="card-skel-item"><div class="card-skel-avatar" style="width:30px;height:30px;border-radius:50%;flex-shrink:0;"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:60%"></div><div class="card-skel-line" style="width:30%"></div></div></div>
+                        </div>
                     </div>
                 </div>
 
@@ -3052,7 +3153,12 @@
                         <button class="tl-filter-btn"        data-tlcat="video"   onclick="setTimelineFilter('video')">▶ Videos</button>
                     </div>
                     <div class="timeline-list" id="timelineList">
-                        <div style="text-align:center;padding:30px;color:var(--text-tertiary);font-size:13px;">Loading activity...</div>
+                        <div class="card-skel-list">
+                            <div class="card-skel-item"><div class="card-skel-avatar" style="width:30px;height:30px;border-radius:50%;flex-shrink:0;"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:68%"></div><div class="card-skel-line" style="width:42%"></div></div></div>
+                            <div class="card-skel-item"><div class="card-skel-avatar" style="width:30px;height:30px;border-radius:50%;flex-shrink:0;"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:75%"></div><div class="card-skel-line" style="width:38%"></div></div></div>
+                            <div class="card-skel-item"><div class="card-skel-avatar" style="width:30px;height:30px;border-radius:50%;flex-shrink:0;"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:58%"></div><div class="card-skel-line" style="width:32%"></div></div></div>
+                            <div class="card-skel-item"><div class="card-skel-avatar" style="width:30px;height:30px;border-radius:50%;flex-shrink:0;"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:63%"></div><div class="card-skel-line" style="width:44%"></div></div></div>
+                        </div>
                     </div>
                 </div>
                 </div><!-- /activity-two-col -->
