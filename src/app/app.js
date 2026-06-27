@@ -992,7 +992,7 @@ var S={
   readerFont:localStorage.getItem('readerFont')||'hafs',
   glyphVerses:{},
   mushafFont:(function(){var f=localStorage.getItem('mushafFont')||'qpcv1';if(f!=='qpcv1'){try{localStorage.setItem('mushafFont','qpcv1');}catch(e){}}return'qpcv1';})(), // always qpcv1; qcf1/qcf2/qcf4 retained as internal-only fallback
-  mushafFontSize:(function(){var ip=document.documentElement.classList.contains('is-ipad');var raw=parseInt(localStorage.getItem(ip?'mushafFontSize_ipad_qcf4':'mushafFontSize_qcf4'))||0;return ip?Math.min(34,Math.max(22,raw||28)):Math.min(24,Math.max(16,raw||22));})(),
+  mushafFontSize:(function(){var ip=document.documentElement.classList.contains('is-ipad');var raw=parseInt(localStorage.getItem(ip?'mushafFontSize_ipad_qpcv1':'mushafFontSize_qpcv1'))||0;return ip?Math.min(34,Math.max(22,raw||28)):Math.min(24,Math.max(16,raw||22));})(),
   mushafLineH:(function(){var ip=document.documentElement.classList.contains('is-ipad');var raw=parseFloat(localStorage.getItem(ip?'mushafLineH_ipad':'mushafLineH'))||0;return ip?Math.min(2.4,Math.max(1.8,raw||2.0)):Math.min(2.3,Math.max(1.8,raw||1.8));})(),
   copy:{surah:0,ayah:0,rangeFmt:'both'}
 };
@@ -1506,15 +1506,15 @@ function init(){
     }
   }
 
-  // Mushaf font warm-up — prefetch current page Â±4 fonts/data so Mushaf tab opens fast
-  setTimeout(function(){
+  // Mushaf font warm-up — only when user is in mushaf mode (avoids injecting font tags on startup otherwise)
+  if(S.mushafMode){setTimeout(function(){
     getMushafPageRange(S.surah||1).then(function(pages){
       var cur=pages.start;
       for(var _wp=-2;_wp<=4;_wp++){
         if(cur+_wp>=1&&cur+_wp<=604)_prefetchMushafPage(cur+_wp);
       }
     }).catch(function(){});
-  },500);
+  },500);}
 
   // IV pre-warm: read series/episodes from localStorage into S at startup so the
   // IslamVoice tab opens with zero spinner even on medium devices (pre-render skipped there).
@@ -11752,7 +11752,7 @@ var SYNC_SIMPLE_KEYS=[
   'autoAdvance','scrollFollowsAudio','hapticFeedback',
   'bestStreak',
   'mushafMode','readerFont','mushafFont','mushafLineH',
-  'mushafFontSize_qcf4','mushafFontSize_ipad_qcf4','mushafFontSize_qcf1',
+  'mushafFontSize_qpcv1','mushafFontSize_ipad_qpcv1',
   'book_saved','book_read_ids',
   'prayerCity','prayerMethod','prayerAthanEnabled','prayerToggles',
   'prayerAthanVoice','prayerTimeFormat',
@@ -11950,8 +11950,8 @@ function applySyncData(data){
   // just keeps the first paint close to the fitted size.
   var _ipadLS=document.documentElement.classList.contains('is-ipad');
   S.mushafFontSize=_ipadLS
-    ?Math.min(34,Math.max(22,parseInt(localStorage.getItem('mushafFontSize_ipad_qcf4'))||28))
-    :Math.min(24,Math.max(16,parseInt(localStorage.getItem('mushafFontSize_qcf4'))||22));
+    ?Math.min(34,Math.max(22,parseInt(localStorage.getItem('mushafFontSize_ipad_qpcv1'))||28))
+    :Math.min(24,Math.max(16,parseInt(localStorage.getItem('mushafFontSize_qpcv1'))||22));
   S.mushafLineH=_ipadLS
     ?Math.min(2.4,Math.max(1.8,parseFloat(localStorage.getItem('mushafLineH_ipad'))||2.0))
     :Math.min(2.3,Math.max(1.8,parseFloat(localStorage.getItem('mushafLineH'))||1.8));
@@ -12875,7 +12875,7 @@ App.openLogin=function(){
       console.log('[Apple] nonce ready, calling plugin.authorize()');
       return plugin.authorize({nonce:hashedNonce});
     }).then(function(res){
-      console.log('[Apple] native result — user:',res&&res.user,'token present:',(res&&!!res.identityToken),'email:',res&&res.email,'givenName:',res&&res.givenName);
+      console.log('[Apple] native result — token present:',(res&&!!res.identityToken));
       var token=res&&res.identityToken;
       if(!token){
         console.warn('[Apple] no identityToken in result');
@@ -12892,7 +12892,7 @@ App.openLogin=function(){
         return;
       }
       var session=resp.data&&resp.data.session;
-      console.log('[Apple] Supabase session OK — user:',session&&session.user&&session.user.email);
+      console.log('[Apple] Supabase session OK');
       if(session){
         // checkProfileComplete handles profile creation + startCloudSync + loginSuccess
         checkProfileComplete(session);
