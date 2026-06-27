@@ -743,8 +743,8 @@
         .ul-table-card::before    { background: linear-gradient(90deg,#3b82f6,#10b981); }
         .apc-card::before         { background: linear-gradient(90deg,#6366f1,#8b5cf6); }
 
-        /* charts-secondary-row: no phantom margin when both items are display:none */
-        .charts-secondary-row:not(:has(> :not([style*="none"]))) { margin-bottom: 0; }
+        /* charts-secondary-row: collapse margin only when platform donut is hidden and heatmap has no data */
+        .charts-secondary-row:not(:has(> :not([style*="display: none"]))) { margin-bottom: 0; }
 
         /* Sidebar Live Stats (App Pulse) widget */
         .apc-card {
@@ -2114,6 +2114,70 @@
         .ul-modal-progress { padding:0 22px 20px; }
         .ul-modal-close-btn { background:var(--bg-active);border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;color:var(--text-secondary);margin-left:auto; }
         .ul-modal-close-btn:hover { background:var(--bg-hover); }
+
+        /* ═══ Batch 7 — Full Fill ═══ */
+
+        /* content-grid: 2-col enforced — eliminates 3+1 orphaned card on wide screens */
+        .content-grid-3 { grid-template-columns: 1fr 1fr; }
+        @media (max-width: 600px) { .content-grid-3 { grid-template-columns: 1fr; } }
+
+        /* chart-insights: collapse padding when empty; shimmer placeholders while loading */
+        .chart-insights:empty { padding: 0; }
+        .ci-skel-v {
+            display: inline-block; width: 44px; height: 15px;
+            background: linear-gradient(90deg, var(--bg-hover) 25%, var(--bg-active) 50%, var(--bg-hover) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s ease-in-out infinite;
+            border-radius: 4px; vertical-align: middle;
+        }
+        .ci-skel-l {
+            display: block; width: 36px; height: 9px; margin-top: 4px;
+            background: linear-gradient(90deg, var(--bg-hover) 25%, var(--bg-active) 50%, var(--bg-hover) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s ease-in-out infinite;
+            border-radius: 3px;
+        }
+
+        /* Sidebar Daily Brief widget (4 mini stats in 2x2 grid) */
+        .db-brief {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 10px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            position: relative;
+            overflow: hidden;
+        }
+        .db-brief::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, #8b5cf6, #3b82f6, #10b981, #f59e0b);
+            pointer-events: none;
+        }
+        .db-brief-stat {
+            display: flex; flex-direction: column; gap: 2px;
+            background: var(--bg-active);
+            border-radius: 8px;
+            padding: 9px 10px;
+            min-width: 0;
+        }
+        .db-brief-val { font-size: 14px; font-weight: 800; color: var(--text-primary); line-height: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .db-brief-val.vg { color: #22c55e; }
+        .db-brief-val.vb { color: #3b82f6; }
+        .db-brief-val.vp { color: #8b5cf6; }
+        .db-brief-val.va { color: #f59e0b; }
+        .db-brief-lbl { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--text-tertiary); margin-top: 2px; line-height: 1.2; }
+
+        /* heatmap skeleton cells */
+        .hm-cell-skel {
+            background: linear-gradient(90deg, var(--bg-hover) 25%, var(--bg-active) 50%, var(--bg-hover) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s ease-in-out infinite;
+        }
+
     </style>
     <style id="early-sidebar-hide">
         .sidebar-nav { visibility: visible; }
@@ -2522,7 +2586,13 @@
                         <div class="chart-container">
                             <canvas id="userGrowthChart"></canvas>
                         </div>
-                        <div class="chart-insights" id="growthInsights"></div>
+                        <div class="chart-insights" id="growthInsights">
+                            <div class="ci-stat"><div class="ci-val"><span class="ci-skel-v"></span></div><div class="ci-lbl">Total 30d</div></div>
+                            <div class="ci-divider"></div>
+                            <div class="ci-stat"><div class="ci-val"><span class="ci-skel-v"></span></div><div class="ci-lbl">Peak Day</div></div>
+                            <div class="ci-divider"></div>
+                            <div class="ci-stat"><div class="ci-val"><span class="ci-skel-v"></span></div><div class="ci-lbl">Daily Avg</div></div>
+                        </div>
                     </div>
                     <div class="chart-card card-animate" style="animation-delay:480ms">
                         <div class="chart-card-header">
@@ -2532,14 +2602,20 @@
                         <div class="chart-container">
                             <canvas id="activeUsersChart"></canvas>
                         </div>
-                        <div class="chart-insights" id="activeInsights"></div>
+                        <div class="chart-insights" id="activeInsights">
+                            <div class="ci-stat"><div class="ci-val"><span class="ci-skel-v"></span></div><div class="ci-lbl">Total 7d</div></div>
+                            <div class="ci-divider"></div>
+                            <div class="ci-stat"><div class="ci-val"><span class="ci-skel-v"></span></div><div class="ci-lbl">Peak DAU</div></div>
+                            <div class="ci-divider"></div>
+                            <div class="ci-stat"><div class="ci-val"><span class="ci-skel-v"></span></div><div class="ci-lbl">Daily Avg</div></div>
+                        </div>
                     </div>
                 </div>
                 <!-- Platform Donut + Heatmap side-by-side -->
                 <div class="charts-secondary-row">
                 <div id="platformSplitRow" style="display:none;"></div>
-                <!-- ══ Activity Heatmap ══ -->
-                <div class="heatmap-card card-animate" id="activityHeatmapCard" style="display:none;animation-delay:510ms;">
+                <!-- ══ Activity Heatmap (skeleton shown until data loads) ══ -->
+                <div class="heatmap-card card-animate" id="activityHeatmapCard" style="animation-delay:510ms;">
                     <div class="heatmap-header">
                         <div class="heatmap-title">
                             <span class="chart-title-icon" style="background:rgba(16,185,129,.1);color:#10b981;"><i data-lucide="grid"></i></span>
@@ -2565,11 +2641,20 @@
                             <div class="hm-dow"></div>
                         </div>
                         <div style="flex:1;min-width:0;">
-                            <div class="hm-month-labels" id="hmMonthLabels"></div>
-                            <div class="heatmap-grid" id="heatmapGrid"></div>
+                            <div class="hm-month-labels" id="hmMonthLabels"><div class="hm-month-lbl"><span class="metric-skel-sm" style="width:24px;height:9px;margin-top:0;display:inline-block;"></span></div></div>
+                            <div class="heatmap-grid" id="heatmapGrid">
+                                <div class="hm-col"><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div></div>
+                                <div class="hm-col"><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div></div>
+                                <div class="hm-col"><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div></div>
+                                <div class="hm-col"><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div></div>
+                                <div class="hm-col"><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div></div>
+                                <div class="hm-col"><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div></div>
+                                <div class="hm-col"><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div></div>
+                                <div class="hm-col"><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div></div>
+                            </div>
                         </div>
                     </div>
-                    <div class="heatmap-summary" id="heatmapSummary"></div>
+                    <div class="heatmap-summary" id="heatmapSummary"><span class="metric-skel-sm" style="width:180px;height:10px;margin-top:8px;display:inline-block;"></span></div>
                 </div>
                 </div><!-- /charts-secondary-row -->
 
@@ -2760,6 +2845,25 @@
                                 <span class="apc-val apc-green" id="apcOnline">—</span>
                                 <span class="apc-lbl">Online Now</span>
                             </div>
+                        </div>
+                    </div>
+                    <!-- Daily Brief: 4 mini stats in 2x2 grid -->
+                    <div class="db-brief card-animate" style="animation-delay:60ms;">
+                        <div class="db-brief-stat">
+                            <span class="db-brief-val vp" id="dbActive7d">—</span>
+                            <span class="db-brief-lbl">Active 7d</span>
+                        </div>
+                        <div class="db-brief-stat">
+                            <span class="db-brief-val vg" id="dbNewWeek">—</span>
+                            <span class="db-brief-lbl">New This Week</span>
+                        </div>
+                        <div class="db-brief-stat">
+                            <span class="db-brief-val va" id="dbMessages">—</span>
+                            <span class="db-brief-lbl">Unread Msgs</span>
+                        </div>
+                        <div class="db-brief-stat">
+                            <span class="db-brief-val vb" id="dbReaders">—</span>
+                            <span class="db-brief-lbl">Readers</span>
                         </div>
                     </div>
                     <div class="section-label"><span class="sl-icon" style="background:rgba(99,102,241,.12);color:#6366f1;"><i data-lucide="clock"></i></span>Recently Visited</div>
@@ -3326,15 +3430,23 @@
     <script src="/utils/admin-health-widget.js?v=6" defer data-cfasync="false"></script>
 <script src="/utils/admin-session-timer-ui.js?v=10"></script>
 <script>
-// Sidebar Live Stats: mirror metric values every 3 s
+// Sidebar Live Stats + Daily Brief: mirror metric values every 3 s
 (function() {
-    var map = [['apcUsers','metricUsers'],['apcActive','metricActiveToday'],['apcOnline','metricOnline']];
+    var map = [
+        ['apcUsers','metricUsers'],
+        ['apcActive','metricActiveToday'],
+        ['apcOnline','metricOnline'],
+        ['dbActive7d','metricActive7d'],
+        ['dbNewWeek','ulNewWeek'],
+        ['dbMessages','metricMessages'],
+        ['dbReaders','metricReaders']
+    ];
     function sync() {
         map.forEach(function(p) {
             var dst = document.getElementById(p[0]);
             var src = document.getElementById(p[1]);
             if (!dst || !src) return;
-            if (src.querySelector('.metric-skel,.metric-skel-sm')) return;
+            if (src.querySelector('.metric-skel,.metric-skel-sm,.ci-skel-v,.ci-skel-l')) return;
             var v = src.textContent.trim();
             if (v && v !== '—') dst.textContent = v;
         });
