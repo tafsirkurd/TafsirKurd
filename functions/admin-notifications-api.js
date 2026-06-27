@@ -284,19 +284,21 @@ async function _handleRequest(context) {
 
         if (stale_tokens?.length) await removeStaleTokens(env, stale_tokens).catch(() => {});
 
-        // Read counts from delivery log for accuracy; fall back to worker-aggregated values
-        // for notifications that predate delivery logging.
-        const { data: logRows } = await supabase
-            .from('admin_notification_delivery_logs')
-            .select('status')
-            .eq('notification_id', notif_id);
-        const logSent   = logRows?.filter(r => r.status === 'sent').length   ?? tokens_sent   ?? 0;
-        const logFailed = logRows?.filter(r => r.status === 'failed' || r.status === 'pending' || r.status === 'retrying').length ?? tokens_failed ?? 0;
-        const logStale  = logRows?.filter(r => r.status === 'stale').length  ?? stale_tokens?.length ?? 0;
-
-        const finalSent   = logRows?.length ? logSent   : (tokens_sent   ?? 0);
-        const finalFailed = logRows?.length ? logFailed : (tokens_failed ?? 0);
-        const finalStale  = logRows?.length ? logStale  : (stale_tokens?.length ?? 0);
+        // Read counts from delivery log via parallel COUNT queries — accurate at any scale.
+        // Full .select() would be capped at Supabase's default 1000 rows, producing wrong counts
+        // for any notification sent to more than 1000 devices.
+        const [sentRes, failedRes, staleRes] = await Promise.all([
+            supabase.from('admin_notification_delivery_logs').select('*', { count: 'exact', head: true })
+                .eq('notification_id', notif_id).eq('status', 'sent'),
+            supabase.from('admin_notification_delivery_logs').select('*', { count: 'exact', head: true })
+                .eq('notification_id', notif_id).in('status', ['failed', 'pending', 'retrying']),
+            supabase.from('admin_notification_delivery_logs').select('*', { count: 'exact', head: true })
+                .eq('notification_id', notif_id).eq('status', 'stale'),
+        ]);
+        const hasLog = (sentRes.count ?? 0) + (failedRes.count ?? 0) + (staleRes.count ?? 0) > 0;
+        const finalSent   = hasLog ? (sentRes.count   ?? 0) : (tokens_sent   ?? 0);
+        const finalFailed = hasLog ? (failedRes.count ?? 0) : (tokens_failed ?? 0);
+        const finalStale  = hasLog ? (staleRes.count  ?? 0) : (stale_tokens?.length ?? 0);
 
         // Hard rule: SENT 0/X (when X > 0) is an impossible state.
         // If no tokens were delivered but the audience was non-empty, mark failed.
@@ -352,30 +354,43 @@ async function _handleRequest(context) {
         const { notif_id } = body;
         if (!notif_id) return json({ error: 'notif_id required' }, 400);
 
-        const { data: rows } = await supabase
-            .from('admin_notification_delivery_logs')
-            .select('status, platform')
-            .eq('notification_id', notif_id);
+        // Parallel COUNT queries — accurate at any scale (full .select() caps at 1000 rows).
+        const base = (s) => supabase.from('admin_notification_delivery_logs')
+            .select('*', { count: 'exact', head: true }).eq('notification_id', notif_id).eq('status', s);
+        const [sentR, failedR, pendingR, retryingR, staleR,
+               aSentR, aFailR, iSentR, iFailR, totalR] = await Promise.all([
+            base('sent'),
+            base('failed'),
+            base('pending'),
+            base('retrying'),
+            base('stale'),
+            supabase.from('admin_notification_delivery_logs').select('*', { count: 'exact', head: true }).eq('notification_id', notif_id).eq('status', 'sent').eq('platform', 'android'),
+            supabase.from('admin_notification_delivery_logs').select('*', { count: 'exact', head: true }).eq('notification_id', notif_id).in('status', ['failed', 'pending']).eq('platform', 'android'),
+            supabase.from('admin_notification_delivery_logs').select('*', { count: 'exact', head: true }).eq('notification_id', notif_id).eq('status', 'sent').eq('platform', 'ios'),
+            supabase.from('admin_notification_delivery_logs').select('*', { count: 'exact', head: true }).eq('notification_id', notif_id).in('status', ['failed', 'pending']).eq('platform', 'ios'),
+            supabase.from('admin_notification_delivery_logs').select('*', { count: 'exact', head: true }).eq('notification_id', notif_id),
+        ]);
 
-        if (!rows?.length) return json({ has_log: false });
+        const total = totalR.count ?? 0;
+        if (!total) return json({ has_log: false });
 
-        const nonStale = rows.filter(r => r.status !== 'stale');
+        const sent     = sentR.count     ?? 0;
+        const failed   = failedR.count   ?? 0;
+        const pending  = pendingR.count  ?? 0;
+        const retrying = retryingR.count ?? 0;
+        const stale    = staleR.count    ?? 0;
+        const nonStale = total - stale;
         const stats = {
             has_log: true,
-            total: rows.length,
-            sent:     rows.filter(r => r.status === 'sent').length,
-            failed:   rows.filter(r => r.status === 'failed').length,
-            pending:  rows.filter(r => r.status === 'pending').length,
-            retrying: rows.filter(r => r.status === 'retrying').length,
-            stale:    rows.filter(r => r.status === 'stale').length,
-            android_sent:   rows.filter(r => r.platform === 'android' && r.status === 'sent').length,
-            android_failed: rows.filter(r => r.platform === 'android' && (r.status === 'failed' || r.status === 'pending')).length,
-            ios_sent:   rows.filter(r => r.platform === 'ios' && r.status === 'sent').length,
-            ios_failed: rows.filter(r => r.platform === 'ios' && (r.status === 'failed' || r.status === 'pending')).length,
+            total,
+            sent, failed, pending, retrying, stale,
+            android_sent:   aSentR.count ?? 0,
+            android_failed: aFailR.count ?? 0,
+            ios_sent:       iSentR.count ?? 0,
+            ios_failed:     iFailR.count ?? 0,
         };
-        // retry_count excludes 'retrying' rows — they're already in-flight
-        stats.retry_count = stats.failed + stats.pending;
-        stats.delivery_rate = nonStale.length > 0 ? Math.round(stats.sent / nonStale.length * 100) : 0;
+        stats.retry_count = failed + pending;
+        stats.delivery_rate = nonStale > 0 ? Math.round(sent / nonStale * 100) : 0;
         return json(stats);
     }
 
@@ -389,18 +404,23 @@ async function _handleRequest(context) {
         const { notif_id, confirm } = body;
         if (!notif_id) return json({ error: 'notif_id required' }, 400);
 
-        const { data: logRows } = await supabase
-            .from('admin_notification_delivery_logs')
-            .select('status, platform, token')
-            .eq('notification_id', notif_id);
-
-        if (!logRows?.length) return json({ error: 'No delivery log for this notification — only notifications sent after the delivery-tracking update support retry.' }, 404);
+        // Use COUNT queries for the summary — accurate at any scale.
+        // Full .select() would be silently capped at 1000 rows, causing wrong counts and
+        // incomplete retries for any notification sent to more than 1000 devices.
+        const [sentCnt, failedCnt, pendingCnt, staleCnt] = await Promise.all([
+            supabase.from('admin_notification_delivery_logs').select('*', { count: 'exact', head: true }).eq('notification_id', notif_id).eq('status', 'sent'),
+            supabase.from('admin_notification_delivery_logs').select('*', { count: 'exact', head: true }).eq('notification_id', notif_id).eq('status', 'failed'),
+            supabase.from('admin_notification_delivery_logs').select('*', { count: 'exact', head: true }).eq('notification_id', notif_id).eq('status', 'pending'),
+            supabase.from('admin_notification_delivery_logs').select('*', { count: 'exact', head: true }).eq('notification_id', notif_id).eq('status', 'stale'),
+        ]);
+        const totalLog = (sentCnt.count ?? 0) + (failedCnt.count ?? 0) + (pendingCnt.count ?? 0) + (staleCnt.count ?? 0);
+        if (!totalLog) return json({ error: 'No delivery log for this notification — only notifications sent after the delivery-tracking update support retry.' }, 404);
 
         const summary = {
-            sent:    logRows.filter(r => r.status === 'sent').length,
-            failed:  logRows.filter(r => r.status === 'failed').length,
-            pending: logRows.filter(r => r.status === 'pending').length,
-            stale:   logRows.filter(r => r.status === 'stale').length,
+            sent:    sentCnt.count    ?? 0,
+            failed:  failedCnt.count  ?? 0,
+            pending: pendingCnt.count ?? 0,
+            stale:   staleCnt.count   ?? 0,
         };
         summary.retry_count = summary.failed + summary.pending;
 
@@ -409,10 +429,23 @@ async function _handleRequest(context) {
 
         if (summary.retry_count === 0) return json({ success: true, retried: 0, sent: 0, message: 'No failed tokens to retry' });
 
+        // Paginate to get ALL failed/pending tokens — never cap at 1000.
         // One-click retry ALL failed/pending tokens via internal sub-invocations.
         // Each sub-invocation (retry_batch) gets its own 50-subrequest budget.
         // Batches run concurrently — they operate on disjoint token sets.
-        const failedRows = logRows.filter(r => r.status === 'failed' || r.status === 'pending');
+        const failedRows = [];
+        const LOG_PAGE = 1000;
+        for (let offset = 0; ; offset += LOG_PAGE) {
+            const { data: page } = await supabase
+                .from('admin_notification_delivery_logs')
+                .select('status, platform, token')
+                .eq('notification_id', notif_id)
+                .in('status', ['failed', 'pending'])
+                .range(offset, offset + LOG_PAGE - 1);
+            if (!page?.length) break;
+            failedRows.push(...page);
+            if (page.length < LOG_PAGE) break;
+        }
         const RETRY_PAGE = 35;
         const totalBatches = Math.ceil(failedRows.length / RETRY_PAGE);
         const siteOrigin = new URL(request.url).origin;
@@ -442,14 +475,17 @@ async function _handleRequest(context) {
             totalStale  += b.stale  ?? 0;
         }
 
-        // Refresh notification totals from delivery log
-        const { data: newLog } = await supabase
-            .from('admin_notification_delivery_logs').select('status').eq('notification_id', notif_id);
-        if (newLog?.length) {
+        // Refresh notification totals from delivery log via count queries (accurate at any scale)
+        const [rSent, rFailed, rStale] = await Promise.all([
+            supabase.from('admin_notification_delivery_logs').select('*', { count: 'exact', head: true }).eq('notification_id', notif_id).eq('status', 'sent'),
+            supabase.from('admin_notification_delivery_logs').select('*', { count: 'exact', head: true }).eq('notification_id', notif_id).in('status', ['failed', 'pending']),
+            supabase.from('admin_notification_delivery_logs').select('*', { count: 'exact', head: true }).eq('notification_id', notif_id).eq('status', 'stale'),
+        ]);
+        if ((rSent.count ?? 0) + (rFailed.count ?? 0) + (rStale.count ?? 0) > 0) {
             await supabase.from('admin_notifications').update({
-                tokens_sent:   newLog.filter(r => r.status === 'sent').length,
-                tokens_failed: newLog.filter(r => r.status === 'failed' || r.status === 'pending').length,
-                stale_removed: newLog.filter(r => r.status === 'stale').length,
+                tokens_sent:   rSent.count   ?? 0,
+                tokens_failed: rFailed.count ?? 0,
+                stale_removed: rStale.count  ?? 0,
             }).eq('id', notif_id);
         }
 
@@ -802,8 +838,8 @@ async function _handleRequest(context) {
     }
 
     // ── BACKFILL RECURRING — now a no-op ─────────────────────────
-    // Pre-creating multiple future entries caused spam. doSend() chains
-    // the next occurrence. This action is kept so old frontend calls don't 404.
+    // Pre-creating multiple future entries caused spam. finalize_send creates
+    // the next occurrence after each send. This action is kept so old frontend calls don't 404.
     if (action === 'backfill_recurring') {
         return json({ success: true, created: 0 });
     }
@@ -1352,6 +1388,8 @@ async function sendBatch(env, supabase, notif, batchTokens) {
     const jobs = batchTokens.map(t => async () => {
         const platform = t._type === 'fcm' ? 'android' : 'ios';
         if (t._type === 'fcm') {
+            // Skip: already pre-counted in failCount/failedList when fcmAuthError was set above
+            if (fcmAuthError) return;
             if (!accessToken) { failCount++; failedList.push({ token: t.token, platform, error: 'No FCM token' }); return; }
             const res = await fetch(FCM_URL, {
                 method: 'POST',
@@ -1403,147 +1441,6 @@ async function sendBatch(env, supabase, notif, batchTokens) {
     return { sent: successCount, failed: failCount, staleTokens, errors };
 }
 
-async function doSend(supabase, env, notif, trackingId, sentBy) {
-    // Get tokens
-    let tokens;
-    try { tokens = await getTokensForAudience(env, notif.audience, notif.platform); }
-    catch (e) {
-        await supabase.from('admin_notifications')
-            .update({ status: 'failed', error_message: 'Token fetch: ' + e.message })
-            .eq('id', trackingId);
-        return { error: 'Token fetch failed: ' + e.message };
-    }
-
-    // Write tokens_targeted immediately so recovery can distinguish
-    // "crashed before sending" (0) from "crashed after sending" (>0).
-    await supabase.from('admin_notifications')
-        .update({ tokens_targeted: tokens.length })
-        .eq('id', trackingId).catch(() => {});
-
-    if (!tokens.length) {
-        await supabase.from('admin_notifications')
-            .update({ status: 'sent', sent_at: new Date().toISOString(),
-                      tokens_targeted: 0, tokens_sent: 0, tokens_failed: 0, stale_removed: 0 })
-            .eq('id', trackingId);
-        return { sent: 0, failed: 0, total: 0, stale_removed: 0 };
-    }
-
-    const apnsTokens = tokens.filter(t => isApnsToken(t.token));
-    const fcmTokens  = tokens.filter(t => !isApnsToken(t.token));
-
-    let accessToken = null, fcmAuthError = null;
-    if (fcmTokens.length && env.FCM_SERVICE_ACCOUNT) {
-        try { accessToken = await getFCMAccessToken(env.FCM_SERVICE_ACCOUNT); }
-        catch (e) {
-            if (!apnsTokens.length) {
-                await supabase.from('admin_notifications')
-                    .update({ status: 'failed', error_message: 'FCM auth: ' + e.message })
-                    .eq('id', trackingId);
-                return { error: 'FCM auth error: ' + e.message };
-            }
-            // APNs tokens exist — continue for iOS but record FCM failure
-            fcmAuthError = 'FCM auth failed (' + fcmTokens.length + ' Android skipped): ' + e.message;
-            console.error('[sendNotification] FCM auth failed, Android tokens skipped:', e.message);
-        }
-    }
-
-    let apnsJwt = null, apnsJwtError = null;
-    if (apnsTokens.length && env.APNS_KEY_P8) {
-        try { apnsJwt = await getAPNsJWT(env.APNS_KEY_P8, env.APNS_KEY_ID || 'KLG2RRCRNR', env.APNS_TEAM_ID || '8KA7UDSC9D'); }
-        catch (e) { apnsJwtError = 'APNs JWT: ' + e.message; }
-    }
-
-    const deepLinkData = buildDeepLinkData(notif.deep_link_type, notif.deep_link_id);
-    const FCM_URL = `https://fcm.googleapis.com/v1/projects/${env.FCM_PROJECT_ID}/messages:send`;
-    let successCount = 0, failCount = 0;
-    const staleTokens = [], apnsErrors = [], fcmErrors = [];
-    if (fcmAuthError) { fcmErrors.push(fcmAuthError); failCount += fcmTokens.length; }
-
-    // Interleave Android (FCM) and iOS (APNs) jobs so both platforms get a fair share
-    // of Cloudflare's per-invocation subrequest budget. Previously all FCM jobs ran
-    // first, exhausting the budget before a single APNs request could be made.
-    const makeFCMJob = ({ token, platform }) => async () => {
-        if (!accessToken) { failCount++; return; }
-        const res = await fetch(FCM_URL, {
-            method: 'POST',
-            headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: buildFCMMessage(token, platform, notif.title, notif.body, notif.image_url, deepLinkData) }),
-        });
-        if (res.ok) { successCount++; }
-        else {
-            const err = await res.json().catch(() => ({}));
-            fcmErrors.push(`FCM ${res.status} ${err?.error?.status || ''}: ${err?.error?.message || JSON.stringify(err)}`);
-            if (err?.error?.status === 'NOT_FOUND' || err?.error?.status === 'UNREGISTERED') staleTokens.push(token);
-            failCount++;
-        }
-    };
-    const makeAPNsJob = ({ token }) => async () => {
-        if (!apnsJwt) { apnsErrors.push(apnsJwtError || 'JWT missing'); failCount++; return; }
-        const res = await sendApns(token, notif.title, notif.body, deepLinkData, apnsJwt, 'com.tafsirkurd.app');
-        if (res.ok) { successCount++; }
-        else {
-            const errText = await res.text().catch(() => '');
-            const err = (() => { try { return JSON.parse(errText || '{}'); } catch { return {}; } })();
-            apnsErrors.push(`APNs ${res.status}: ${err?.reason || errText}`);
-            if (res.status === 410 || err?.reason === 'BadDeviceToken' || err?.reason === 'Unregistered') staleTokens.push(token);
-            failCount++;
-        }
-    };
-    // Interleave: FCM[0], APNs[0], FCM[1], APNs[1], ...
-    const maxLen = Math.max(fcmTokens.length, apnsTokens.length);
-    const allJobs = [];
-    for (let i = 0; i < maxLen; i++) {
-        if (i < fcmTokens.length) allJobs.push(makeFCMJob(fcmTokens[i]));
-        if (i < apnsTokens.length) allJobs.push(makeAPNsJob(apnsTokens[i]));
-    }
-    // Cloudflare free plan: 50 subrequests per Worker invocation.
-    // Budget: 3 before sends (token fetch, tokens_targeted write, FCM auth)
-    //       + 4 after sends (stale removal, final DB update, next-occurrence check+insert)
-    //       = 43 available for actual sends.
-    // We cap at 42 for a safety margin so the final DB update always succeeds.
-    // Upgrade to Cloudflare Workers Paid ($5/mo) for 1000 subrequests — removes this cap.
-    const SEND_CAP = 42;
-    await Promise.allSettled(allJobs.slice(0, SEND_CAP).map(fn => fn()));
-
-    if (staleTokens.length) await removeStaleTokens(env, staleTokens).catch(() => {});
-
-    await supabase.from('admin_notifications').update({
-        status: 'sent', sent_at: new Date().toISOString(),
-        tokens_targeted: tokens.length, tokens_sent: successCount,
-        tokens_failed: failCount, stale_removed: staleTokens.length,
-        error_message: apnsErrors.length ? apnsErrors[0] : (fcmErrors.length ? fcmErrors[0] : null),
-    }).eq('id', trackingId);
-
-    // Auto-schedule next occurrence — only if it wasn't already pre-created on save.
-    if (notif.recurrence && notif.recurrence !== 'none') {
-        try {
-            const nextAt = nextOccurrence(notif.recurrence, notif.recurrence_day, notif.scheduled_at);
-            if (nextAt) {
-                // Skip if a scheduled occurrence already exists at this exact time (pre-created on save)
-                const { count: dupCount } = await supabase
-                    .from('admin_notifications')
-                    .select('id', { count: 'exact', head: true })
-                    .eq('title', notif.title)
-                    .eq('recurrence', notif.recurrence)
-                    .eq('scheduled_at', nextAt)
-                    .in('status', ['scheduled', 'sending']);
-                if (!dupCount) {
-                    const { error: insErr } = await supabase.from('admin_notifications').insert({
-                        title: notif.title, body: notif.body, image_url: notif.image_url || null,
-                        platform: notif.platform || 'all', audience: notif.audience || 'all',
-                        deep_link_type: notif.deep_link_type || 'none', deep_link_id: notif.deep_link_id || null,
-                        recurrence: notif.recurrence, recurrence_day: notif.recurrence_day || null,
-                        notes: notif.notes || null, created_by: sentBy || 'cron',
-                        status: 'scheduled', scheduled_at: nextAt, is_template: false,
-                    });
-                    if (insErr) console.error('Next occurrence insert failed:', insErr.message);
-                }
-            }
-        } catch (e) { console.error('nextOccurrence error:', e.message); }
-    }
-
-    return { sent: successCount, failed: failCount, total: tokens.length, stale_removed: staleTokens.length };
-}
 
 async function doSendTokenList(env, notif, tokens) {
     if (!tokens.length) return { sent: 0, failed: 0, total: 0 };
@@ -1729,27 +1626,23 @@ function pemToDer(pem) {
     for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
     return buf.buffer;
 }
-// Returns the next ISO timestamp for a recurring notification
+// Returns the next ISO timestamp for a recurring notification.
+// Always adds exactly 1 or 7 days to the original scheduled_at timestamp so the
+// send time is preserved byte-for-byte (same HH:MM UTC, same calendar weekday in Baghdad).
+// Computing from `now` instead of `scheduledAt` would drift the time forward each cycle;
+// computing a weekday from `getUTCDay()` would misfire for Baghdad midnight notifications
+// (times 00:00–02:59 Baghdad = previous UTC day).
 function nextOccurrence(recurrence, recurrenceDay, scheduledAt) {
-    const now = new Date();
-    // Preserve the original HH:MM from the notification's scheduled_at
-    const refTime = scheduledAt ? new Date(scheduledAt) : null;
-    const h = refTime ? refTime.getUTCHours() : 9;
-    const m = refTime ? refTime.getUTCMinutes() : 0;
+    if (!scheduledAt) return null;
+    const ref = new Date(scheduledAt);
+    if (isNaN(ref.getTime())) return null;
     if (recurrence === 'daily') {
-        const next = new Date(now);
-        next.setUTCDate(next.getUTCDate() + 1);
-        next.setUTCHours(h, m, 0, 0);
-        return next.toISOString();
+        ref.setUTCDate(ref.getUTCDate() + 1);
+        return ref.toISOString();
     }
     if (recurrence === 'weekly' && recurrenceDay != null) {
-        const next = new Date(now);
-        const currentDay = next.getUTCDay();
-        let daysUntil = (recurrenceDay - currentDay + 7) % 7;
-        if (daysUntil === 0) daysUntil = 7;
-        next.setUTCDate(next.getUTCDate() + daysUntil);
-        next.setUTCHours(h, m, 0, 0);
-        return next.toISOString();
+        ref.setUTCDate(ref.getUTCDate() + 7);
+        return ref.toISOString();
     }
     return null;
 }
