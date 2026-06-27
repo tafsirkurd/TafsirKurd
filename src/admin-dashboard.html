@@ -570,7 +570,7 @@
         /* ── Unified Infrastructure Grid (System + Deployments) ── */
         .infra-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             gap: 20px;
             margin-bottom: 28px;
         }
@@ -591,7 +591,7 @@
         /* ── Health Monitors: 3 collapsible cards in auto-fill grid ── */
         .health-monitors-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             gap: 20px;
             margin-bottom: 28px;
         }
@@ -655,6 +655,10 @@
         .my-tasks-widget, .ato-card, .ul-table-card, .apc-card {
             position: relative;
         }
+        /* overflow:hidden so gradient bar clips neatly at top corners */
+        .infra-grid .card, .health-monitors-grid .card, .messages-audit-row .card { overflow: hidden; }
+        /* Content card body min-height: loading state isn't sparse */
+        .content-card-body { min-height: 180px; }
         /* Individual gradient colours */
         .chart-card::before       { background: linear-gradient(90deg,#3b82f6,#10b981,#8b5cf6); }
         .content-card::before     { background: linear-gradient(90deg,var(--primary),rgba(59,130,246,.25)); }
@@ -2315,6 +2319,23 @@
                     <a class="ob-link" href="/admin-tasks.html">View tasks →</a>
                 </div>
 
+                <!-- ══ System Status Bar ══ -->
+                <div class="system-status-bar" id="systemStatusBar">
+                    <div class="status-item">
+                        <span class="status-dot green" id="statusDotSystem"></span>
+                        <span>System: Online</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-dot green" id="statusDotDb"></span>
+                        <span>Database: Connected</span>
+                    </div>
+                    <div class="status-item" id="statusSync">
+                        <span>Last sync: --</span>
+                    </div>
+                    <div id="healthScoreBadge" style="display:none;" class="health-score-badge green" title="System health score based on errors, DB and sync status"></div>
+                    <div class="role-badge" id="roleBadge">admin</div>
+                </div>
+
                 <!-- ══ Metric Cards ══ -->
                 <div class="metrics-grid" id="metricsGrid">
                     <!-- Total Users -->
@@ -2694,12 +2715,12 @@
 
                     <!-- App Errors Widget -->
                     <div class="card card-animate" style="animation-delay:430ms">
-                        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
-                            <h3 class="card-title" style="display:flex;align-items:center;gap:8px;min-width:0">
-                                <span style="flex-shrink:0;width:8px;height:8px;background:#ef4444;border-radius:50%"></span>
-                                <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">App Errors</span>
-                            </h3>
-                            <a href="/admin-errors.html" style="flex-shrink:0;font-size:12px;color:var(--primary);text-decoration:none;padding:4px 10px;background:var(--bg-active);border-radius:12px;font-weight:600;margin-left:8px">View all</a>
+                        <div class="content-card-header">
+                            <div class="content-card-title">
+                                <div class="cct-icon" style="background:rgba(239,68,68,.1);color:#ef4444;"><i data-lucide="alert-triangle"></i></div>
+                                App Errors
+                            </div>
+                            <a href="/admin-errors.html" class="content-card-link">View all</a>
                         </div>
                         <div style="padding:12px 16px 16px">
                             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
@@ -2724,12 +2745,12 @@
 
                     <!-- Notification Analytics Widget -->
                     <div class="card card-animate" style="animation-delay:435ms">
-                        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
-                            <h3 class="card-title" style="display:flex;align-items:center;gap:8px;min-width:0">
-                                <span style="flex-shrink:0;width:8px;height:8px;background:#3b82f6;border-radius:50%"></span>
-                                <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Notification Analytics</span>
-                            </h3>
-                            <a href="/admin-notification-analytics.html" style="flex-shrink:0;font-size:12px;color:var(--primary);text-decoration:none;padding:4px 10px;background:var(--bg-active);border-radius:12px;font-weight:600;margin-left:8px">Full report</a>
+                        <div class="content-card-header">
+                            <div class="content-card-title">
+                                <div class="cct-icon" style="background:rgba(59,130,246,.1);color:#3b82f6;"><i data-lucide="bell"></i></div>
+                                Notification Analytics
+                            </div>
+                            <a href="/admin-notification-analytics.html" class="content-card-link">Full report</a>
                         </div>
                         <div style="padding:12px 16px 16px">
                             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
@@ -2754,12 +2775,12 @@
 
                     <!-- App Versions Widget -->
                     <div class="card card-animate" style="animation-delay:440ms">
-                        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
-                            <h3 class="card-title" style="display:flex;align-items:center;gap:8px;min-width:0">
-                                <span style="flex-shrink:0;width:8px;height:8px;background:#10b981;border-radius:50%"></span>
-                                <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">App Versions</span>
-                            </h3>
-                            <a href="/admin-app-versions.html" style="flex-shrink:0;font-size:12px;color:var(--primary);text-decoration:none;padding:4px 10px;background:var(--bg-active);border-radius:12px;font-weight:600;margin-left:8px">View all</a>
+                        <div class="content-card-header">
+                            <div class="content-card-title">
+                                <div class="cct-icon" style="background:rgba(16,185,129,.1);color:#10b981;"><i data-lucide="smartphone"></i></div>
+                                App Versions
+                            </div>
+                            <a href="/admin-app-versions.html" class="content-card-link">View all</a>
                         </div>
                         <div style="padding:12px 16px 16px">
                             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
@@ -2780,12 +2801,12 @@
 
                     <!-- iOS Builds widget -->
                     <div class="card card-animate" style="animation-delay:450ms">
-                        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
-                            <h3 class="card-title" style="display:flex;align-items:center;gap:8px;min-width:0">
-                                <span style="flex-shrink:0;width:8px;height:8px;background:#f97316;border-radius:50%"></span>
-                                <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">iOS Builds</span>
-                            </h3>
-                            <a href="/admin-codemagic.html" style="flex-shrink:0;font-size:12px;color:var(--primary);text-decoration:none;padding:4px 10px;background:var(--bg-active);border-radius:12px;font-weight:600;margin-left:8px">View all</a>
+                        <div class="content-card-header">
+                            <div class="content-card-title">
+                                <div class="cct-icon" style="background:rgba(249,115,22,.1);color:#f97316;"><i data-lucide="zap"></i></div>
+                                iOS Builds
+                            </div>
+                            <a href="/admin-codemagic.html" class="content-card-link">View all</a>
                         </div>
                         <div style="padding:12px 16px 16px" id="cmWidgetBody">
                             <div style="color:var(--text-tertiary);font-size:13px">Loading…</div>
@@ -2794,12 +2815,12 @@
 
                     <!-- Release History widget -->
                     <div class="card card-animate" style="animation-delay:460ms">
-                        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
-                            <h3 class="card-title" style="display:flex;align-items:center;gap:8px;min-width:0">
-                                <span style="flex-shrink:0;width:8px;height:8px;background:#6366f1;border-radius:50%"></span>
-                                <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Release History</span>
-                            </h3>
-                            <a href="/admin-release-history.html" style="flex-shrink:0;font-size:12px;color:var(--primary);text-decoration:none;padding:4px 10px;background:var(--bg-active);border-radius:12px;font-weight:600;margin-left:8px">View all</a>
+                        <div class="content-card-header">
+                            <div class="content-card-title">
+                                <div class="cct-icon" style="background:rgba(99,102,241,.1);color:#6366f1;"><i data-lucide="git-branch"></i></div>
+                                Release History
+                            </div>
+                            <a href="/admin-release-history.html" class="content-card-link">View all</a>
                         </div>
                         <div style="padding:12px 16px 16px" id="rhWidgetBody">
                             <div style="color:var(--text-tertiary);font-size:13px">Loading…</div>
@@ -2815,7 +2836,7 @@
                 <div class="timeline-section card-animate" style="animation-delay:360ms;margin-bottom:0;">
                     <div class="timeline-header" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
                         <div style="display:flex;align-items:center;gap:8px;">
-                            <div class="timeline-title">⚙️ Recent Admin Actions</div>
+                            <div class="timeline-title" style="display:flex;align-items:center;gap:8px;"><div class="chart-title-icon" style="background:rgba(99,102,241,.1);color:#6366f1;"><i data-lucide="settings"></i></div>Admin Actions</div>
                             <span id="alCountBadge" style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--bg-hover);color:var(--text-tertiary);display:none;">0</span>
                         </div>
                         <div style="display:flex;align-items:center;gap:6px;">
@@ -2844,7 +2865,7 @@
                 <!-- ══ Activity Timeline ══ -->
                 <div class="timeline-section card-animate" style="animation-delay:620ms;margin-bottom:0;">
                     <div class="timeline-header">
-                        <div class="timeline-title">Recent Activity</div>
+                        <div class="timeline-title" style="display:flex;align-items:center;gap:8px;"><div class="chart-title-icon" style="background:rgba(16,185,129,.1);color:#10b981;"><i data-lucide="clock"></i></div>Recent Activity</div>
                     </div>
                     <div class="tl-filter-row" id="tlFilterRow">
                         <button class="tl-filter-btn active" data-tlcat="all"     onclick="setTimelineFilter('all')">All</button>
@@ -2867,10 +2888,10 @@
                 <!-- ══ Prayer Times Health ══ -->
                 <div class="card card-animate collapsible-card" id="prayerHealthCard" style="animation-delay:400ms;">
                     <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-light);padding-bottom:14px;margin-bottom:4px;flex-wrap:wrap;gap:8px;cursor:pointer;" onclick="toggleCollapse('prayer')">
-                        <h3 class="card-title" style="display:flex;align-items:center;gap:8px;">
-                            <span style="width:8px;height:8px;background:#f59e0b;border-radius:50%;"></span>
+                        <div class="content-card-title" style="font-size:14px;font-weight:700;color:var(--text-primary);">
+                            <div class="cct-icon" style="background:rgba(245,158,11,.1);color:#f59e0b;"><i data-lucide="clock"></i></div>
                             Prayer Times Health
-                        </h3>
+                        </div>
                         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;" onclick="event.stopPropagation()">
                             <span id="prayerHealthUpdated" style="font-size:11px;color:var(--text-tertiary);"></span>
                             <button onclick="forcePrayerCacheRefresh(this)" style="font-size:12px;color:#fff;background:#ef4444;border:none;padding:5px 14px;border-radius:8px;cursor:pointer;font-weight:600;transition:opacity .2s;" title="Bumps prayer_cache_version — all phones purge cache on next open">
@@ -2965,10 +2986,10 @@
                 <!-- ══ Translation Cache Health ══ -->
                 <div class="card card-animate collapsible-card" id="i18nHealthCard" style="animation-delay:420ms;">
                     <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-light);padding-bottom:14px;margin-bottom:4px;flex-wrap:wrap;gap:8px;cursor:pointer;" onclick="toggleCollapse('i18n')">
-                        <h3 class="card-title" style="display:flex;align-items:center;gap:8px;">
-                            <span style="width:8px;height:8px;background:#8b5cf6;border-radius:50%;"></span>
+                        <div class="content-card-title" style="font-size:14px;font-weight:700;color:var(--text-primary);">
+                            <div class="cct-icon" style="background:rgba(139,92,246,.1);color:#8b5cf6;"><i data-lucide="globe"></i></div>
                             Translation Cache Health
-                        </h3>
+                        </div>
                         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;" onclick="event.stopPropagation()">
                             <span id="i18nVersionBadge" style="font-size:11px;color:var(--text-tertiary);padding:3px 10px;background:var(--bg-hover);border-radius:12px;font-weight:600;">version —</span>
                             <span id="i18nPublishedBadge" style="font-size:11px;color:var(--text-tertiary);">last published —</span>
@@ -3017,10 +3038,10 @@
                 <!-- ══ Widget Health ══ -->
                 <div class="card card-animate collapsible-card" id="widgetHealthCard" style="animation-delay:440ms;">
                     <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-light);padding-bottom:14px;margin-bottom:4px;flex-wrap:wrap;gap:8px;cursor:pointer;" onclick="toggleCollapse('widget')">
-                        <h3 class="card-title" style="display:flex;align-items:center;gap:8px;">
-                            <span style="width:8px;height:8px;background:#3b82f6;border-radius:50%;"></span>
+                        <div class="content-card-title" style="font-size:14px;font-weight:700;color:var(--text-primary);">
+                            <div class="cct-icon" style="background:rgba(59,130,246,.1);color:#3b82f6;"><i data-lucide="monitor"></i></div>
                             Widget Health
-                        </h3>
+                        </div>
                         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;" onclick="event.stopPropagation()">
                             <span id="widgetHealthUpdated" style="font-size:11px;color:var(--text-tertiary);"></span>
                             <button onclick="forceWidgetRefreshAdmin(this)" style="font-size:12px;color:#fff;background:#3b82f6;border:none;padding:5px 14px;border-radius:8px;cursor:pointer;font-weight:600;transition:opacity .2s;" title="Bumps widget_refresh_nonce — all iOS devices force-refresh on next open">
@@ -3071,12 +3092,12 @@
 
                 <!-- ══ Recent Messages (super_admin only) ══ -->
                 <div class="card messages-section" id="recent-messages-card">
-                    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-light);padding-bottom:14px;margin-bottom:4px;">
-                        <h3 class="card-title" style="display:flex;align-items:center;gap:8px;">
-                            <span style="width:8px;height:8px;background:#10b981;border-radius:50%;"></span>
+                    <div class="content-card-header">
+                        <div class="content-card-title">
+                            <div class="cct-icon" style="background:rgba(16,185,129,.1);color:#10b981;"><i data-lucide="mail"></i></div>
                             Recent Messages
-                        </h3>
-                        <a href="/admin-messages.html" style="font-size:12px;color:var(--primary);text-decoration:none;padding:4px 10px;background:var(--bg-active);border-radius:12px;transition:all 0.2s;font-weight:600;">View all</a>
+                        </div>
+                        <a href="/admin-messages.html" class="content-card-link">View all</a>
                     </div>
                     <div class="table-container">
                         <table>
@@ -3103,12 +3124,12 @@
 
                 <!-- ══ Recent Audit Logs (super_admin only) ══ -->
                 <div class="card audit-logs-section" id="audit-logs-card">
-                    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-light);padding-bottom:14px;margin-bottom:4px;">
-                        <h3 class="card-title" style="display:flex;align-items:center;gap:8px;">
-                            <span style="width:8px;height:8px;background:#8b5cf6;border-radius:50%;"></span>
+                    <div class="content-card-header">
+                        <div class="content-card-title">
+                            <div class="cct-icon" style="background:rgba(139,92,246,.1);color:#8b5cf6;"><i data-lucide="shield"></i></div>
                             Recent Audit Logs
-                        </h3>
-                        <a href="/admin-audit.html" style="font-size:12px;color:var(--primary);text-decoration:none;padding:4px 10px;background:var(--bg-active);border-radius:12px;transition:all 0.2s;font-weight:600;">View all</a>
+                        </div>
+                        <a href="/admin-audit.html" class="content-card-link">View all</a>
                     </div>
                     <div class="table-container">
                         <table>
@@ -3133,23 +3154,6 @@
                 </div>
 
                 </div><!-- /messages-audit-row -->
-
-                <!-- ══ System Status Bar ══ -->
-                <div class="system-status-bar" id="systemStatusBar">
-                    <div class="status-item">
-                        <span class="status-dot green" id="statusDotSystem"></span>
-                        <span>System: Online</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="status-dot green" id="statusDotDb"></span>
-                        <span>Database: Connected</span>
-                    </div>
-                    <div class="status-item" id="statusSync">
-                        <span>Last sync: --</span>
-                    </div>
-                    <div id="healthScoreBadge" style="display:none;" class="health-score-badge green" title="System health score based on errors, DB and sync status"></div>
-                    <div class="role-badge" id="roleBadge">admin</div>
-                </div>
             </div>
         </main>
     </div>
