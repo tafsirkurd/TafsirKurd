@@ -1782,6 +1782,54 @@
             line-height: 1.3;
         }
         .mg-set-btn:hover { color: var(--primary); }
+
+        /* ── User Lifecycle Section ── */
+        .ul-stat-strip { display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap; }
+        .ul-stat-pill { flex:1;min-width:90px;background:var(--bg-surface);border:1px solid var(--border-light);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px; }
+        .ul-stat-val { font-size:22px;font-weight:800;color:var(--text-primary);letter-spacing:-0.5px; }
+        .ul-stat-lbl { font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-tertiary); }
+        .ul-stat-pill.pill-green .ul-stat-val { color:#10b981; }
+        .ul-stat-pill.pill-blue  .ul-stat-val { color:#3b82f6; }
+        .ul-stat-pill.pill-purple .ul-stat-val { color:#8b5cf6; }
+        .ul-stat-pill.pill-gray  .ul-stat-val { color:#64748b; }
+        .ul-table-card { background:var(--bg-surface);border:1px solid var(--border-light);border-radius:16px;overflow:hidden;margin-bottom:20px; }
+        .ul-table-header { display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border-light); }
+        .ul-table-title { display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700;color:var(--text-primary); }
+        .ul-table-icon { width:28px;height:28px;border-radius:8px;background:rgba(59,130,246,.1);color:#3b82f6;display:flex;align-items:center;justify-content:center; }
+        .ul-filter-sel { font-size:12px;padding:4px 10px;border-radius:8px;border:1px solid var(--border-light);background:var(--bg-active);color:var(--text-secondary);cursor:pointer;font-family:inherit; }
+        .ul-table { width:100%;border-collapse:collapse; }
+        .ul-table th { text-align:left;padding:9px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);background:var(--bg-active);border-bottom:1px solid var(--border-light);white-space:nowrap; }
+        .ul-table td { padding:10px 14px;border-bottom:1px solid var(--border-light);font-size:13px;vertical-align:middle; }
+        .ul-table tbody tr:last-child td { border-bottom:none; }
+        .ul-table tbody tr { cursor:pointer;transition:background .12s; }
+        .ul-table tbody tr:hover { background:var(--bg-hover); }
+        .ul-user-cell { display:flex;align-items:center;gap:9px; }
+        .ul-avatar { width:30px;height:30px;border-radius:50%;background:var(--bg-active);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--text-secondary);flex-shrink:0;overflow:hidden; }
+        .ul-avatar img { width:100%;height:100%;object-fit:cover;border-radius:50%; }
+        .ul-user-name { font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px; }
+        .ul-user-email { font-size:11px;color:var(--text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px; }
+        .ul-badge { display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:2px 8px;border-radius:10px;white-space:nowrap; }
+        .ul-badge-online  { background:rgba(16,185,129,.12);color:#10b981; }
+        .ul-badge-recent  { background:rgba(59,130,246,.1);color:#3b82f6; }
+        .ul-badge-active  { background:rgba(245,158,11,.1);color:#f59e0b; }
+        .ul-badge-dormant { background:rgba(100,116,139,.1);color:#64748b; }
+        .ul-progress-bar  { height:3px;background:var(--bg-active);border-radius:2px;overflow:hidden;width:56px;display:inline-block;vertical-align:middle;margin-left:6px; }
+        .ul-progress-fill { height:100%;background:linear-gradient(90deg,#10b981,#3b82f6);border-radius:2px; }
+        /* Profile modal */
+        .ul-modal-bg { position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px); }
+        .ul-modal-box { background:var(--bg-surface);border:1px solid var(--border-light);border-radius:20px;width:100%;max-width:500px;max-height:88vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.3); }
+        .ul-modal-head { display:flex;align-items:center;gap:14px;padding:22px 22px 0; }
+        .ul-modal-avatar { width:56px;height:56px;border-radius:50%;background:var(--bg-active);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:var(--text-secondary);flex-shrink:0;overflow:hidden; }
+        .ul-modal-avatar img { width:100%;height:100%;object-fit:cover;border-radius:50%; }
+        .ul-modal-name { font-size:17px;font-weight:800;color:var(--text-primary); }
+        .ul-modal-email { font-size:12px;color:var(--text-tertiary);margin-top:2px; }
+        .ul-modal-grid { display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:18px 22px; }
+        .ul-modal-stat { background:var(--bg-active);border-radius:10px;padding:11px 13px; }
+        .ul-modal-stat-lbl { font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-tertiary);margin-bottom:3px; }
+        .ul-modal-stat-val { font-size:13px;font-weight:600;color:var(--text-primary); }
+        .ul-modal-progress { padding:0 22px 20px; }
+        .ul-modal-close-btn { background:var(--bg-active);border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;color:var(--text-secondary);margin-left:auto; }
+        .ul-modal-close-btn:hover { background:var(--bg-hover); }
     </style>
     <style id="early-sidebar-hide">
         .sidebar-nav { visibility: visible; }
@@ -2220,6 +2268,51 @@
                         </div>
                     </div>
                     <div class="heatmap-summary" id="heatmapSummary"></div>
+                </div>
+
+                <!-- ══ User Lifecycle ══ -->
+                <div class="section-label" style="margin-top:16px;"><span class="sl-icon" style="background:rgba(59,130,246,.12);color:#3b82f6;"><i data-lucide="users"></i></span>User Lifecycle</div>
+                <div class="ul-stat-strip">
+                    <div class="ul-stat-pill pill-green"><div class="ul-stat-val" id="ulNewToday">—</div><div class="ul-stat-lbl">New Today</div></div>
+                    <div class="ul-stat-pill pill-blue"><div class="ul-stat-val" id="ulNewWeek">—</div><div class="ul-stat-lbl">New This Week</div></div>
+                    <div class="ul-stat-pill pill-purple"><div class="ul-stat-val" id="ulActiveWeek">—</div><div class="ul-stat-lbl">Active 7d</div></div>
+                    <div class="ul-stat-pill pill-gray"><div class="ul-stat-val" id="ulDormant">—</div><div class="ul-stat-lbl">Dormant 30d+</div></div>
+                    <div class="ul-stat-pill"><div class="ul-stat-val" id="ulReaders">—</div><div class="ul-stat-lbl">Readers</div></div>
+                </div>
+                <div class="ul-table-card card-animate" id="ulTableCard" style="animation-delay:520ms;">
+                    <div class="ul-table-header">
+                        <div class="ul-table-title">
+                            <div class="ul-table-icon"><i data-lucide="clock" style="width:14px;height:14px;"></i></div>
+                            Users by Last Activity
+                        </div>
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <select id="ulFilter" class="ul-filter-sel">
+                                <option value="all">All Users</option>
+                                <option value="online">Online Now</option>
+                                <option value="active7">Active 7d</option>
+                                <option value="active30">Active 30d</option>
+                                <option value="dormant">Dormant 30d+</option>
+                                <option value="new7">New (7d)</option>
+                            </select>
+                            <a href="/admin-users.html" style="font-size:12px;color:var(--primary);text-decoration:none;font-weight:600;">All users →</a>
+                        </div>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table class="ul-table">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Joined</th>
+                                    <th>Last Seen</th>
+                                    <th>Quran</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ulTableBody">
+                                <tr><td colspan="5" style="text-align:center;color:var(--text-tertiary);padding:24px;">Loading…</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <!-- ══ Quick Actions ══ -->
@@ -2975,6 +3068,8 @@
                 await loadDashboardData();
                 loadOnlineUsers();
                 setInterval(loadOnlineUsers, 30 * 1000);
+                loadUserLifecycle();
+                setInterval(loadUserLifecycle, 10 * 60 * 1000);
                 loadAdminTeamOnline();
                 subscribeAdminTeamOnline();
                 setInterval(loadAdminTeamOnline, 15 * 1000);
@@ -6033,6 +6128,8 @@
 
                 // Platform split widget
                 renderPlatformSplit(p, data.count || 0);
+                // Sync online IDs into lifecycle table
+                _ulSyncOnlineIds(data.userIds || []);
             } catch (e) {
                 console.error('loadOnlineUsers:', e);
             }
@@ -6331,6 +6428,213 @@
                 more.textContent = '+' + (users.length - MAX);
                 list.appendChild(more);
             }
+        }
+
+        /* ═══════════════════════════════════════════════
+           USER LIFECYCLE TABLE + PROFILE MODAL
+           ═══════════════════════════════════════════════ */
+        var _ulUsers = [];
+        var _ulOnlineIds = new Set();
+        var _ulCurrentFilter = 'all';
+
+        function _ulSetEl(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; }
+
+        function _ulTimeAgo(iso) {
+            if (!iso) return '—';
+            var ms = Date.now() - new Date(iso).getTime();
+            var s = Math.floor(ms / 1000);
+            if (s < 60) return 'just now';
+            var m = Math.floor(s / 60);
+            if (m < 60) return m + 'm ago';
+            var h = Math.floor(m / 60);
+            if (h < 24) return h + 'h ago';
+            var d = Math.floor(h / 24);
+            if (d < 30) return d + 'd ago';
+            return Math.floor(d / 30) + 'mo ago';
+        }
+
+        function _ulStatus(userId, lastActive) {
+            if (_ulOnlineIds.has(userId)) return 'online';
+            if (!lastActive) return 'dormant';
+            var ms = Date.now() - new Date(lastActive).getTime();
+            if (ms < 10 * 60 * 1000) return 'online';
+            if (ms < 7  * 24 * 60 * 60 * 1000) return 'recent';
+            if (ms < 30 * 24 * 60 * 60 * 1000) return 'active';
+            return 'dormant';
+        }
+
+        function _ulBadge(status) {
+            var m = { online:{cls:'ul-badge-online',lbl:'Online'}, recent:{cls:'ul-badge-recent',lbl:'7d'}, active:{cls:'ul-badge-active',lbl:'30d'}, dormant:{cls:'ul-badge-dormant',lbl:'Dormant'} };
+            var s = m[status] || m.dormant;
+            return '<span class="ul-badge ' + s.cls + '">● ' + s.lbl + '</span>';
+        }
+
+        function _ulSyncOnlineIds(ids) {
+            _ulOnlineIds = new Set(ids || []);
+            if (_ulUsers.length) _ulRenderTable(_ulCurrentFilter);
+        }
+
+        async function loadUserLifecycle() {
+            var tok = sessionStorage.getItem('adminToken');
+            if (!tok) return;
+            try {
+                var res = await fetch('/admin-users-data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
+                    body: JSON.stringify({ action: 'get_users', token: tok })
+                });
+                var d = await res.json();
+                if (!d.success || !d.users) return;
+                _ulUsers = d.users;
+
+                var now = Date.now();
+                var todayStart = new Date(); todayStart.setHours(0,0,0,0);
+                var week7 = now - 7  * 24 * 60 * 60 * 1000;
+                var day30 = now - 30 * 24 * 60 * 60 * 1000;
+
+                _ulSetEl('ulNewToday',  _ulUsers.filter(function(u){ return new Date(u.created_at) >= todayStart; }).length);
+                _ulSetEl('ulNewWeek',   _ulUsers.filter(function(u){ return new Date(u.created_at) >= week7; }).length);
+                _ulSetEl('ulActiveWeek',_ulUsers.filter(function(u){ return new Date(u.last_active||u.created_at) >= week7; }).length);
+                _ulSetEl('ulDormant',   _ulUsers.filter(function(u){ return new Date(u.last_active||u.created_at) < day30; }).length);
+                _ulSetEl('ulReaders',   _ulUsers.filter(function(u){ return (u.totalAyahsRead||0) > 0; }).length);
+
+                _ulRenderTable(_ulCurrentFilter);
+
+                var sel = document.getElementById('ulFilter');
+                if (sel && !sel._ulBound) {
+                    sel._ulBound = true;
+                    sel.addEventListener('change', function() {
+                        _ulCurrentFilter = this.value;
+                        _ulRenderTable(this.value);
+                    });
+                }
+            } catch(e) { console.error('loadUserLifecycle:', e); }
+        }
+
+        function _ulRenderTable(filter) {
+            var tbody = document.getElementById('ulTableBody');
+            if (!tbody || !_ulUsers.length) return;
+
+            var now = Date.now();
+            var week7 = now - 7  * 24 * 60 * 60 * 1000;
+            var day30 = now - 30 * 24 * 60 * 60 * 1000;
+            var min10 = now - 10 * 60 * 1000;
+
+            var filtered = _ulUsers.filter(function(u) {
+                var la     = new Date(u.last_active || u.created_at).getTime();
+                var joined = new Date(u.created_at).getTime();
+                var online = _ulOnlineIds.has(u.id) || la > min10;
+                if (filter === 'online')  return online;
+                if (filter === 'active7') return la >= week7;
+                if (filter === 'active30') return la >= day30 && la < week7;
+                if (filter === 'dormant') return la < day30;
+                if (filter === 'new7')    return joined >= week7;
+                return true;
+            });
+
+            var sorted = filtered.slice().sort(function(a,b){
+                return new Date(b.last_active||b.created_at) - new Date(a.last_active||a.created_at);
+            }).slice(0, 40);
+
+            if (!sorted.length) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-tertiary);padding:20px;">No users in this filter</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = sorted.map(function(u) {
+                var status   = _ulStatus(u.id, u.last_active);
+                var ayahs    = u.totalAyahsRead || 0;
+                var pct      = Math.min(100, (ayahs / 6236) * 100).toFixed(0);
+                var initials = (u.name || '?').charAt(0).toUpperCase();
+                var avatarIn = u.avatar
+                    ? '<img src="' + escHtml(u.avatar) + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.onerror=null;this.style.display=\'none\'">'
+                    : initials;
+                return '<tr onclick="ulShowProfile(\'' + escHtml(u.id) + '\')">' +
+                    '<td><div class="ul-user-cell">' +
+                        '<div class="ul-avatar">' + avatarIn + '</div>' +
+                        '<div><div class="ul-user-name" title="' + escHtml(u.name||'') + '">' + escHtml(u.name||'Unknown') + '</div>' +
+                        '<div class="ul-user-email" title="' + escHtml(u.email||'') + '">' + escHtml(u.email||'') + '</div></div>' +
+                    '</div></td>' +
+                    '<td style="color:var(--text-tertiary);font-size:12px;white-space:nowrap;">' +
+                        new Date(u.created_at).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) +
+                    '</td>' +
+                    '<td style="color:var(--text-secondary);font-size:12px;white-space:nowrap;">' + _ulTimeAgo(u.last_active) + '</td>' +
+                    '<td style="white-space:nowrap;">' +
+                        '<span style="font-weight:700;color:var(--text-primary);">' + ayahs.toLocaleString() + '</span>' +
+                        '<span class="ul-progress-bar"><span class="ul-progress-fill" style="width:' + pct + '%;"></span></span>' +
+                    '</td>' +
+                    '<td>' + _ulBadge(status) + '</td>' +
+                '</tr>';
+            }).join('');
+        }
+
+        function ulShowProfile(userId) {
+            var u = _ulUsers.find(function(x){ return x.id === userId; });
+            if (!u) return;
+            var old = document.getElementById('ulProfileModal');
+            if (old) old.remove();
+
+            var status  = _ulStatus(u.id, u.last_active);
+            var ayahs   = u.totalAyahsRead || 0;
+            var readPct = Math.min(100, (ayahs / 6236) * 100).toFixed(1);
+            var initials = (u.name || '?').charAt(0).toUpperCase();
+            var avatarHtml = u.avatar
+                ? '<img src="' + escHtml(u.avatar) + '" onerror="this.onerror=null;this.style.display=\'none\'">'
+                : initials;
+
+            var SURAH = ['','Al-Fātiḥah','Al-Baqarah','Āl ʿImrān','An-Nisāʾ','Al-Māʾidah','Al-Anʿām','Al-Aʿrāf','Al-Anfāl','At-Tawbah','Yūnus','Hūd','Yūsuf','Ar-Raʿd','Ibrāhīm','Al-Ḥijr','An-Naḥl','Al-Isrāʾ','Al-Kahf','Maryam','Ṭāhā'];
+            var posLabel = u.currentSurah
+                ? (SURAH[u.currentSurah] || 'Surah ' + u.currentSurah) + (u.currentAyah ? ' :' + u.currentAyah : '')
+                : '—';
+
+            function ms(lbl, val) {
+                return '<div class="ul-modal-stat"><div class="ul-modal-stat-lbl">' + lbl + '</div><div class="ul-modal-stat-val">' + val + '</div></div>';
+            }
+
+            var modal = document.createElement('div');
+            modal.id = 'ulProfileModal';
+            modal.className = 'ul-modal-bg';
+            modal.onclick = function(e){ if(e.target===modal) modal.remove(); };
+            modal.innerHTML =
+                '<div class="ul-modal-box">' +
+                    '<div class="ul-modal-head">' +
+                        '<div class="ul-modal-avatar">' + avatarHtml + '</div>' +
+                        '<div style="flex:1;min-width:0;">' +
+                            '<div class="ul-modal-name">' + escHtml(u.name||'Unknown') + '</div>' +
+                            '<div class="ul-modal-email">' + escHtml(u.email||'') + '</div>' +
+                            '<div style="margin-top:6px;">' + _ulBadge(status) + '</div>' +
+                        '</div>' +
+                        '<button class="ul-modal-close-btn" onclick="document.getElementById(\'ulProfileModal\').remove()">✕</button>' +
+                    '</div>' +
+                    '<div class="ul-modal-grid">' +
+                        ms('Joined',            new Date(u.created_at).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})) +
+                        ms('Last Seen',         _ulTimeAgo(u.last_active)) +
+                        ms('Reg. Source',       escHtml(u.registration_source||'—')) +
+                        ms('Theme',             escHtml(u.theme||'—')) +
+                        ms('Ayahs Read',        ayahs.toLocaleString() + ' / 6,236 (' + readPct + '%)') +
+                        ms('Best Streak',       (u.bestStreak||0) + ' days') +
+                        ms('Active Days (30d)', String(u.activeDays30||0)) +
+                        ms('Active Days (all)', String(u.activeDaysTotal||0)) +
+                        ms('Bookmarks',         String(u.bookmarksCount||0)) +
+                        ms('Surahs Started',    String(u.surahsStarted||0)) +
+                        ms('Surahs Completed',  String(u.surahsCompleted||0)) +
+                        ms('Position',          posLabel) +
+                        ms('Reading Goal',      u.readingGoal ? u.readingGoal + ' ayahs/day' : 'Not set') +
+                        ms('Reciter',           escHtml(u.reciter||'—')) +
+                        ms('Daily Reminder',    u.dailyReminder ? '✅ On' : '❌ Off') +
+                        ms('Tafsir',            u.showTafsir !== false ? '✅ On' : '❌ Off') +
+                    '</div>' +
+                    '<div class="ul-modal-progress">' +
+                        '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-tertiary);margin-bottom:6px;">Quran Progress — ' + readPct + '%</div>' +
+                        '<div style="height:6px;background:var(--bg-active);border-radius:3px;overflow:hidden;">' +
+                            '<div style="width:' + readPct + '%;height:100%;background:linear-gradient(90deg,#10b981,#3b82f6);border-radius:3px;"></div>' +
+                        '</div>' +
+                        '<div style="display:flex;justify-content:space-between;margin-top:4px;font-size:11px;color:var(--text-tertiary);">' +
+                            '<span>0</span><span>' + ayahs.toLocaleString() + ' read</span><span>6,236</span>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+            document.body.appendChild(modal);
         }
 
         /* ─── Admin Team Online ──────────────────────────────────────
