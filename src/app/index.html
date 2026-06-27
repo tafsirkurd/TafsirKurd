@@ -194,8 +194,8 @@ if(window.isNativePlatform&&window.Capacitor.Plugins.StatusBar){
 /* Critical: theme bg applied before external CSS loads — prevents flash */
 html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 </style>
-<link rel="preload" href="/app/app-styles.min.css?v=13" as="style">
-<link rel="stylesheet" href="/app/app-styles.min.css?v=13">
+<link rel="preload" href="/app/app-styles.min.css?v=14" as="style">
+<link rel="stylesheet" href="/app/app-styles.min.css?v=14">
 <style>
 /* Search bar — open: spring bounce */
 .search-bar.on{transform:translateY(0) scale(1);opacity:1;pointer-events:auto;padding:10px 16px 12px;max-height:600px;transition:max-height .01s,padding .01s,opacity .3s cubic-bezier(0.34,1.56,0.64,1),transform .3s cubic-bezier(0.34,1.56,0.64,1)}
@@ -856,13 +856,136 @@ if ('serviceWorker' in navigator && !(window.Capacitor && window.Capacitor.isNat
   var _swLoadTs = Date.now();
   navigator.serviceWorker.addEventListener('controllerchange', function() {
     if (Date.now() - _swLoadTs < 4000) { location.reload(); return; }
-    if (document.getElementById('sw-update-bar')) return;
-    var b = document.createElement('div');
-    b.id = 'sw-update-bar';
-    b.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#1a56db;color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:10px;z-index:99999;font-family:sans-serif;font-size:14px;box-shadow:0 -2px 8px rgba(0,0,0,.2)';
-    b.innerHTML = '🔄 App updated! <button onclick="location.reload()" style="background:#fff;color:#1a56db;border:none;padding:4px 14px;border-radius:5px;font-size:13px;font-weight:600;cursor:pointer">Refresh Now</button><button onclick="this.parentNode.remove()" style="background:transparent;border:none;color:rgba(255,255,255,.75);font-size:20px;cursor:pointer;padding:0 4px">×</button>';
-    document.body.appendChild(b);
+    _showSwUpdateCard();
   });
+
+  function _showSwUpdateCard() {
+    if (document.getElementById('sw-update-card')) return;
+
+    var card = document.createElement('div');
+    card.id = 'sw-update-card';
+    card.setAttribute('role', 'status');
+    card.setAttribute('aria-live', 'polite');
+    card.setAttribute('aria-label', 'App updated — refresh to apply');
+
+    // Icon container
+    var iconWrap = document.createElement('div');
+    iconWrap.className = 'swu-icon-wrap';
+    var iconSvg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+    iconSvg.setAttribute('width','20');iconSvg.setAttribute('height','20');
+    iconSvg.setAttribute('viewBox','0 0 24 24');iconSvg.setAttribute('fill','none');
+    iconSvg.setAttribute('stroke','currentColor');iconSvg.setAttribute('stroke-width','2');
+    iconSvg.setAttribute('stroke-linecap','round');iconSvg.setAttribute('stroke-linejoin','round');
+    iconSvg.setAttribute('aria-hidden','true');
+    var p1=document.createElementNS('http://www.w3.org/2000/svg','path');
+    p1.setAttribute('d','M21.5 2v6h-6');
+    var p2=document.createElementNS('http://www.w3.org/2000/svg','path');
+    p2.setAttribute('d','M21.34 15.57a10 10 0 1 1-.57-8.38');
+    iconSvg.appendChild(p1);iconSvg.appendChild(p2);
+    iconWrap.appendChild(iconSvg);
+
+    // Text block
+    var textWrap = document.createElement('div');
+    textWrap.className = 'swu-text';
+    var title = document.createElement('div');
+    title.className = 'swu-title';
+    title.textContent = (window.tSafe && tSafe('update.sw_title')) || 'Update Ready';
+    var desc = document.createElement('div');
+    desc.className = 'swu-desc';
+    desc.textContent = (window.tSafe && tSafe('update.sw_desc')) || 'A new version is available';
+    textWrap.appendChild(title);
+    textWrap.appendChild(desc);
+
+    // Close button
+    var closeBtn = document.createElement('button');
+    closeBtn.className = 'swu-close';
+    closeBtn.setAttribute('aria-label', 'Dismiss');
+    closeBtn.setAttribute('type', 'button');
+    var closeSvg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+    closeSvg.setAttribute('width','14');closeSvg.setAttribute('height','14');
+    closeSvg.setAttribute('viewBox','0 0 24 24');closeSvg.setAttribute('fill','none');
+    closeSvg.setAttribute('stroke','currentColor');closeSvg.setAttribute('stroke-width','2.5');
+    closeSvg.setAttribute('stroke-linecap','round');closeSvg.setAttribute('aria-hidden','true');
+    var cl1=document.createElementNS('http://www.w3.org/2000/svg','line');
+    cl1.setAttribute('x1','18');cl1.setAttribute('y1','6');cl1.setAttribute('x2','6');cl1.setAttribute('y2','18');
+    var cl2=document.createElementNS('http://www.w3.org/2000/svg','line');
+    cl2.setAttribute('x1','6');cl2.setAttribute('y1','6');cl2.setAttribute('x2','18');cl2.setAttribute('y2','18');
+    closeSvg.appendChild(cl1);closeSvg.appendChild(cl2);
+    closeBtn.appendChild(closeSvg);
+
+    // Action row
+    var actions = document.createElement('div');
+    actions.className = 'swu-actions';
+    var refreshBtn = document.createElement('button');
+    refreshBtn.className = 'swu-refresh-btn';
+    refreshBtn.setAttribute('type', 'button');
+    refreshBtn.setAttribute('aria-label', 'Refresh now to apply update');
+    refreshBtn.textContent = (window.tSafe && tSafe('update.sw_btn')) || 'Refresh Now';
+    var laterBtn = document.createElement('button');
+    laterBtn.className = 'swu-later-btn';
+    laterBtn.setAttribute('type', 'button');
+    laterBtn.textContent = (window.tSafe && tSafe('update.sw_later')) || 'Later';
+    actions.appendChild(refreshBtn);
+    actions.appendChild(laterBtn);
+
+    // Top row: icon + text + close
+    var topRow = document.createElement('div');
+    topRow.className = 'swu-top';
+    topRow.appendChild(iconWrap);
+    topRow.appendChild(textWrap);
+    topRow.appendChild(closeBtn);
+
+    card.appendChild(topRow);
+    card.appendChild(actions);
+    document.body.appendChild(card);
+
+    // Haptics
+    try { if (window.H) H.light(); } catch(e) {}
+
+    // Animate in — double rAF for spring entry from slightly below
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){ card.classList.add('swu-in'); });
+    });
+
+    function _dismiss(andReload) {
+      card.classList.remove('swu-in');
+      card.classList.add('swu-out');
+      setTimeout(function(){ if(card.parentNode) card.parentNode.removeChild(card); }, 380);
+      if (andReload) setTimeout(function(){ location.reload(); }, 120);
+    }
+
+    refreshBtn.addEventListener('click', function() { _dismiss(true); });
+    laterBtn.addEventListener('click', function() { _dismiss(false); });
+    closeBtn.addEventListener('click', function() { _dismiss(false); });
+
+    // Swipe-up to dismiss (card is top-positioned, upward swipe = away from content)
+    var _sy=0, _sd=0, _sa=false;
+    card.addEventListener('touchstart', function(e){
+      _sy=e.touches[0].clientY; _sd=0; _sa=true;
+      card.style.transition='none';
+    },{passive:true});
+    card.addEventListener('touchmove', function(e){
+      if(!_sa)return;
+      var d=e.touches[0].clientY-_sy; // negative = upward
+      _sd=d>0?0:-d; // only upward, clamped >= 0
+      card.style.transform='translateY('+(-_sd)+'px)';
+      card.style.opacity=String(Math.max(0,1-_sd/90));
+    },{passive:true});
+    function _touchEnd(){
+      if(!_sa)return; _sa=false;
+      var vel=_sd/(Date.now()-_sy+1);
+      if(_sd>50||vel>0.35){
+        card.style.transition='';
+        _dismiss(false);
+      } else {
+        card.style.transition='';
+        card.style.transform='';
+        card.style.opacity='';
+      }
+    }
+    card.addEventListener('touchend',_touchEnd,{passive:true});
+    card.addEventListener('touchcancel',_touchEnd,{passive:true});
+  }
 
   /* Handle NOTIF_TAP messages from the SW (web push notification taps when app is open).
      SW sends: postMessage({ type:'NOTIF_TAP', extra:{type, id} }) via clients.postMessage.
