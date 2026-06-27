@@ -32,10 +32,12 @@ DECLARE
     'messages',
     'notification-analytics',
     'notifications',
+    'reading-stats',
     'release-history',
     'schedule',
     'search-console',
     'social-stats',
+    'system-health',
     'tasks',
     'translations',
     'updates',
@@ -73,8 +75,8 @@ FROM
     'bot-protection','codemagic','dashboard','database','db-health',
     'email-templates','errors','features','gencine','header-animation',
     'images','islamvoice-management','jobs','links','messages',
-    'notification-analytics','notifications','release-history','schedule',
-    'search-console','social-stats','tasks','translations','updates',
+    'notification-analytics','notifications','reading-stats','release-history','schedule',
+    'search-console','social-stats','system-health','tasks','translations','updates',
     'users','videos','website','widget-health'
   ]) AS slug) p
   CROSS JOIN (SELECT COUNT(*) AS id FROM admin_users WHERE role = 'custom' AND is_active = true) au
