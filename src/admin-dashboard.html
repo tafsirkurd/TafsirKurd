@@ -1046,6 +1046,14 @@
                 padding-right: max(12px, env(safe-area-inset-right));
                 padding-bottom: max(32px, env(safe-area-inset-bottom, 32px));
             }
+            /* Reset ul-table from global card-stacking (admin-styles.css applies broad table rules) */
+            .ul-table { display: table; width: 100%; min-width: 320px; }
+            .ul-table thead { display: table-header-group; }
+            .ul-table tbody { display: table-row-group; flex-direction: unset; gap: 0; }
+            .ul-table tbody tr { display: table-row; background: transparent; border: none; border-radius: 0; overflow: visible; }
+            .ul-table tbody td { display: table-cell; align-items: unset; justify-content: unset; gap: 0; border: none; border-bottom: 1px solid var(--border-light); padding: 10px 14px; font-size: 13px; vertical-align: middle; }
+            .ul-table tbody td::before { display: none; }
+            .ul-table tbody tr:last-child td { border-bottom: none; }
         }
         @media (max-width: 700px) {
             .welcome-header { padding: 16px 18px; margin-bottom: 18px; gap: 10px; }
@@ -1069,6 +1077,14 @@
             .content-card-body { padding: 10px 14px 14px; }
             .ato-card { padding: 14px 16px; }
             .ato-item { max-width: none; flex: 1 1 200px; }
+            /* User Lifecycle pills: 2 per row */
+            .ul-stat-strip { gap: 8px; }
+            .ul-stat-pill { flex: 1 1 calc(50% - 4px); min-width: 0; padding: 10px 12px; }
+            .ul-stat-val { font-size: 18px; }
+            /* User Lifecycle table header: stack filter row below title */
+            .ul-table-header { flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px 16px; }
+            .ul-table-header > div:last-child { width: 100%; }
+            .ul-filter-sel { font-size: 16px; min-height: 36px; }
         }
         @media (max-width: 540px) {
             /* Icon-only mode for welcome header buttons — hide text labels */
@@ -1099,6 +1115,17 @@
             /* Chart insights overflow scroll on tiny screens */
             .chart-insights { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
             .chart-range-tabs { flex-wrap: nowrap; overflow-x: auto; }
+            /* User Lifecycle table: hide non-critical columns on small screens */
+            .ul-table th:nth-child(2), .ul-table td:nth-child(2) { display: none; }
+            .ul-table th:nth-child(4), .ul-table td:nth-child(4) { display: none; }
+            .ul-user-name { max-width: 80px; }
+            .ul-user-email { max-width: 80px; }
+            /* User Lifecycle profile modal: bottom sheet on mobile */
+            .ul-modal-bg { align-items: flex-end; padding: 0; }
+            .ul-modal-box { border-radius: 20px 20px 0 0; max-height: 85vh; }
+            .ul-modal-grid { grid-template-columns: 1fr; gap: 8px; padding: 12px 16px; }
+            .ul-modal-head { padding: 16px 16px 0; }
+            .ul-modal-progress { padding: 0 16px 16px; }
         }
         @media (max-width: 390px) {
             .welcome-left h1 { font-size: 17px; }
@@ -1116,6 +1143,8 @@
             .my-tasks-meta { padding: 10px 14px; }
             .my-task-row { padding: 9px 14px; }
             .my-tasks-footer { padding: 10px 14px; }
+            .ul-stat-val { font-size: 16px; }
+            .ul-stat-lbl { font-size: 9px; }
         }
 
         /* ── Quick Add Task Modal ── */
