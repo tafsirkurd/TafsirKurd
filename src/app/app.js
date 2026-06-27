@@ -991,7 +991,7 @@ var S={
   supabase:null,user:null,syncInterval:null,isSyncing:false,syncFailed:false,syncErrorDetail:null,lastSyncTime:0,realtimeChannel:null,
   readerFont:localStorage.getItem('readerFont')||'hafs',
   glyphVerses:{},
-  mushafFont:'qcf4', // QCF4: fully bundled (fonts + page data) — Mushaf works offline. qcf1/qcf2 need network (GitHub fonts + quran.com API).
+  mushafFont:(function(){var f=localStorage.getItem('mushafFont')||'qpcv1';if(f!=='qpcv1'){try{localStorage.setItem('mushafFont','qpcv1');}catch(e){}}return'qpcv1';})(), // always qpcv1; qcf1/qcf2/qcf4 retained as internal-only fallback
   mushafFontSize:(function(){var ip=document.documentElement.classList.contains('is-ipad');var raw=parseInt(localStorage.getItem(ip?'mushafFontSize_ipad_qcf4':'mushafFontSize_qcf4'))||0;return ip?Math.min(34,Math.max(22,raw||28)):Math.min(24,Math.max(16,raw||22));})(),
   mushafLineH:(function(){var ip=document.documentElement.classList.contains('is-ipad');var raw=parseFloat(localStorage.getItem(ip?'mushafLineH_ipad':'mushafLineH'))||0;return ip?Math.min(2.4,Math.max(1.8,raw||2.0)):Math.min(2.3,Math.max(1.8,raw||1.8));})(),
   copy:{surah:0,ayah:0,rangeFmt:'both'}
@@ -3902,6 +3902,8 @@ var _qcfV2FontInjected={};
 var _qcfV4FontInjected={};
 // pageNum → Promise<boolean> — deduplicates concurrent font-load waits
 var _qcfV4FontLoadP={};
+// QPC V1 (QUL) font tracking — parallel to QCF4, same concurrency model
+var _qpcV1FontInjected={};var _qpcV1FontLoadP={};
 // Concurrency limiter: cap simultaneous QCF4 font fetches to 4 so fast-scroll
 // doesn't exhaust the browser's HTTP connection pool (typically 6 per origin).
 var _qcfFontActive=0,_qcfFontQueue=[];
@@ -4016,12 +4018,62 @@ function ensureQCFV4Font(pageNum){
   return _qcfV4FontLoadP[pageNum];
 }
 
+// ── QPC V1 (QUL) font injection + load wait ─────────────────────────────────
+// Mirrors injectQCFV4Font / ensureQCFV4Font exactly.
+// Fonts bundled at src/assets/fonts/qpcv1/p{N}.woff2 (Android/Web).
+// iOS CDN path: static-cdn.tarteel.ai (cached by SW on first load).
+function injectQPCV1Font(pageNum){
+  if(_qpcV1FontInjected[pageNum])return;
+  _qpcV1FontInjected[pageNum]=true;
+  var s=document.createElement('style');
+  var localSrc=_isIOSCap
+    ?"url('https://static-cdn.tarteel.ai/qul/fonts/quran_fonts/v1/woff2/p"+pageNum+".woff2') format('woff2'),"
+    :"url('/assets/fonts/qpcv1/p"+pageNum+".woff2') format('woff2'),";
+  s.textContent="@font-face{font-family:'QPCv1p"+pageNum+"';src:"+localSrc+"url('https://static-cdn.tarteel.ai/qul/fonts/quran_fonts/v1/woff2/p"+pageNum+".woff2') format('woff2');font-display:block}";
+  document.head.appendChild(s);
+}
+function ensureQPCV1Font(pageNum){
+  if(_qpcV1FontLoadP[pageNum])return _qpcV1FontLoadP[pageNum];
+  injectQPCV1Font(pageNum);
+  var fontName='QPCv1p'+pageNum;
+  function _sentinelOk(){
+    try{
+      var cv=document.createElement('canvas');var cx=cv.getContext('2d');if(!cx)return false;
+      var s='ﭑﭒﭓﭔﭕ'; // QPC V1 sample codepoints
+      cx.font='48px monospace';var wRef=cx.measureText(s).width;
+      cx.font='48px "'+fontName+'",monospace';var wQCF=cx.measureText(s).width;
+      return wQCF>0&&Math.abs(wQCF-wRef)>2;
+    }catch(e){return false;}
+  }
+  if(!document.fonts||!document.fonts.load){_qpcV1FontLoadP[pageNum]=Promise.resolve(false);return _qpcV1FontLoadP[pageNum];}
+  var loadP=_qcfFontSlot(function(){
+    return document.fonts.load('1em "'+fontName+'"').then(function(faces){
+      if(!faces||!faces.length)return false;return _sentinelOk();
+    }).catch(function(){return false;});
+  });
+  var timeoutP=new Promise(function(res){setTimeout(function(){res(false);},5000);});
+  _qpcV1FontLoadP[pageNum]=Promise.race([loadP,timeoutP]).then(function(ok){
+    if(!ok){
+      var probe=_isIOSCap
+        ?('https://static-cdn.tarteel.ai/qul/fonts/quran_fonts/v1/woff2/p'+pageNum+'.woff2')
+        :('/assets/fonts/qpcv1/p'+pageNum+'.woff2');
+      fetch(probe).then(function(r){
+        console.warn('[QuranFont] QPCv1p'+pageNum+' FAILED — '+probe+' → HTTP '+r.status+(r.ok?' (file ok; face did not apply)':' (font file missing from bundle)'));
+      }).catch(function(e){console.warn('[QuranFont] QPCv1p'+pageNum+' FAILED — fetch error: '+(e&&e.message));});
+    }
+    return ok;
+  });
+  return _qpcV1FontLoadP[pageNum];
+}
+
 // Prefetch QCF4 font + page data for a page number — fire and forget.
 function _prefetchMushafPage(pageNum){
   if(pageNum<1||pageNum>604)return;
   var pf=_getPageFields();
   if(S.mushafFont==='qcf4'){
     ensureQCFV4Font(pageNum);
+  } else if(S.mushafFont==='qpcv1'){
+    injectQPCV1Font(pageNum);
   } else if(S.mushafFont==='qcf2'){
     injectQCFV2Font(pageNum);
   } else {
@@ -4053,6 +4105,19 @@ function getMushafPageRange(surahNum){
     });
 }
 
+// Singleton Promise for loading mushaf-v1-pages.json (QPC V1).
+var _mushafV1DataP=null;
+function _loadMushafV1BundledData(){
+  if(window._mushafV1Pages)return Promise.resolve(window._mushafV1Pages);
+  if(_mushafV1DataP)return _mushafV1DataP;
+  var _c=new AbortController();var _t=setTimeout(function(){_c.abort();},_sn.ms(30000,55000));
+  _mushafV1DataP=fetch('/data/mushaf-v1-pages.json',{signal:_c.signal})
+    .then(function(r){clearTimeout(_t);return r.ok?r.json():null;})
+    .then(function(data){if(data&&Array.isArray(data))window._mushafV1Pages=data;return window._mushafV1Pages||null;})
+    .catch(function(){clearTimeout(_t);return null;});
+  return _mushafV1DataP;
+}
+
 // Singleton Promise for loading mushaf-v4-pages.json.
 // Shared across all getMushafPageData calls so the 3 MB file is fetched once only.
 var _mushafV4DataP=null;
@@ -4079,6 +4144,24 @@ function getMushafPageData(pageNum,fields,cachePrefix,mushafId){
   // 2. For QCF4: wait for bundled data to finish loading, THEN check it.
   //    This resolves the race where getMushafPageData was called before the
   //    3 MB JSON fetch completed, causing the bundle check to be skipped.
+  // QPC V1 bundled JSON (mushaf-v1-pages.json) — same pattern as QCF4 below
+  if(fields==='code_v1'&&cachePrefix==='qpcV1r_'){
+    return _loadMushafV1BundledData().then(function(){
+      if(window._mushafV1Pages){
+        var bd1=window._mushafV1Pages[pageNum-1];
+        if(bd1&&bd1.verses&&bd1.verses.length){
+          try{localStorage.setItem(key,JSON.stringify(bd1));}catch(e){}
+          return bd1;
+        }
+      }
+      var _mc1=new AbortController();
+      var _mt1=setTimeout(function(){_mc1.abort();},_sn.ms(12000,22000));
+      return fetch('https://api.quran.com/api/v4/verses/by_page/'+pageNum+'?words=true&word_fields=code_v1&per_page=300',{signal:_mc1.signal})
+        .then(function(r){clearTimeout(_mt1);if(!r.ok)throw new Error(r.status);return r.json();})
+        .then(function(json){try{localStorage.setItem(key,JSON.stringify(json));}catch(e){}return json;})
+        .catch(function(){clearTimeout(_mt1);return{verses:[],_noData:true};});
+    }).catch(function(){return{verses:[],_noData:true};});
+  }
   if(fields==='code_v2'&&mushafId===19){
     return _loadMushafBundledData().then(function(){
       if(window._mushafV4Pages){
@@ -4112,6 +4195,8 @@ function _getPageFields(){
   // qcfV4r_ (was qcfV4p_): bumped 2026-06-12 after the page-assignment repair —
   // pre-fix cached pages contained misplaced boundary verses (soup/dup/holes).
   if(S.mushafFont==='qcf4')return{fields:'code_v2',cache:'qcfV4r_',mushafId:19};
+  // QPC V1 (QUL): fully bundled locally; cache prefix 'qpcV1r_' triggers bundled-data path
+  if(S.mushafFont==='qpcv1')return{fields:'code_v1',cache:'qpcV1r_'};
   return{fields:'code_v1',cache:'qcfV1p_'};
 }
 
@@ -4239,7 +4324,9 @@ App.toggleMushafMode=function(){
 
 // Standard Medina Mushaf (604-page Hafs/Uthmani) — juz start pages
 var JUZ_PAGES=[1,22,42,62,82,102,121,142,162,182,201,222,242,262,282,302,322,342,362,382,402,422,442,462,482,502,522,542,562,582];
-function juzForPage(p){for(var j=JUZ_PAGES.length-1;j>=0;j--){if(p>=JUZ_PAGES[j])return j+1;}return 1;}
+// QPC V1 juz start pages — derived from mushaf-v1-pages.json (juz 7 differs: V1=122 vs QCF4=121)
+var JUZ_PAGES_V1=[1,22,42,62,82,102,122,142,162,182,201,222,242,262,282,302,322,342,362,382,402,422,442,462,482,502,522,542,562,582];
+function juzForPage(p){var jp=S.mushafFont==='qpcv1'?JUZ_PAGES_V1:JUZ_PAGES;for(var j=jp.length-1;j>=0;j--){if(p>=jp[j])return j+1;}return 1;}
 
 function _mushafSkeleton(){
   var sk=el('div','mushaf-skeleton');
@@ -4278,8 +4365,6 @@ function _mushafSkeleton(){
 
 // â”€â”€ Mushaf integrity validation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // pageData = the raw API json; pageEl = rendered DOM element
-var _mushafRenderMetrics={};  // pageNum → {fontMs,dataMs,renderMs,total,height,ok}
-
 function validateMushafPage(pageNum,pageData,pageEl){
   var verses=pageData.verses||[];
   var expectedKeys=[];
@@ -4299,84 +4384,6 @@ function validateMushafPage(pageNum,pageData,pageEl){
   return{pageNum:pageNum,expected:expectedKeys,present:presentKeys,missing:missingKeys,lineCount:lineCount,height:height,ok:ok};
 }
 
-window.MushafDebug={
-  pageMetrics:function(pageNum){
-    var m=_mushafRenderMetrics[pageNum];
-    if(!m){console.log('[MushafDebug] no metrics for page '+pageNum);return null;}
-    console.log('[MushafDebug] page='+pageNum,JSON.stringify(m,null,2));
-    return m;
-  },
-  allMetrics:function(){
-    Object.keys(_mushafRenderMetrics).sort(function(a,b){return+a-+b;}).forEach(function(p){
-      var m=_mushafRenderMetrics[p];
-      console.log('[MushafDebug] page='+p+' ok='+m.ok+' missing='+(m.missing||[]).join(',')
-        +' dataMs='+m.dataMs+' fontMs='+m.fontMs+' total='+m.total+' height='+m.height+'px');
-    });
-    return _mushafRenderMetrics;
-  },
-  validate:function(pageNum){
-    var view=$('mushafView');
-    if(!view)return;
-    var pageEl=view.querySelector('.mushaf-text-page[data-page="'+pageNum+'"]');
-    if(!pageEl){console.warn('[MushafDebug] page el not found: '+pageNum);return;}
-    var pf=_getPageFields();
-    getMushafPageData(pageNum,pf.fields,pf.cache,pf.mushafId).then(function(json){
-      var r=validateMushafPage(pageNum,json,pageEl);
-      console.log('[MushafDebug] validate page='+pageNum,r);
-    });
-  },
-  visibleSurah:function(){
-    var view=$('mushafView');
-    if(!view)return null;
-    var banners=view.querySelectorAll('.mushaf-surah-banner[data-surah]');
-    var viewRect=view.getBoundingClientRect();
-    var best=null,bestTop=Infinity;
-    for(var b=0;b<banners.length;b++){
-      var br=banners[b].getBoundingClientRect();
-      var dist=Math.abs(br.top-viewRect.top);
-      if(br.bottom>viewRect.top&&br.top<viewRect.bottom&&dist<bestTop){bestTop=dist;best=banners[b];}
-    }
-    if(!best){console.log('[MushafDebug] no banner visible');return null;}
-    var sn=parseInt(best.dataset.surah);
-    var s=SURAHS[sn-1];
-    console.log('[MushafDebug] visibleSurah='+sn+(s?' ('+s.en+')':''));
-    return sn;
-  },
-  renderedAyahs:function(pageNum){
-    var view=$('mushafView');
-    if(!view)return [];
-    var pageEl=pageNum?view.querySelector('.mushaf-text-page[data-page="'+pageNum+'"]'):null;
-    var container=pageEl||view;
-    var segs=container.querySelectorAll('.mushaf-ayah-seg[data-surah][data-ayah]');
-    var keys=[];
-    for(var i=0;i<segs.length;i++){
-      var k=segs[i].getAttribute('data-surah')+':'+segs[i].getAttribute('data-ayah');
-      if(keys.indexOf(k)<0)keys.push(k);
-    }
-    console.log('[MushafDebug] renderedAyahs page='+pageNum+' count='+keys.length,keys);
-    return keys;
-  },
-  missingAyahs:function(pageNum){
-    var self=this;
-    var pf=_getPageFields();
-    return getMushafPageData(pageNum,pf.fields,pf.cache,pf.mushafId).then(function(json){
-      var verses=json.verses||[];
-      var expected=[];
-      verses.forEach(function(v){
-        var k=String(v.surah_number||parseInt((v.verse_key||'0:0').split(':')[0]))+':'+String(v.verse_number);
-        if(expected.indexOf(k)<0)expected.push(k);
-      });
-      var rendered=self.renderedAyahs(pageNum);
-      var missing=expected.filter(function(k){return rendered.indexOf(k)<0;});
-      if(missing.length){
-        console.warn('[MushafDebug] missingAyahs page='+pageNum+' MISSING='+missing.join(','));
-      } else {
-        console.log('[MushafDebug] missingAyahs page='+pageNum+' ALL PRESENT ('+expected.length+' ayahs)');
-      }
-      return missing;
-    });
-  }
-};
 
 // Wrap mushaf pages into horizontal snap spreads for iPad
 // Landscape (â‰¥1024px): 2 pages per spread. Portrait (<1024px): 1 page per spread.
@@ -4419,14 +4426,14 @@ function _mushafWrapSpreads(view){
 function renderMushafView(){
   var view=$('mushafView');
   if(!view||!S.surah)return;
-  // Start the 3 MB bundle fetch immediately so it's ready before the first page loads
+  // Start bundle fetch immediately so it's ready before the first page loads
   if(S.mushafFont==='qcf4')_loadMushafBundledData();
+  else if(S.mushafFont==='qpcv1')_loadMushafV1BundledData();
   clearMushafHighlights();
   // Disconnect previous lazy-load observer to prevent accumulation
   if(_mushafLazyObs){_mushafLazyObs.disconnect();_mushafLazyObs=null;}
   _mqReset();
   window._mushafVerseElements={};
-  _mushafRenderMetrics={}; // reset per-surah — prevents unbounded growth across long sessions
   // Single clear + skeleton — never clear twice. When page range resolves we remove
   // only the skeleton node, so the view is never in a blank state between clears.
   clear(view);
@@ -4445,6 +4452,7 @@ function renderMushafView(){
       if(S.mushafFont==='qcf1')injectQCFFont(pi);
       else if(S.mushafFont==='qcf2')injectQCFV2Font(pi);
       else if(S.mushafFont==='qcf4')injectQCFV4Font(pi);
+      else if(S.mushafFont==='qpcv1')injectQPCV1Font(pi);
     }
 
     // Full Quran: page 1â†’604. Always start from page 1 so scrolling back to
@@ -4709,89 +4717,9 @@ function _buildHafsFallbackFrag(verses,pageNum){
   return frag;
 }
 
-function _mushafDbgOverlay(pageEl,pageNum){
-  var OID='_mDbg';
-  var ov=document.getElementById(OID);
-  if(!ov){
-    ov=document.createElement('div');
-    ov.id=OID;
-    ov.style.cssText='position:fixed;bottom:72px;left:6px;right:6px;background:rgba(0,0,0,0.93);color:#fff;font-size:10.5px;font-family:monospace;padding:8px 10px;border-radius:10px;z-index:2147483647;max-height:260px;overflow-y:auto;direction:ltr;text-align:left;box-shadow:0 2px 12px rgba(0,0,0,0.6);';
-    document.body.appendChild(ov);
-  }
-  // CSS sheets
-  var sheets=Array.prototype.slice.call(document.querySelectorAll('link[rel=stylesheet]')).map(function(s){return s.href.replace(location.origin,'');}).join(' | ');
-  var hasV9=sheets.indexOf('v=9')!==-1;
-  var theme=document.documentElement.getAttribute('data-theme')||'(none)';
-  // Elements on the currently rendered page
-  var qLine=pageEl.querySelector('.mushaf-qcf-line');
-  var flowV=pageEl.querySelector('.mushaf-flow-verse');
-  var seg=pageEl.querySelector('.mushaf-ayah-seg');
-  var textPage=pageEl;
-  var isQCF=!!qLine;
-  var isHafs=!qLine&&!!flowV;
-  var lines=[];
-  lines.push('PAGE='+pageNum+'  THEME='+theme+'  CSS-v9='+hasV9);
-  lines.push('CSS: '+(sheets.split('/app/')[1]||sheets));
-  lines.push('RENDERER: '+(isQCF?'QCF4':isHafs?'Hafs-fallback':'EMPTY'));
-  // .mushaf-text-page background + color
-  var tpCs=window.getComputedStyle(textPage);
-  lines.push('page.bg-color: '+tpCs.backgroundColor);
-  lines.push('page.bg-image: '+tpCs.backgroundImage.slice(0,55));
-  lines.push('page.color: '+tpCs.color);
-  if(qLine){
-    var lCs=window.getComputedStyle(qLine);
-    lines.push('qcf-line.cls: '+qLine.className);
-    lines.push('qcf-line.color: '+lCs.color);
-    lines.push('qcf-line.font: '+lCs.fontFamily.slice(0,40));
-  }
-  if(flowV){
-    var fCs=window.getComputedStyle(flowV);
-    lines.push('flow-verse.color: '+fCs.color);
-  }
-  if(seg){
-    var sCs=window.getComputedStyle(seg);
-    lines.push('ayah-seg.color: '+sCs.color);
-    var sp=seg.querySelector('span');
-    if(sp){var spCs=window.getComputedStyle(sp);lines.push('seg>span[0].color: '+spCs.color+'  cls='+sp.className);}
-    else{lines.push('seg>span: none');}
-  }
-  // 18:5 across whole doc
-  var seg185=document.querySelector('.mushaf-ayah-seg[data-surah="18"][data-ayah="5"]');
-  if(seg185){
-    var tc185=seg185.textContent;
-    var cps185=Array.prototype.map.call(Array.from(tc185),function(c){return'U+'+c.codePointAt(0).toString(16).toUpperCase().padStart(4,'0');}).join(' ');
-    lines.push('18:5 rendered ['+Array.from(tc185).length+'cp]: '+cps185.slice(0,80));
-    var seg185Color=window.getComputedStyle(seg185).color;
-    lines.push('18:5 seg.color: '+seg185Color);
-    var c185=S.quranData&&S.quranData['18']&&S.quranData['18'][4];
-    if(c185){var ccps=Array.from(c185.text).map(function(c){return'U+'+c.codePointAt(0).toString(16).toUpperCase().padStart(4,'0');});lines.push('18:5 canonical['+ccps.length+'cp]: '+ccps.slice(0,6).join(' ')+'...');}
-  }else{
-    lines.push('18:5: not in DOM yet (open surah 18)');
-  }
-  // Render
-  ov.innerHTML='';
-  var pre=document.createElement('pre');
-  pre.style.cssText='margin:0;white-space:pre-wrap;word-break:break-all;';
-  pre.textContent=lines.join('\n');
-  ov.appendChild(pre);
-  var btn=document.createElement('button');
-  btn.textContent='COPY DEBUG';
-  btn.style.cssText='margin-top:6px;padding:3px 12px;background:#2563eb;color:#fff;border:none;border-radius:6px;font-size:10px;cursor:pointer;font-family:monospace;';
-  btn.onclick=function(){
-    var txt=lines.join('\n');
-    if(navigator.clipboard){navigator.clipboard.writeText(txt).then(function(){btn.textContent='COPIED!';setTimeout(function(){btn.textContent='COPY DEBUG';},2000);});}
-    else{try{var ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);btn.textContent='COPIED!';setTimeout(function(){btn.textContent='COPY DEBUG';},2000);}catch(e){}}
-  };
-  ov.appendChild(btn);
-  var cls=document.createElement('button');
-  cls.textContent='X';
-  cls.style.cssText='margin-top:6px;margin-left:6px;padding:3px 8px;background:#64748b;color:#fff;border:none;border-radius:6px;font-size:10px;cursor:pointer;font-family:monospace;';
-  cls.onclick=function(){ov.style.display='none';};
-  ov.appendChild(cls);
-}
 
 function loadMushafPageQCF(pageEl,pageNum){
-  var font=S.mushafFont||'qcf4';
+  var font=S.mushafFont||'qpcv1';
   var pf=_getPageFields();
   var _t0=Date.now();
 
@@ -4799,6 +4727,8 @@ function loadMushafPageQCF(pageEl,pageNum){
   var fontP;
   if(font==='qcf4'){
     fontP=ensureQCFV4Font(pageNum);
+  } else if(font==='qpcv1'){
+    fontP=ensureQPCV1Font(pageNum);
   } else {
     if(font==='qcf1')injectQCFFont(pageNum);
     else if(font==='qcf2')injectQCFV2Font(pageNum);
@@ -4817,7 +4747,7 @@ function loadMushafPageQCF(pageEl,pageNum){
     var verses=json.verses||[];
     if(!verses.length){
       // No page data — render Hafs Arabic text as fallback (never show ×)
-      if(font==='qcf4'){
+      if(font==='qcf4'||font==='qpcv1'){
         var _nd=_buildHafsFallbackFrag([],pageNum);
         clear(pageEl);pageEl.classList.add('mushaf-page-hafs-fallback');pageEl.appendChild(_nd);
       } else {clear(pageEl);pageEl.appendChild(el('div','mushaf-page-ph','—'));}
@@ -4826,8 +4756,9 @@ function loadMushafPageQCF(pageEl,pageNum){
 
     // Render into a fragment — spinner stays visible until font is ready
     var frag=document.createDocumentFragment();
-    // Juz banner — show only at the START of a new juz
-    var juzIdx=JUZ_PAGES.indexOf(pageNum);
+    // Juz banner — show only at the START of a new juz; use V1 map when V1 renderer is active
+    var _juzMap=font==='qpcv1'?JUZ_PAGES_V1:JUZ_PAGES;
+    var juzIdx=_juzMap.indexOf(pageNum);
     if(juzIdx>=0){
       var juzBanner=el('div','mushaf-juz-banner',t('reader.juz_label')+' '+toArabicNum(juzIdx+1));
       frag.appendChild(juzBanner);
@@ -4853,9 +4784,9 @@ function loadMushafPageQCF(pageEl,pageNum){
       }
     }
 
-    if(font==='qcf1'||font==='qcf2'||font==='qcf4'){
-      // ── QCF line-by-line rendering (V1, V2, or V4 tajweed) ──
-      var fontFam=(font==='qcf2')?"'QCFv2p"+pageNum+"'":(font==='qcf4')?"'QCFv4p"+pageNum+"'":"'QCFv1p"+pageNum+"'";
+    if(font==='qcf1'||font==='qcf2'||font==='qcf4'||font==='qpcv1'){
+      // ── QCF/QPC line-by-line rendering (V1, V2, V4 tajweed, or QPC V1) ──
+      var fontFam=font==='qcf2'?"'QCFv2p"+pageNum+"'":font==='qcf4'?"'QCFv4p"+pageNum+"'":font==='qpcv1'?"'QPCv1p"+pageNum+"'":"'QCFv1p"+pageNum+"'";
       var codeField=(font==='qcf2'||font==='qcf4')?'code_v2':'code_v1';
       var lineOrder=[];var lineOrderSeen={};var lineStartsSurah={};var lineAyahGroups={};
 
@@ -4889,7 +4820,7 @@ function loadMushafPageQCF(pageEl,pageNum){
           seg.className='mushaf-ayah-seg';
           seg.setAttribute('data-surah',String(g.sn));
           seg.setAttribute('data-ayah',String(g.vn));
-          var _glyphStr=g.words.join('');
+          var _glyphStr=g.words.join('‌'); // QCF4 only: ZWNJ between word tokens
           seg.textContent=_glyphStr;
           var k=String(g.sn)+':'+String(g.vn);
           if(!window._mushafVerseElements[k])window._mushafVerseElements[k]=[];
@@ -5024,8 +4955,8 @@ function loadMushafPageQCF(pageEl,pageNum){
       var _total=Date.now()-_t0;
       // Re-fit once QCF1/QCF2 font actually downloads (fontP resolved instantly so
       // the first RAF below measures with the fallback font — this corrects it)
-      if(font==='qcf1'||font==='qcf2'){
-        var _qcfFam=(font==='qcf2')?"1em 'QCFv2p"+pageNum+"'":"1em 'QCFv1p"+pageNum+"'";
+      if(font==='qcf1'||font==='qcf2'||font==='qpcv1'){
+        var _qcfFam=font==='qcf2'?"1em 'QCFv2p"+pageNum+"'":font==='qpcv1'?"1em 'QPCv1p"+pageNum+"'":"1em 'QCFv1p"+pageNum+"'";
         if(document.fonts&&document.fonts.load){
           document.fonts.load(_qcfFam).then(function(){
             requestAnimationFrame(function(){_fitQCFLines(pageEl);});
@@ -5035,34 +4966,27 @@ function loadMushafPageQCF(pageEl,pageNum){
       // Integrity validation + line auto-fit — runs after DOM commit
       requestAnimationFrame(function(){
         _fitQCFLines(pageEl);
-        var result=validateMushafPage(pageNum,json,pageEl);
-        _mushafRenderMetrics[pageNum]={
-          fontMs:fontMs||0,dataMs:_dataMs,renderMs:_renderMs,total:_total,
-          height:pageEl.offsetHeight,ok:result.ok,
-          expected:result.expected,missing:result.missing
-        };
-        console.log('[MushafPerf] page='+pageNum+' dataMs='+_dataMs+' fontMs='+(fontMs||0)+' renderMs='+_renderMs+' total='+_total+' ok='+result.ok+(result.missing.length?' MISSING='+result.missing.join(','):''));
-        _mushafDbgOverlay(pageEl,pageNum);
+        validateMushafPage(pageNum,json,pageEl);
       });
     };
 
-    // For QCF4 font already resolved by ensureQCFV4Font; for other modes font is always ready
+    // For QCF4/QPCV1 font resolved by ensureQCFV4Font/ensureQPCV1Font; other modes always ready
     return fontP.then(function(fontOk){
       var QFM=window.QuranFontManager;
       var _fontMs=Date.now()-_t0-_dataMs;
-      if(font==='qcf4'&&!fontOk){
-        // QCF4 font unavailable — sentinel test failed or font timed out.
+      if((font==='qcf4'||font==='qpcv1')&&!fontOk){
+        // Font unavailable — sentinel test failed or font timed out.
         // Render readable Hafs Arabic text; never show broken PUA glyph codes.
-        if(QFM)QFM.qcfPageFailed(pageNum,'font-unavailable');
+        if(QFM&&font==='qcf4')QFM.qcfPageFailed(pageNum,'font-unavailable');
         clear(pageEl);
         pageEl.classList.add('mushaf-page-hafs-fallback');
-        // Banner: tell user font is unavailable and offer retry
         var _fb=document.createElement('div');_fb.className='mushaf-fallback-banner';
         var _fi=document.createElement('i');_fi.className='fas fa-info-circle';_fb.appendChild(_fi);
         var _ft=document.createElement('span');_ft.textContent=' '+(window.t?t('mushaf.font_offline'):'ستایلا پەڕینێ نەکەتە دەست بی ئینتەرنەت.');_fb.appendChild(_ft);
         var _fr=document.createElement('button');_fr.className='mushaf-fallback-retry';_fr.textContent=window.t?t('general.retry','دوبارە'):'دوبارە';
         _fr.addEventListener('click',function(){
-          delete _qcfV4FontLoadP[pageNum];delete _qcfV4FontInjected[pageNum];
+          if(font==='qpcv1'){delete _qpcV1FontLoadP[pageNum];delete _qpcV1FontInjected[pageNum];}
+          else{delete _qcfV4FontLoadP[pageNum];delete _qcfV4FontInjected[pageNum];}
           delete pageEl.dataset.loaded;clear(pageEl);
           pageEl.classList.remove('mushaf-page-hafs-fallback');
           pageEl.appendChild(_mushafSkeleton());
@@ -5071,8 +4995,6 @@ function loadMushafPageQCF(pageEl,pageNum){
         _fb.appendChild(_fr);
         pageEl.appendChild(_fb);
         pageEl.appendChild(_buildHafsFallbackFrag(verses,pageNum));
-        _mushafRenderMetrics[pageNum]={fontMs:_fontMs,dataMs:_dataMs,total:Date.now()-_t0,ok:false,missing:['qcf4-font']};
-        console.log('[MushafPerf] page='+pageNum+' status=hafs-fallback total='+(Date.now()-_t0));
         return;
       }
       if(font==='qcf4'&&QFM)QFM.qcfPageLoaded(pageNum,Date.now()-_t0);
@@ -5992,10 +5914,53 @@ function updateMushafProgress(view){
   initTimer=setTimeout(checkVisible,500);
   periodic=setInterval(checkVisible,3000);
 
+  // ── Dev overlay: only when localStorage.devMode === '1' ──────────────────
+  // Enable:  localStorage.setItem('devMode','1'); location.reload()
+  // Disable: localStorage.removeItem('devMode'); location.reload()
+  var devOverlayInterval=null;
+  if(typeof localStorage!=='undefined'&&localStorage.getItem('devMode')==='1'){
+    var DOV_ID='_mushafDevOv';
+    var dov=document.getElementById(DOV_ID);
+    if(!dov){
+      dov=document.createElement('div');
+      dov.id=DOV_ID;
+      dov.style.cssText=[
+        'position:fixed','top:56px','left:6px','min-width:170px',
+        'background:rgba(0,0,20,0.88)','color:#7ef','font-size:9.5px',
+        'font-family:monospace','padding:6px 8px','border-radius:8px',
+        'z-index:2147483646','line-height:1.7','direction:ltr',
+        'pointer-events:none','white-space:nowrap'
+      ].join(';');
+      document.body.appendChild(dov);
+    }
+    dov.style.display='';
+    function _updateDevOv(){
+      if(destroyed){dov.style.display='none';return;}
+      var visAyah=_visibleAyahInMushaf();
+      var audioKey=_hl&&_hl.currentKey||'—';
+      var sn=_currentSurah||sessionSurah||S.surah||0;
+      var seenSet=_getSeen(sn);
+      var seenMax=0;seenSet.forEach(function(n){if(n>seenMax)seenMax=n;});
+      var savedRaw=0;
+      try{savedRaw=parseInt(localStorage.getItem('surah_read_v3_'+sn))||0;}catch(e){}
+      dov.textContent=[
+        'DEV │ renderer: '+(S.mushafFont||'?'),
+        'surah: '+sn+'  visAyah: '+(visAyah||'—'),
+        'audio: '+audioKey,
+        'seen: '+seenSet.size+'  max: '+seenMax,
+        'savedMax: '+savedRaw
+      ].join('\n');
+    }
+    _updateDevOv();
+    devOverlayInterval=setInterval(_updateDevOv,500);
+  }
+
   _progressCleanup=function(){
     destroyed=true;
     clearTimeout(saveTimer);clearTimeout(initTimer);clearTimeout(scrollTick);
     clearTimeout(dwellTimer);clearInterval(periodic);
+    if(devOverlayInterval){clearInterval(devOverlayInterval);devOverlayInterval=null;}
+    var _dov=document.getElementById('_mushafDevOv');if(_dov)_dov.style.display='none';
     window.removeEventListener('scroll',onScroll,{capture:true});
     view.removeEventListener('scroll',onScroll);
   };
@@ -6794,6 +6759,8 @@ App.openMushafSettings=function(){
   })();
   lhCtrl.appendChild(lhMBtn);lhCtrl.appendChild(lhVal);lhCtrl.appendChild(lhPBtn);
   body.appendChild(lhCtrl);
+
+
 
 
   pane.appendChild(body);ov.appendChild(pane);
@@ -11973,11 +11940,9 @@ function applySyncData(data){
   S.hapticFeedback=localStorage.getItem('hapticFeedback')!=='false';
   S.mushafMode=localStorage.getItem('mushafMode')==='true';
   S.readerFont=localStorage.getItem('readerFont')||'hafs';
-  // Pinned to QCF4 — the only fully-bundled mode (604 local fonts + mushaf-v4-pages.json),
-  // so Mushaf works with no network at all. qcf1/qcf2 remain code-supported but require
-  // internet (raw.githubusercontent.com fonts + api.quran.com page data).
-  S.mushafFont='qcf4';
-  try{localStorage.setItem('mushafFont','qcf4');}catch(e){}
+  // Always QPC V1 — the default fully-bundled renderer. Migrate any saved qcf4 value.
+  S.mushafFont='qpcv1';
+  try{localStorage.setItem('mushafFont','qpcv1');}catch(e){}
   // Clamps/defaults MUST match the mushaf-settings stepper (phone 23-25/24,
   // iPad 24-34/28) — the old 25-32/30 here forced 30px on phones, wider than
   // the page card, which is what caused clipped line edges before the
@@ -12002,6 +11967,33 @@ function applySyncData(data){
       }
       _pk.forEach(function(k){localStorage.removeItem(k);});
       localStorage.setItem('qcfV4purged','1');
+    }
+  }catch(e){}
+  // One-time purge of V1 page caches built before end-marker patch (2026-06-27).
+  // Old entries were missing ayah end-marker glyphs; drop them so next render uses
+  // the updated bundled JSON which includes the end marker for every verse.
+  try{
+    if(!localStorage.getItem('qpcV1purged1')){
+      var _vk=[];
+      for(var _vi=0;_vi<localStorage.length;_vi++){
+        var _vkk=localStorage.key(_vi);
+        if(_vkk&&_vkk.indexOf('qpcV1r_')===0)_vk.push(_vkk);
+      }
+      _vk.forEach(function(k){localStorage.removeItem(k);});
+      localStorage.setItem('qpcV1purged1','1');
+    }
+  }catch(e){}
+  // One-time purge of legacy qcf1/qcf2 page caches — no longer needed now that
+  // QPC V1 is the only renderer. Prefix patterns: qcfV1p_, qcfV2p_.
+  try{
+    if(!localStorage.getItem('qcfLegacyPurged')){
+      var _lk=[];
+      for(var _li=0;_li<localStorage.length;_li++){
+        var _lkk=localStorage.key(_li);
+        if(_lkk&&(_lkk.indexOf('qcfV1p_')===0||_lkk.indexOf('qcfV2p_')===0))_lk.push(_lkk);
+      }
+      _lk.forEach(function(k){localStorage.removeItem(k);});
+      localStorage.setItem('qcfLegacyPurged','1');
     }
   }catch(e){}
   S.prayerCity=localStorage.getItem('prayerCity')||'Duhok';

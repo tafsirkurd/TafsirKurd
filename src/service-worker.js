@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v1269';
+const CACHE_NAME = 'tafsir-kurd-v1273';
 
 // All files required to run the app fully offline.
 // IMPORTANT: version strings here must match the ?v= params in index.html exactly.
@@ -8,7 +8,7 @@ const PRECACHE = [
   '/utils/app-hardening.js?v=2',
   '/app/app.min.js?v=1216',
   '/utils/book-spotlight.js?v=12',
-  '/app/app-styles.min.css?v=9',
+  '/app/app-styles.min.css?v=12',
   // Prayer module
   '/prayer/prayer.cache.js?v=20260526',
   '/prayer/prayer.api.js?v=20260604',
@@ -28,6 +28,7 @@ const PRECACHE = [
   '/data/quran.json',
   '/data/kurdish_tafsir.json',
   '/data/mushaf-v4-pages.json?v=2',
+  '/data/mushaf-v1-pages.json',
   // Prayer static annual JSON â€” all 20 cities Ã— 2 years bundled for offline
   // Covers fresh-install offline and 30-day offline month-boundary on web
   '/prayer-data/2026/Akre.json',
@@ -160,6 +161,22 @@ self.addEventListener('fetch', event => {
   // â”€â”€ Remote QCF mushaf fonts: cache-first (immutable per page number) â”€â”€â”€â”€
   // iOS strips local .bin files; iOS/web both fall back to this Cloudflare Worker.
   // Once cached the font loads instantly â€” Mushaf feels native-fast offline.
+  // QPC V1 fonts from QUL CDN — cache-first for iOS/Web offline
+  if (url.includes('static-cdn.tarteel.ai/qul/fonts')) {
+    event.respondWith(
+      caches.match(req).then(cached => {
+        if (cached) return cached;
+        return fetch(req, { mode: 'cors' }).then(res => {
+          if (res && res.status === 200) {
+            caches.open(CACHE_NAME).then(c => c.put(req, res.clone())).catch(() => {});
+          }
+          return res;
+        }).catch(() => new Response('', { status: 503 }));
+      })
+    );
+    return;
+  }
+
   if (url.includes('qpc-v4-fonts.tefsirkurd.workers.dev')) {
     event.respondWith(
       caches.match(req).then(cached => {
