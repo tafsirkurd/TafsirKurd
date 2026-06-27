@@ -12304,8 +12304,8 @@ function _getTopBnrHost(){
 App.setBannerFloor=function(px){
   var host=_getTopBnrHost();
   if(px>0){
-    var base='calc(var(--tab-h,60px) + env(safe-area-inset-bottom,0px) + 10px)';
-    host.style.bottom='max('+base+','+(px+10)+'px)';
+    var base='calc(var(--tab-h,60px) + env(safe-area-inset-bottom,0px) + var(--audio-bar-h,0px) + 10px)';
+    host.style.bottom='max('+base+',calc('+(px+10)+'px))';
   }else{
     host.style.bottom='';
   }

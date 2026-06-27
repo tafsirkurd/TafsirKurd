@@ -17,12 +17,38 @@ import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 import com.getcapacitor.BridgeActivity;
 import com.getcapacitor.BridgeWebChromeClient;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.FirebaseOptions;
 import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends BridgeActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        // Ensure Firebase is initialized before Capacitor activates push-notification plugin.
+        // google-services.json is gitignored; without it the google-services plugin is skipped
+        // and Firebase never auto-initializes, causing a FATAL crash on CapacitorPlugins thread.
+        // Stub options allow the SDK to boot; FCM token registration will fail silently in debug.
+        try {
+            if (FirebaseApp.getApps(this).isEmpty()) {
+                FirebaseOptions options = new FirebaseOptions.Builder()
+                    .setApplicationId("1:000000000000:android:0000000000000000000000")
+                    .setApiKey("debug-placeholder-key")
+                    .setProjectId("tafsirkurd-debug-placeholder")
+                    .build();
+                FirebaseApp.initializeApp(this, options);
+                Log.i("Firebase", "Stub Firebase init — push notifications disabled in debug build");
+            }
+        } catch (Exception e) {
+            Log.w("Firebase", "Firebase stub init failed: " + e.getMessage());
+        }
+
+        // Enable WebView remote debugging in debug builds only (chrome://inspect).
+        // Must be set BEFORE super.onCreate so the flag is active when Capacitor creates the WebView.
+        if (0 != (getApplicationInfo().flags & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE)) {
+            android.webkit.WebView.setWebContentsDebuggingEnabled(true);
+        }
+
         registerPlugin(AudioPermissionPlugin.class);
         registerPlugin(AthanAlarmPlugin.class);
         super.onCreate(savedInstanceState);
