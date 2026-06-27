@@ -613,6 +613,78 @@
         }
         @media (max-width: 900px) { .messages-audit-row .card { flex: 1 1 100%; } }
 
+        /* ═══ Deep Fill — unified sections, equal height, gradient polish ═══ */
+
+        /* System Status Bar: gradient top bar */
+        .system-status-bar { position: relative; }
+        .system-status-bar::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, #10b981, #3b82f6, #8b5cf6);
+            pointer-events: none;
+        }
+
+        /* Heatmap card: gradient top bar */
+        .heatmap-card { position: relative; }
+        .heatmap-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, #10b981, #3b82f6);
+            border-radius: 14px 14px 0 0;
+            pointer-events: none;
+        }
+        /* Platform donut card: gradient top bar */
+        .ps-donut-card { position: relative; overflow: hidden; }
+        .ps-donut-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, #8b5cf6, #3b82f6);
+            border-radius: 16px 16px 0 0;
+            pointer-events: none;
+        }
+
+        /* User Lifecycle: pills + table in ONE unified card */
+        .ul-unified-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 28px;
+            position: relative;
+        }
+        .ul-unified-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, #3b82f6, #10b981);
+            pointer-events: none;
+        }
+        .ul-unified-card .ul-stat-strip {
+            margin-bottom: 0;
+            border-bottom: 1px solid var(--border-light);
+            padding: 14px 20px;
+            background: var(--bg-hover);
+        }
+        .ul-unified-card .ul-table-card {
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            margin-bottom: 0;
+            overflow: visible;
+        }
+        .ul-unified-card .ul-table-card::before { display: none; }
+
+        /* Content-grid-3: equal-height cards (flex column on each card) */
+        .content-grid-3 { align-items: stretch; }
+        .content-grid-3 .content-card { display: flex; flex-direction: column; }
+        .content-grid-3 .content-card .content-card-body { flex: 1; min-height: 160px; }
+
+        /* Activity two-col: equal height columns */
+        .activity-two-col { align-items: stretch; }
+
         /* ═══ Modern Fill — visual density & empty-space fixes ═══ */
 
         /* Metrics: tighter min so all 7 fit in one row on wide screens */
@@ -2470,7 +2542,7 @@
                 <div class="heatmap-card card-animate" id="activityHeatmapCard" style="display:none;animation-delay:510ms;">
                     <div class="heatmap-header">
                         <div class="heatmap-title">
-                            <span style="width:8px;height:8px;border-radius:50%;background:#10b981;display:inline-block;"></span>
+                            <span class="chart-title-icon" style="background:rgba(16,185,129,.1);color:#10b981;"><i data-lucide="grid"></i></span>
                             New User Activity — Last 28 Days
                         </div>
                         <div class="heatmap-legend">
@@ -2507,6 +2579,7 @@
 
                 <!-- ══ User Lifecycle ══ -->
                 <div class="section-label" style="margin-top:0;"><span class="sl-icon" style="background:rgba(59,130,246,.12);color:#3b82f6;"><i data-lucide="users"></i></span>User Lifecycle</div>
+                <div class="ul-unified-card card-animate" style="animation-delay:480ms;">
                 <div class="ul-stat-strip">
                     <div class="ul-stat-pill pill-green"><div class="ul-stat-val" id="ulNewToday">—</div><div class="ul-stat-lbl">New Today</div></div>
                     <div class="ul-stat-pill pill-blue"><div class="ul-stat-val" id="ulNewWeek">—</div><div class="ul-stat-lbl">New This Week</div></div>
@@ -2514,7 +2587,7 @@
                     <div class="ul-stat-pill pill-gray"><div class="ul-stat-val" id="ulDormant">—</div><div class="ul-stat-lbl">Dormant 30d+</div></div>
                     <div class="ul-stat-pill"><div class="ul-stat-val" id="ulReaders">—</div><div class="ul-stat-lbl">Readers</div></div>
                 </div>
-                <div class="ul-table-card card-animate" id="ulTableCard" style="animation-delay:520ms;">
+                <div class="ul-table-card" id="ulTableCard">
                     <div class="ul-table-header">
                         <div class="ul-table-title">
                             <div class="ul-table-icon"><i data-lucide="clock" style="width:14px;height:14px;"></i></div>
@@ -2549,6 +2622,7 @@
                         </table>
                     </div>
                 </div>
+                </div><!-- /ul-unified-card -->
 
                 <!-- ══ 3-Col Content Grid ══ -->
                 <div class="section-label"><span class="sl-icon" style="background:rgba(16,185,129,.12);color:#10b981;"><i data-lucide="radio"></i></span>Live Data</div>
