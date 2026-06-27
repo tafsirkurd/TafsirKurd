@@ -11846,9 +11846,11 @@ function _mergeWatchProgress(aStr,bStr){
 // _syncPendingDirty survives app kills so a terminated-while-dirty session
 // flushes on next launch (even offline → queued until online returns).
 var _dirtyKeys=new Set();
+var _syncDirtyGen=0; // incremented by every _markDirty call
 var _isNewDeviceLogin=false; // set in startCloudSync, cleared after restore banner
 
 function _markDirty(key){
+  _syncDirtyGen++;
   _dirtyKeys.add(key);
   try{localStorage.setItem('_syncPendingDirty','1');}catch(e){}
   debouncedSync();
@@ -12105,6 +12107,7 @@ function syncToCloud(){
   _updateSyncPanelStatus(); // show "syncing…" immediately
   var payload=gatherSyncData();
   payload._syncTime=new Date().toISOString();
+  var _genAtStart=_syncDirtyGen; // snapshot — detect writes that land during upload
   var _syncTO=new Promise(function(_,rej){setTimeout(function(){rej(new Error('sync_timeout'));},_sn.ms(18000,30000));});
   Promise.race([
     S.supabase.from('user_data').upsert({
@@ -12126,9 +12129,16 @@ function syncToCloud(){
       S.syncErrorDetail=null;
       localStorage.setItem('_lastSyncTime',payload._syncTime);
       localStorage.setItem('_lastSyncTs',payload._syncTime);
-      localStorage.removeItem('_syncPendingDirty');
       _dirtyKeys.clear();
       _syncRetryDelay=2000;
+      if(_syncDirtyGen===_genAtStart){
+        // No new writes during upload — clear the pending flag
+        localStorage.removeItem('_syncPendingDirty');
+      }else{
+        // New localStorage writes arrived during upload — they weren't in this payload.
+        // Leave _syncPendingDirty='1' and schedule a follow-up sync.
+        setTimeout(debouncedSync,0);
+      }
     }
   }).catch(function(e){
     console.error('Sync failed:',e);
@@ -12151,7 +12161,11 @@ function _schedSyncRetry(){
 
 function loadFromCloud(cb){
   if(!S.supabase||!S.user){if(cb)cb();return}
-  S.supabase.from('user_data').select('app_data,updated_at').eq('user_id',S.user.id).single()
+  var _lto=new Promise(function(_,rej){setTimeout(function(){rej(new Error('load_timeout'));},_sn.ms(15000,25000));});
+  Promise.race([
+    S.supabase.from('user_data').select('app_data,updated_at').eq('user_id',S.user.id).single(),
+    _lto
+  ])
   .then(function(resp){
     if(resp.error){
       if(resp.error.code==='PGRST116'){
@@ -12212,6 +12226,7 @@ function subscribeRealtime(){
     },function(payload){
       if(S.isSyncing)return; // ignore echo while we are uploading
       if(!payload.new||!payload.new.app_data)return;
+      if(!_validateSyncPayload(payload.new.app_data))return;
       // Echo detection: skip if this update's _syncTime matches our own last push
       var incomingTime=payload.new.app_data._syncTime;
       var myLastSync=localStorage.getItem('_lastSyncTime');
@@ -12332,6 +12347,8 @@ function startCloudSync(){
 
 function stopCloudSync(){
   if(S.syncInterval){clearInterval(S.syncInterval);S.syncInterval=null}
+  clearTimeout(_syncRetryTimer);_syncRetryTimer=null;
+  _syncRetryDelay=2000;
   document.removeEventListener('visibilitychange',syncOnHide);
   unsubscribeRealtime();
   _stopSessionHeartbeat();
