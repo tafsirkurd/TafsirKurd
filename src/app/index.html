@@ -959,9 +959,9 @@ if ('serviceWorker' in navigator && !(window.Capacitor && window.Capacitor.isNat
     closeBtn.addEventListener('click', function() { _dismiss(false); });
 
     // Swipe-up to dismiss (card is top-positioned, upward swipe = away from content)
-    var _sy=0, _sd=0, _sa=false;
+    var _sy=0, _st=0, _sd=0, _sa=false;
     card.addEventListener('touchstart', function(e){
-      _sy=e.touches[0].clientY; _sd=0; _sa=true;
+      _sy=e.touches[0].clientY; _st=Date.now(); _sd=0; _sa=true;
       card.style.transition='none';
     },{passive:true});
     card.addEventListener('touchmove', function(e){
@@ -973,7 +973,7 @@ if ('serviceWorker' in navigator && !(window.Capacitor && window.Capacitor.isNat
     },{passive:true});
     function _touchEnd(){
       if(!_sa)return; _sa=false;
-      var vel=_sd/(Date.now()-_sy+1);
+      var vel=_sd/(Date.now()-_st+1); // px/ms
       if(_sd>50||vel>0.35){
         card.style.transition='';
         _dismiss(false);
