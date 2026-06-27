@@ -11602,8 +11602,9 @@ function _syncStatusInfo(){
   if(!navigator.onLine)return{dot:'⚠',txt:t('settings.sync_status_offline'),col:'#f09000'};
   if(S.isSyncing)return{dot:'⟳',txt:t('settings.sync_status_syncing'),col:'var(--text3)'};
   if(S.syncFailed)return{dot:'✕',txt:(t('settings.sync_status_failed')||'هەلگرتن سەرنەکەفت')+(S.syncErrorDetail?' ['+S.syncErrorDetail.slice(0,60)+']':''),col:'#e53935'};
-  if(S.lastSyncTime){
-    var ts=new Date(S.lastSyncTime).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  var _syncDisplayTime=S.lastSyncTime?new Date(S.lastSyncTime).toISOString():localStorage.getItem('_lastSyncTs');
+  if(_syncDisplayTime){
+    var ts=new Date(_syncDisplayTime).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
     return{dot:'✓',txt:(t('settings.sync_last')||'')+' '+ts,col:'#43a047'};
   }
   return{dot:'○',txt:t('settings.sync_never'),col:'var(--text3)'};
@@ -11744,20 +11745,31 @@ function _removeCurrentDeviceSession(){
 //   FURTHEST  — take whichever position is further in the Quran (lastRead)
 
 var SYNC_SIMPLE_KEYS=[
+  // Quran progress & goals
   'lastRead','readingGoal','readLog','readAyahsToday','trackingResetAt','fullResetAt',
-  'app_bookmarks','iv_watch_progress','iv_saved_eps',
-  'showTafsir','bgAudio','theme','keepAwake',
-  'app_arSize','app_tfSize','app_lineH',
-  'app_reciter','app_speed','app_repeat','app_repeatCount',
-  'autoAdvance','scrollFollowsAudio','hapticFeedback',
-  'bestStreak',
-  'mushafMode','readerFont','mushafFont','mushafLineH',
+  'bestStreak','khatmCelebAt','ayahMark',
+  // Bookmarks & saved content
+  'app_bookmarks','iv_saved_eps',
+  // iv_watch_progress intentionally excluded — uses per-episode ts merge in mergeSyncData
+  // Reader / Mushaf settings
+  'showTafsir','mushafMode','readerFont','mushafFont',
+  'mushafLineH','mushafLineH_ipad',
   'mushafFontSize_qpcv1','mushafFontSize_ipad_qpcv1',
+  'app_arSize','app_tfSize','app_lineH',
+  // Audio settings
+  'app_reciter','app_speed','app_repeat','app_repeatCount',
+  'autoAdvance','scrollFollowsAudio','bgAudio',
+  // App preferences
+  'theme','themeUserChosen','keepAwake','hapticFeedback','appNotifEnabled',
+  // Books
   'book_saved','book_read_ids',
+  // Prayer settings & goals
   'prayerCity','prayerMethod','prayerAthanEnabled','prayerToggles',
   'prayerAthanVoice','prayerTimeFormat',
-  'tasbihDhikr','tasbihTarget',
-  'prayerTrackingStart'
+  'prayerReminderEnabled','prayerReminderOffset','prayerReminderConfig',
+  'prayerTrackingStart','prayerYearCelebAt',
+  // Dhikr
+  'tasbihDhikr','tasbihTarget'
 ];
 
 // â”€â”€ Merge helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -11808,6 +11820,38 @@ function _mergePrayerLog(aStr,bStr){
     return JSON.stringify(result);
   }catch(e){return aStr||bStr||'{}';}
 }
+
+// iv_watch_progress: per-episode LWW by .ts (most-recently-watched position wins per episode)
+// Full-object LWW was wrong: watching ep5 on phone A then ep3 on phone B wiped ep5 progress.
+function _mergeWatchProgress(aStr,bStr){
+  try{
+    var a=JSON.parse(aStr||'{}');var b=JSON.parse(bStr||'{}');
+    if(typeof a!=='object'||Array.isArray(a))a={};
+    if(typeof b!=='object'||Array.isArray(b))b={};
+    var r=Object.assign({},a);
+    Object.keys(b).forEach(function(epId){
+      var ae=a[epId],be=b[epId];
+      if(!ae)r[epId]=be;
+      else if(!be)r[epId]=ae;
+      else r[epId]=(be.ts||0)>(ae.ts||0)?be:ae;
+    });
+    return JSON.stringify(r);
+  }catch(e){return aStr||bStr||'{}'}
+}
+
+// ── Dirty-key tracking ────────────────────────────────────────────────────────
+// Tracks which keys have changed since last successful sync.
+// _syncPendingDirty survives app kills so a terminated-while-dirty session
+// flushes on next launch (even offline → queued until online returns).
+var _dirtyKeys=new Set();
+var _isNewDeviceLogin=false; // set in startCloudSync, cleared after restore banner
+
+function _markDirty(key){
+  _dirtyKeys.add(key);
+  try{localStorage.setItem('_syncPendingDirty','1');}catch(e){}
+  debouncedSync();
+}
+App.markDirty=_markDirty; // exposed so prayer/books modules can call it
 
 // Master merge — called on both login-load and realtime push
 function mergeSyncData(local,cloud){
@@ -11894,7 +11938,11 @@ function mergeSyncData(local,cloud){
   // prayer_log: additive union (pray on any device, all devices know)
   result.prayer_log=_mergePrayerLog(local.prayer_log,cloud.prayer_log);
 
+  // iv_watch_progress: per-episode LWW by .ts (not in SYNC_SIMPLE_KEYS — handled here)
+  result.iv_watch_progress=_mergeWatchProgress(local.iv_watch_progress,cloud.iv_watch_progress);
+
   result._syncTime=new Date().toISOString();
+  result._schemaVersion='2';
   return result;
 }
 
@@ -11906,6 +11954,10 @@ function gatherSyncData(){
     var v=localStorage.getItem(k);
     if(v!==null)data[k]=v;
   });
+  // iv_watch_progress gathered explicitly (not in SYNC_SIMPLE_KEYS — merged per-episode)
+  var wp=localStorage.getItem('iv_watch_progress');if(wp!==null)data.iv_watch_progress=wp;
+  // readSessions: cleared on user-switch, synced to preserve reading history across devices
+  var rs=localStorage.getItem('readSessions');if(rs!==null)data.readSessions=rs;
   var pl=localStorage.getItem('prayer_log');if(pl!==null)data.prayer_log=pl;
   for(var i=1;i<=114;i++){
     var pk='surah_progress_'+i;var sk='surah_scroll_'+i;var rk='surah_read_v3_'+i;
@@ -11918,12 +11970,33 @@ function gatherSyncData(){
   var _bpKeys=[];
   for(var _bi=0;_bi<localStorage.length;_bi++){var _bk=localStorage.key(_bi);if(_bk&&_bk.indexOf('pdfProg_')===0)_bpKeys.push(_bk);}
   _bpKeys.forEach(function(k){var v=localStorage.getItem(k);if(v!==null)data[k]=v;});
+  data._schemaVersion='2';
   // _syncTime set by caller so reads never pollute the timestamp
   return data;
 }
 
+function _showRestoreBanner(){
+  try{
+    var b=document.createElement('div');
+    b.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--accent,#4caf50);color:#fff;padding:10px 20px;border-radius:24px;font-size:14px;z-index:9999;box-shadow:0 2px 12px rgba(0,0,0,.3);pointer-events:none;';
+    b.textContent=t('settings.sync_restored')||'داتاکەت لە هەژمارەکەت گەڕاندرایەوە';
+    document.body.appendChild(b);
+    setTimeout(function(){if(b.parentNode)b.parentNode.removeChild(b);},4000);
+  }catch(e){}
+}
+
+function _validateSyncPayload(data){
+  if(!data||typeof data!=='object')return false;
+  if(typeof data._syncTime!=='string')return false;
+  if(data.lastRead!==undefined){
+    try{var _lr=JSON.parse(data.lastRead);if(typeof _lr!=='object'||_lr===null)return false;}
+    catch(e){return false;}
+  }
+  return true;
+}
+
 function applySyncData(data){
-  if(!data)return;
+  if(!_validateSyncPayload(data))return;
   Object.keys(data).forEach(function(k){
     if(k==='_syncTime')return;
     try{localStorage.setItem(k,data[k]);}catch(e){}
@@ -12024,6 +12097,8 @@ function syncToCloud(){
   if(!S.supabase||!S.user||S.isSyncing)return;
   var now=Date.now();
   if(now-S.lastSyncTime<5000)return;
+  // Skip if nothing has changed and last sync was recent (2 min window)
+  if(_dirtyKeys.size===0&&localStorage.getItem('_syncPendingDirty')!=='1'&&(now-S.lastSyncTime)<120000)return;
   S.isSyncing=true;
   _updateSyncPanelStatus(); // show "syncing…" immediately
   var payload=gatherSyncData();
@@ -12047,6 +12122,9 @@ function syncToCloud(){
       S.syncFailed=false;
       S.syncErrorDetail=null;
       localStorage.setItem('_lastSyncTime',payload._syncTime);
+      localStorage.setItem('_lastSyncTs',payload._syncTime);
+      localStorage.removeItem('_syncPendingDirty');
+      _dirtyKeys.clear();
       _syncRetryDelay=2000;
     }
   }).catch(function(e){
@@ -12096,11 +12174,20 @@ function loadFromCloud(cb){
       if(cb)cb();return;
     }
     if(resp.data&&resp.data.app_data){
+      if(!_validateSyncPayload(resp.data.app_data)){
+        console.warn('Cloud sync: invalid payload schema, skipping apply');
+        if(cb)cb();return;
+      }
       var localData=gatherSyncData();
       localData._syncTime=localStorage.getItem('_lastSyncTime')||'0';
       var merged=mergeSyncData(localData,resp.data.app_data);
       applySyncData(merged);
       localStorage.setItem('_lastSyncTime',merged._syncTime);
+      // Show "Restored from your account" banner on first login from a new device
+      if(_isNewDeviceLogin){
+        _isNewDeviceLogin=false;
+        _showRestoreBanner();
+      }
       // Push merged result back if it added anything from local
       setTimeout(syncToCloud,500);
       renderCurrentTab();
@@ -12153,7 +12240,7 @@ function _clearUserLocalData(){
     localStorage.removeItem('surah_scroll_'+i);
     localStorage.removeItem('surah_read_v3_'+i);  // list-mode read progress
   }
-  ['_lastSyncTime','readingGoal','readLog','readAyahsToday','bestStreak','readSessions','prayer_log'].forEach(function(k){localStorage.removeItem(k);});
+  ['_lastSyncTime','_lastSyncTs','_syncPendingDirty','readingGoal','readLog','readAyahsToday','bestStreak','readSessions','iv_watch_progress','prayer_log'].forEach(function(k){localStorage.removeItem(k);});
   var _clearBpKeys=[];
   for(var _ci=0;_ci<localStorage.length;_ci++){var _ck=localStorage.key(_ci);if(_ck&&_ck.indexOf('pdfProg_')===0)_clearBpKeys.push(_ck);}
   _clearBpKeys.forEach(function(k){localStorage.removeItem(k);});
@@ -12223,10 +12310,14 @@ function startCloudSync(){
   if(prevUserId&&prevUserId!==S.user.id){
     _clearUserLocalData();
   }
+  // New device = this device has never synced for this account
+  _isNewDeviceLogin=!prevUserId||prevUserId!==S.user.id||!localStorage.getItem('_lastSyncTs');
   lsSet('_lastUserId',S.user.id);
   loadFromCloud(function(){
     S.syncInterval=setInterval(syncToCloud,30000);
     subscribeRealtime();
+    // Flush any dirty data queued while offline (app killed before sync completed)
+    if(localStorage.getItem('_syncPendingDirty')==='1'){setTimeout(syncToCloud,1000);}
   });
   document.addEventListener('visibilitychange',syncOnHide);
   // Register this device and start heartbeat
