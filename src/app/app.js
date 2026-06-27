@@ -2005,6 +2005,7 @@ function applyTheme(){
   document.documentElement.style.background=bg;
   document.documentElement.style.setProperty('--bg',bg);
   localStorage.setItem('theme',S.theme);
+  if(window.S&&S.user)debouncedSync();
   _nativeSyncTheme(S.theme);
   if(window.Capacitor&&window.Capacitor.Plugins.StatusBar){
     var isDark=S.theme==='dark'||S.theme==='sakina';
@@ -6723,6 +6724,7 @@ App.openMushafSettings=function(){
     v=Math.max(_fsMin,Math.min(_fsMax,Math.round(v)));S.mushafFontSize=v;fsVal.textContent=v+'px';
     document.documentElement.style.setProperty('--mushaf-size',v+'px');
     localStorage.setItem(_fsKey,String(v));
+    if(window.S&&S.user)debouncedSync();
     if(fsMBtn)fsMBtn.disabled=(v<=_fsMin);if(fsPBtn)fsPBtn.disabled=(v>=_fsMax);
     requestAnimationFrame(function(){
       var mv=$('mushafView');
@@ -12116,6 +12118,7 @@ function syncToCloud(){
       console.error('Sync error:',resp.error);
       S.syncErrorDetail=(resp.error.code||'')+' '+(resp.error.message||'');
       S.syncFailed=true;
+      try{localStorage.setItem('_syncPendingDirty','1');}catch(e){}
       _schedSyncRetry();
     }else{
       S.lastSyncTime=Date.now();
@@ -12130,6 +12133,7 @@ function syncToCloud(){
   }).catch(function(e){
     console.error('Sync failed:',e);
     S.syncFailed=true;
+    try{localStorage.setItem('_syncPendingDirty','1');}catch(e2){}
     _schedSyncRetry();
   }).finally(function(){S.isSyncing=false;_updateSyncPanelStatus();});
 }

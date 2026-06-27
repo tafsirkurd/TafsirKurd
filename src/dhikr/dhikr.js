@@ -701,6 +701,7 @@ function _bookToggleSave(id, book){
   if (idx >= 0) { saved.splice(idx, 1); }
   else { saved.unshift({ id: book.id, title_ku: book.title_ku, title_ar: book.title_ar, author_ku: book.author_ku, cover_url: book.cover_url }); }
   localStorage.setItem('book_saved', JSON.stringify(saved));
+  if(window.App&&App.markDirty)App.markDirty('book_saved');
 }
 
 /* ── Book reading-progress helpers ── */
@@ -3295,7 +3296,7 @@ window.GencineUI = {
               var vol = lastRead ? lastRead.vol : fb.volumes[0];
               if (!vol) return;
               _addToReadingHistory(vol.id);
-              if (!_bookGetProgress(String(vol.id))) { try { localStorage.setItem('pdfProg_'+vol.id, JSON.stringify({page:1,total:vol.pages||0,ts:Date.now()})); } catch(e3) {} }
+              if (!_bookGetProgress(String(vol.id))) { try { localStorage.setItem('pdfProg_'+vol.id, JSON.stringify({page:1,total:vol.pages||0,ts:Date.now()})); if(window.App&&App.markDirty)App.markDirty('pdfProg_'+vol.id); } catch(e3) {} }
               self._currentBook = vol; self._pdfDoc = null; self._pdfPage = 1; self._view = 'book-reader'; self._draw();
             };
           }
@@ -3303,7 +3304,7 @@ window.GencineUI = {
             var panel = document.getElementById('gencineContent');
             self._booksScrollPos = panel ? panel.scrollTop : 0;
             _addToReadingHistory(fb.id);
-            if (!_bookGetProgress(String(fb.id))) { try { localStorage.setItem('pdfProg_'+fb.id, JSON.stringify({page:1,total:fb.pages||0,ts:Date.now()})); } catch(e3) {} }
+            if (!_bookGetProgress(String(fb.id))) { try { localStorage.setItem('pdfProg_'+fb.id, JSON.stringify({page:1,total:fb.pages||0,ts:Date.now()})); if(window.App&&App.markDirty)App.markDirty('pdfProg_'+fb.id); } catch(e3) {} }
             self._currentBook = fb; self._pdfDoc = null; self._pdfPage = 1; self._view = 'book-reader'; self._draw();
           };
         }
@@ -3646,7 +3647,7 @@ window.GencineUI = {
           } catch(_bse) {}
         })();
         if (!_bookGetProgress(String(vol.id))) {
-          try { localStorage.setItem('pdfProg_'+vol.id, JSON.stringify({page:1,total:vol.pages||0,ts:Date.now()})); } catch(e3) {}
+          try { localStorage.setItem('pdfProg_'+vol.id, JSON.stringify({page:1,total:vol.pages||0,ts:Date.now()})); if(window.App&&App.markDirty)App.markDirty('pdfProg_'+vol.id); } catch(e3) {}
         }
         self._currentBook = vol; self._pdfDoc = null; self._pdfPage = 1;
         self._view = 'book-reader'; self._draw();
@@ -4244,6 +4245,7 @@ window.GencineUI = {
           var _ep = _bookGetProgress(String(book.id));
           _pg = (_ep && _ep.page > 1 && _ep.page <= _totalPages) ? _ep.page : 1;
           localStorage.setItem('pdfProg_'+book.id, JSON.stringify({page:_pg,total:_totalPages,ts:Date.now()}));
+          if(window.App&&App.markDirty)App.markDirty('pdfProg_'+book.id);
         } catch(e2) {}
       }
       var slots = [];
