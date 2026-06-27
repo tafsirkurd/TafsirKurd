@@ -552,6 +552,41 @@
         @media (max-width: 700px) {
             .db-sidebar-col .quick-actions { grid-template-columns: 1fr 1fr; }
         }
+
+        /* ── Charts Secondary: Platform Donut + Heatmap side-by-side ── */
+        .charts-secondary-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 28px;
+            align-items: flex-start;
+        }
+        .charts-secondary-row #platformSplitRow { flex: 0 0 260px; min-width: 0; margin-bottom: 0 !important; }
+        .charts-secondary-row .heatmap-card { flex: 1; min-width: 280px; margin-bottom: 0; }
+        @media (max-width: 700px) {
+            .charts-secondary-row #platformSplitRow { flex: 1 1 100%; }
+        }
+
+        /* ── Unified Infrastructure Grid (System + Deployments) ── */
+        .infra-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+        @media (max-width: 700px) { .infra-grid { grid-template-columns: 1fr; } }
+
+        /* ── Activity 2-col: Admin Actions + Timeline side-by-side ── */
+        .activity-two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 28px;
+            align-items: start;
+        }
+        .activity-two-col .timeline-section { margin-bottom: 0; }
+        .activity-two-col #timelineList { max-height: 380px; overflow-y: auto; }
+        @media (max-width: 900px) { .activity-two-col { grid-template-columns: 1fr; } }
         .content-card {
             background: var(--bg-surface);
             border: 1px solid var(--border-light);
@@ -2298,9 +2333,9 @@
                         <div class="chart-insights" id="activeInsights"></div>
                     </div>
                 </div>
-                <!-- Platform split -->
-                <div id="platformSplitRow" style="display:none;margin-bottom:28px;"></div>
-
+                <!-- Platform Donut + Heatmap side-by-side -->
+                <div class="charts-secondary-row">
+                <div id="platformSplitRow" style="display:none;"></div>
                 <!-- ══ Activity Heatmap ══ -->
                 <div class="heatmap-card card-animate" id="activityHeatmapCard" style="display:none;animation-delay:510ms;">
                     <div class="heatmap-header">
@@ -2334,6 +2369,7 @@
                     </div>
                     <div class="heatmap-summary" id="heatmapSummary"></div>
                 </div>
+                </div><!-- /charts-secondary-row -->
 
                 <!-- ══ Dashboard Main + Sidebar ══ -->
                 <div class="db-main-layout">
@@ -2524,8 +2560,9 @@
                 </div><!-- /db-sidebar-col -->
                 </div><!-- /db-main-layout -->
 
-                <!-- ══ System Widgets Row ══ -->
-                <div class="system-widgets-row" id="systemWidgetsRow">
+                <!-- ══ System & Deployments ══ -->
+                <div class="section-label"><span class="sl-icon" style="background:rgba(239,68,68,.12);color:#ef4444;"><i data-lucide="server"></i></span>System & Deployments</div>
+                <div class="infra-grid" id="systemWidgetsRow">
 
                     <!-- App Errors Widget -->
                     <div class="card card-animate" style="animation-delay:430ms">
@@ -2613,12 +2650,6 @@
                         </div>
                     </div>
 
-                </div>
-
-                <!-- ══ Deployments widgets row ══ -->
-                <div class="section-label"><span class="sl-icon" style="background:rgba(249,115,22,.12);color:#f97316;"><i data-lucide="rocket"></i></span>Deployments</div>
-                <div class="system-widgets-row" style="margin-bottom:28px;grid-template-columns:1fr 1fr;">
-
                     <!-- iOS Builds widget -->
                     <div class="card card-animate" style="animation-delay:450ms">
                         <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
@@ -2649,8 +2680,11 @@
 
                 </div>
 
+                <!-- ══ Activity ══ -->
+                <div class="section-label"><span class="sl-icon" style="background:rgba(16,185,129,.12);color:#10b981;"><i data-lucide="activity"></i></span>Activity</div>
+                <div class="activity-two-col">
                 <!-- ══ Admin Actions Log ══ -->
-                <div class="timeline-section card-animate" style="animation-delay:360ms">
+                <div class="timeline-section card-animate" style="animation-delay:360ms;margin-bottom:0;">
                     <div class="timeline-header" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
                         <div style="display:flex;align-items:center;gap:8px;">
                             <div class="timeline-title">⚙️ Recent Admin Actions</div>
@@ -2680,7 +2714,7 @@
                 </div>
 
                 <!-- ══ Activity Timeline ══ -->
-                <div class="timeline-section card-animate" style="animation-delay:620ms">
+                <div class="timeline-section card-animate" style="animation-delay:620ms;margin-bottom:0;">
                     <div class="timeline-header">
                         <div class="timeline-title">Recent Activity</div>
                     </div>
@@ -2694,6 +2728,7 @@
                         <div style="text-align:center;padding:30px;color:var(--text-tertiary);font-size:13px;">Loading activity...</div>
                     </div>
                 </div>
+                </div><!-- /activity-two-col -->
 
                 <!-- Release History full page → /admin-release-history.html -->
 
