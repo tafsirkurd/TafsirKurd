@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v1275';
+const CACHE_NAME = 'tafsir-kurd-v1276';
 
 // All files required to run the app fully offline.
 // IMPORTANT: version strings here must match the ?v= params in index.html exactly.
@@ -29,6 +29,7 @@ const PRECACHE = [
   '/data/quran.json',
   '/data/kurdish_tafsir.json',
   '/data/mushaf-v4-pages.json?v=2',
+  '/data/mushaf-v2-pages.json',
   '/data/mushaf-v1-pages.json',
   // Prayer static annual JSON â€” all 20 cities Ã— 2 years bundled for offline
   // Covers fresh-install offline and 30-day offline month-boundary on web

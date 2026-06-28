@@ -95,9 +95,18 @@ async function main() {
   const qcf4Dst   = join(fontsDir, 'qcf4ttf');
   const qpcv1Src  = join(fontsDir, 'qpcv1');
   const qpcv1Dst  = join(fontsDir, 'qpcv1ttf');
+  const qpcv2Src  = join(fontsDir, 'qpcv2');
+  const qpcv2Dst  = join(fontsDir, 'qpcv2ttf');
 
   // Convert QCF4 woff2 → TTF for offline Mushaf on iOS (ITMS-90853 safe)
   await convertWoff2ToTTF(qcf4Src, qcf4Dst, 'qcf4');
+
+  // Convert QPC V2 woff2 → TTF for offline Mushaf on iOS (ITMS-90853 safe)
+  const v2Count = await convertWoff2ToTTF(qpcv2Src, qpcv2Dst, 'qpcv2');
+  if (v2Count > 0 && v2Count !== 604) {
+    console.error(`  [qpcv2] ERROR: expected 604 TTFs, got ${v2Count}`);
+    process.exit(1);
+  }
 
   // Convert QPC V1 woff2 → TTF for offline Mushaf on iOS (ITMS-90853 safe)
   const v1Count = await convertWoff2ToTTF(qpcv1Src, qpcv1Dst, 'qpcv1');
@@ -108,6 +117,7 @@ async function main() {
 
   // Remove original woff2 directories now that TTF copies exist
   rmDir(qcf4Src);
+  rmDir(qpcv2Src);
   rmDir(qpcv1Src);
   rmDir(join(fontsDir, 'qcf2'));
 
