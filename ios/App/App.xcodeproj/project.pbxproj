@@ -501,7 +501,7 @@
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 
-				CURRENT_PROJECT_VERSION = 302;
+				CURRENT_PROJECT_VERSION = 303;
 
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
@@ -526,7 +526,7 @@
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 
-				CURRENT_PROJECT_VERSION = 302;
+				CURRENT_PROJECT_VERSION = 303;
 
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
@@ -550,7 +550,7 @@
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CODE_SIGN_STYLE = Manual;
 
-				CURRENT_PROJECT_VERSION = 302;
+				CURRENT_PROJECT_VERSION = 303;
 
 				DEVELOPMENT_TEAM = 8KA7UDSC9D;
 				INFOPLIST_FILE = TafsirKurdWidget/Info.plist;
@@ -578,7 +578,7 @@
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CODE_SIGN_STYLE = Manual;
 
-				CURRENT_PROJECT_VERSION = 302;
+				CURRENT_PROJECT_VERSION = 303;
 
 				DEVELOPMENT_TEAM = 8KA7UDSC9D;
 				INFOPLIST_FILE = TafsirKurdWidget/Info.plist;
@@ -604,7 +604,7 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 
-				CURRENT_PROJECT_VERSION = 302;
+				CURRENT_PROJECT_VERSION = 303;
 
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.tafsirkurd.app.TafsirKurdWidgetTests";
@@ -620,7 +620,7 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 
-				CURRENT_PROJECT_VERSION = 302;
+				CURRENT_PROJECT_VERSION = 303;
 
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.tafsirkurd.app.TafsirKurdWidgetTests";
