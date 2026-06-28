@@ -4174,6 +4174,36 @@ function _extractV2VersesBysurah(surahNum){
   return result.length?result:null;
 }
 
+// Extract QPC V1 verses for one surah from the already-loaded V1 bundle.
+function _extractV1VersesBysurah(surahNum){
+  var data=window._mushafV1Pages;
+  if(!data)return null;
+  var r=_MUSHAF_PAGE_RANGES[surahNum-1];
+  if(!r)return null;
+  var startPi=Math.max(0,r[0]-2),endPi=Math.min(data.length-1,r[1]);
+  var ayahMap={};
+  for(var pi=startPi;pi<=endPi;pi++){
+    var page=data[pi];if(!page)continue;
+    var pn=pi+1;
+    for(var vi=0;vi<page.verses.length;vi++){
+      var verse=page.verses[vi];
+      var pts=verse.verse_key.split(':');
+      if(parseInt(pts[0])!==surahNum)continue;
+      var an=parseInt(pts[1]);
+      if(!ayahMap[an])ayahMap[an]={verse_key:verse.verse_key,words:[]};
+      var ws=verse.words||[];
+      for(var wi=0;wi<ws.length;wi++){
+        var w=ws[wi];
+        if(w.code_v1)ayahMap[an].words.push({code_v1:w.code_v1,page_number:pn});
+      }
+    }
+  }
+  var result=[];
+  var keys=Object.keys(ayahMap).map(Number).sort(function(a,b){return a-b;});
+  for(var ki=0;ki<keys.length;ki++)result[keys[ki]-1]=ayahMap[keys[ki]];
+  return result.length?result:null;
+}
+
 function getMushafPageData(pageNum,fields,cachePrefix,mushafId){
   fields=fields||'code_v1';cachePrefix=cachePrefix||'qcfV1p_';
   var key=cachePrefix+pageNum;
@@ -6058,6 +6088,7 @@ function renderReaderSettings(){
   /* ---- ARABIC FONT ---- */
   body.appendChild(el('div','qs-section-title',t('qs.quran_font_section')));
   var rfFonts=[
+    {id:'qpcv2', label:'QPC v2',       family:"'QCFv2p1','KFGQPC Hafs',serif"},
     {id:'hafs',  label:'KFGQPC Hafs', family:"'KFGQPC Hafs',serif"},
     {id:'amiri', label:'Amiri Quran', family:"'Amiri Quran',serif"}
   ];
