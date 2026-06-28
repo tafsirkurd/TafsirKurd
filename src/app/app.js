@@ -4533,11 +4533,12 @@ function renderMushafView(){
     if(_skel.parentNode===view)view.removeChild(_skel); // remove skeleton, not entire view
     view.scrollTop=0;view.scrollLeft=0;
 
-    // Pre-inject QCF fonts for first 3 pages so they're downloading in parallel
+    // Pre-inject fonts for first 3 pages so they start loading before lazy-observer fires
     for(var pi=pages.start;pi<=Math.min(pages.end,pages.start+2);pi++){
       if(S.mushafFont==='qcf1')injectQCFFont(pi);
       else if(S.mushafFont==='qcf2')injectQCFV2Font(pi);
       else if(S.mushafFont==='qcf4')injectQCFV4Font(pi);
+      else if(S.mushafFont==='qpcv2')injectQPCV2Font(pi);
       else if(S.mushafFont==='qpcv1')injectQPCV1Font(pi);
     }
 
@@ -4805,7 +4806,7 @@ function _buildHafsFallbackFrag(verses,pageNum){
 
 
 function loadMushafPageQCF(pageEl,pageNum){
-  var font=S.mushafFont||'qpcv1';
+  var font=S.mushafFont||'qpcv2';
   var pf=_getPageFields();
   var _t0=Date.now();
 
@@ -12156,8 +12157,21 @@ function applySyncData(data){
       localStorage.setItem('qpcV1purged1','1');
     }
   }catch(e){}
-  // One-time purge of legacy qcf1/qcf2 page caches — no longer needed now that
-  // QPC V1 is the only renderer. Prefix patterns: qcfV1p_, qcfV2p_.
+  // One-time purge of qpcV1r_ page caches — V2 is now the active renderer and
+  // uses qpcV2r_ prefix. V1 entries are permanently orphaned and waste quota.
+  // Flag qpcV2activated1 prevents re-running after first V2 launch.
+  try{
+    if(!localStorage.getItem('qpcV2activated1')){
+      var _v2ak=[];
+      for(var _v2ai=0;_v2ai<localStorage.length;_v2ai++){
+        var _v2akk=localStorage.key(_v2ai);
+        if(_v2akk&&_v2akk.indexOf('qpcV1r_')===0)_v2ak.push(_v2akk);
+      }
+      _v2ak.forEach(function(k){localStorage.removeItem(k);});
+      localStorage.setItem('qpcV2activated1','1');
+    }
+  }catch(e){}
+  // One-time purge of legacy qcf1/qcf2 page caches (never re-populated after 2026 migration). Prefix patterns: qcfV1p_, qcfV2p_.
   try{
     if(!localStorage.getItem('qcfLegacyPurged')){
       var _lk=[];
