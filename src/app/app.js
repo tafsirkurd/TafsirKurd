@@ -189,7 +189,8 @@ window.ForceUpdate = (function(){
         var verRow = overlay.querySelector('.fu-ver-row');
         if (verRow) verRow.style.display = lock.minVersion ? '' : 'none';
         _showEarlyOverlay(overlay, lock.minVersion);
-        console.log('[Update] Early enforce lock active — blocking app immediately');
+        var _ec1plat = (window.Capacitor && Capacitor.getPlatform ? Capacitor.getPlatform() : 'web');
+        console.log('[Update] fuOverlay shown — reason:early-lock platform:' + _ec1plat + ' min:' + (lock.minVersion||'?'));
         return;
       }
 
@@ -229,7 +230,7 @@ window.ForceUpdate = (function(){
       var verRow2 = overlay2.querySelector('.fu-ver-row');
       if (verRow2) verRow2.style.display = minVer2 ? '' : 'none';
       _showEarlyOverlay(overlay2, minVer2);
-      console.log('[Update] Early cached-config enforce — blocking app immediately');
+      console.log('[Update] fuOverlay shown — reason:early-cached-config platform:' + platform2 + ' v:' + cachedVer + ' min:' + minVer2);
     } catch(e) {}
   })();
 
@@ -346,6 +347,8 @@ window.ForceUpdate = (function(){
   }
 
   function showHard(version, minVersion, cfg) {
+    var _sh_plat = (window.Capacitor && Capacitor.getPlatform ? Capacitor.getPlatform() : 'web');
+    console.log('[Update] fuOverlay shown — reason:hard-enforce platform:' + _sh_plat + ' v:' + version + ' min:' + minVersion);
     var o = document.getElementById('fuOverlay');
     if (!o) return;
     var alreadyOn = o.classList.contains('on');
@@ -418,10 +421,11 @@ window.ForceUpdate = (function(){
   // The hard overlay (showHard) still applies on native for forced-update enforcement.
   function showSoftBanner(whatsNew, minVersion) {
     if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
-      console.log('[Update] SOFT banner suppressed on native platform — web/PWA only');
+      console.log('[Update] fuBanner suppressed — reason:native-platform platform:' + (Capacitor.getPlatform ? Capacitor.getPlatform() : 'native'));
       return;
     }
     if (document.getElementById('fuBanner')) return;
+    console.log('[Update] fuBanner shown — reason:soft-update platform:web min:' + minVersion);
 
     var banner = document.createElement('div');
     banner.id = 'fuBanner';
