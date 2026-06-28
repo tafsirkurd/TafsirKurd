@@ -1589,32 +1589,31 @@ function init(){
     var sp=$('splash');
     var app=$('app');
     if(app)app.style.display='flex';
-    requestAnimationFrame(function(){
-      requestAnimationFrame(function(){
-        console.log('[Startup] Transitioning into app at',Date.now()-_splashStart,'ms');
-        // Dismiss themed native overlay (iOS MainViewController) — runs in parallel with HTML exit
-        try{if(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.splashDismiss)
-          window.webkit.messageHandlers.splashDismiss.postMessage(null);}catch(e){}
-        // Logo exit animation — skipped on warm resume (instant restore)
-        var logo=document.getElementById('splashLogo');
-        if(logo&&!window._splashFastExit)logo.classList.add('exit');
-        // Refresh current tab with latest translations just before fade-in.
-        // Ensures user always sees live text, never stale bundled fallback.
-        try{_rerenderCurrentTab();}catch(e){}
-        // App fades in at the same time as logo exits
-        if(app)app.classList.add('visible');
-        if(_pendingPushDeepLink){
-          var _pl=_pendingPushDeepLink;_pendingPushDeepLink=null;
-          setTimeout(function(){_handlePushDeepLink(_pl.type,_pl.id);},300);
-        }
-        // Splash bg fades out after logo animation finishes (~260ms)
-        setTimeout(function(){
-          if(sp){sp.style.transition='opacity .15s ease';sp.classList.add('hide');}
-          setTimeout(function(){if(sp&&sp.parentNode)sp.parentNode.removeChild(sp);},200);
-        },220);
-        console.log('[Startup] App visible at',Date.now()-_splashStart,'ms');
-      });
-    });
+    var _visibleApplied=false;
+    function _applyVisible(){
+      if(_visibleApplied)return;
+      _visibleApplied=true;
+      console.log('[Startup] Transitioning into app at',Date.now()-_splashStart,'ms');
+      try{if(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.splashDismiss)
+        window.webkit.messageHandlers.splashDismiss.postMessage(null);}catch(e){}
+      var logo=document.getElementById('splashLogo');
+      if(logo&&!window._splashFastExit)logo.classList.add('exit');
+      try{_rerenderCurrentTab();}catch(e){}
+      if(app)app.classList.add('visible');
+      if(_pendingPushDeepLink){
+        var _pl=_pendingPushDeepLink;_pendingPushDeepLink=null;
+        setTimeout(function(){_handlePushDeepLink(_pl.type,_pl.id);},300);
+      }
+      setTimeout(function(){
+        if(sp){sp.style.transition='opacity .15s ease';sp.classList.add('hide');}
+        setTimeout(function(){if(sp&&sp.parentNode)sp.parentNode.removeChild(sp);},200);
+      },220);
+      console.log('[Startup] App visible at',Date.now()-_splashStart,'ms');
+    }
+    requestAnimationFrame(function(){requestAnimationFrame(_applyVisible);});
+    // Fallback: if rAF is suspended during Android cold-start WebView init, use timeout.
+    // 200ms is long enough for double-rAF to complete at 60fps; short enough to be invisible.
+    setTimeout(_applyVisible, 200);
   }
 
   function _checkSplashReady(){

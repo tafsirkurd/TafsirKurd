@@ -1076,7 +1076,8 @@ if ('serviceWorker' in navigator && !(window.Capacitor && window.Capacitor.isNat
     }, 200);
   })();
 }
-/* Failsafe: reveal app after 7s even if app.js IIFE throws, then show recovery banner */
+/* Failsafe: reveal app after 7s even if app.js IIFE throws, then show recovery banner.
+   Only shows error banner if App object never loaded — a timing/rAF delay is not a crash. */
 setTimeout(function(){
   var sp=document.getElementById('splash');
   var ap=document.getElementById('app');
@@ -1085,18 +1086,21 @@ setTimeout(function(){
     ap.classList.add('visible');
     ap.style.opacity='1';
     ap.style.display='flex';
-    console.error('Splash failsafe triggered - app.js may have errors');
-    var _rb=document.createElement('div');
-    _rb.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99999;background:#c0392b;color:#fff;padding-top:calc(env(safe-area-inset-top,0px) + 12px);padding-bottom:12px;padding-left:16px;padding-right:16px;text-align:center;font-size:14px;direction:rtl;display:flex;align-items:center;justify-content:center;gap:12px;';
-    var _rt=document.createElement('span');
-    _rt.textContent='کێشەیەک هات. ئەپ باشی کار ناکات.';
-    var _reloadBtn=document.createElement('button');
-    _reloadBtn.textContent='دووبارە بکەوە';
-    _reloadBtn.style.cssText='padding:4px 14px;background:#fff;color:#c0392b;border:none;border-radius:6px;cursor:pointer;font-size:13px;flex-shrink:0;';
-    _reloadBtn.onclick=function(){location.reload();};
-    _rb.appendChild(_rt);
-    _rb.appendChild(_reloadBtn);
-    document.body.appendChild(_rb);
+    var _appLoaded=typeof App!=='undefined'&&typeof App.openInbox==='function';
+    console.error('Splash failsafe triggered — app loaded:'+_appLoaded);
+    if(!_appLoaded){
+      var _rb=document.createElement('div');
+      _rb.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99999;background:#c0392b;color:#fff;padding-top:calc(env(safe-area-inset-top,0px) + 12px);padding-bottom:12px;padding-left:16px;padding-right:16px;text-align:center;font-size:14px;direction:rtl;display:flex;align-items:center;justify-content:center;gap:12px;';
+      var _rt=document.createElement('span');
+      _rt.textContent='کێشەیەک هات. ئەپ باشی کار ناکات.';
+      var _reloadBtn=document.createElement('button');
+      _reloadBtn.textContent='دووبارە بکەوە';
+      _reloadBtn.style.cssText='padding:4px 14px;background:#fff;color:#c0392b;border:none;border-radius:6px;cursor:pointer;font-size:13px;flex-shrink:0;';
+      _reloadBtn.onclick=function(){location.reload();};
+      _rb.appendChild(_rt);
+      _rb.appendChild(_reloadBtn);
+      document.body.appendChild(_rb);
+    }
   }
 },7000);
 </script>
