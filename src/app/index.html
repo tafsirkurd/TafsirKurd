@@ -846,20 +846,68 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 <script>
 /* Register service worker — web/PWA only; native Capacitor loads from bundle, no SW needed */
 if ('serviceWorker' in navigator && !(window.Capacitor && window.Capacitor.isNativePlatform())) {
+  // Snapshot the current controller before any listener fires.
+  // null = first install (no existing SW); non-null = update replacing an old SW.
+  var _prevController = navigator.serviceWorker.controller;
+  // Reference to the waiting SW worker — set when updatefound→installed.
+  // The banner's "Refresh Now" button sends SKIP_WAITING to this worker.
+  var _swWaitingWorker = null;
+
   navigator.serviceWorker.register('/service-worker.js', { scope: '/', updateViaCache: 'none' })
-    .then(function(reg) { reg.update().catch(function() {}); })
+    .then(function(reg) {
+      // Cold-start: a SW was already waiting from a previous session.
+      // Activate it immediately — user is starting fresh, no old clients running.
+      if (reg.waiting) {
+        console.log('[SW] startup: waiting SW found — auto-activating (reason: waiting-on-startup)');
+        reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+        // controllerchange fires below → location.reload()
+        return;
+      }
+
+      // Trigger an HTTP check for a new SW version
+      reg.update().catch(function() {});
+
+      // Banner shows only after new SW has fully downloaded AND entered waiting state.
+      // updatefound fires while still downloading — never show banner here.
+      reg.addEventListener('updatefound', function() {
+        var newWorker = reg.installing;
+        if (!newWorker) return;
+        console.log('[SW] updatefound — new version downloading (no banner yet)');
+
+        newWorker.addEventListener('statechange', function() {
+          console.log('[SW] installing SW state →', newWorker.state);
+          if (newWorker.state !== 'installed') return;
+
+          if (!navigator.serviceWorker.controller) {
+            // First install — no old SW to replace. Browser activates immediately anyway;
+            // send SKIP_WAITING explicitly to unblock in case the browser waits.
+            console.log('[SW] first install — activating silently (reason: first-install)');
+            newWorker.postMessage({ type: 'SKIP_WAITING' });
+          } else {
+            // Genuine update: registration.waiting is now set.
+            // Show banner so user controls when the reload happens.
+            _swWaitingWorker = reg.waiting || newWorker;
+            console.log('[SW] new version installed and waiting — showing banner (reason: new-install)');
+            _showSwUpdateCard('new-install');
+          }
+        });
+      });
+    })
     .catch(function() {});
 
-  /* SW update: when a new service worker takes control, auto-reload if the page is fresh
-     (opened within the last 4 seconds — user hasn't started reading anything yet).
-     Otherwise show a dismissible banner so we don't interrupt mid-session use. */
-  var _swLoadTs = Date.now();
+  // New SW took control. Reload to run on the new assets.
+  // Guard: first-install transitions from null→SW (not an update) — skip reload, page is fresh.
   navigator.serviceWorker.addEventListener('controllerchange', function() {
-    if (Date.now() - _swLoadTs < 4000) { location.reload(); return; }
-    _showSwUpdateCard();
+    if (!_prevController) {
+      _prevController = navigator.serviceWorker.controller;
+      console.log('[SW] controllerchange — first install, skipping reload (reason: first-install)');
+      return;
+    }
+    console.log('[SW] controllerchange — new SW active, reloading (reason: sw-activated)');
+    location.reload();
   });
 
-  function _showSwUpdateCard() {
+  function _showSwUpdateCard(reason) {
     if (document.getElementById('sw-update-card')) return;
 
     var card = document.createElement('div');
@@ -954,7 +1002,16 @@ if ('serviceWorker' in navigator && !(window.Capacitor && window.Capacitor.isNat
       if (andReload) setTimeout(function(){ location.reload(); }, 120);
     }
 
-    refreshBtn.addEventListener('click', function() { _dismiss(true); });
+    refreshBtn.addEventListener('click', function() {
+      if (_swWaitingWorker) {
+        // Tell the waiting SW to activate — controllerchange fires → location.reload()
+        console.log('[SW] user confirmed update — sending SKIP_WAITING');
+        _swWaitingWorker.postMessage({ type: 'SKIP_WAITING' });
+        _dismiss(false);
+      } else {
+        _dismiss(true); // fallback: direct reload if waiting SW reference was lost
+      }
+    });
     laterBtn.addEventListener('click', function() { _dismiss(false); });
     closeBtn.addEventListener('click', function() { _dismiss(false); });
 

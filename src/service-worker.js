@@ -125,7 +125,9 @@ const SWR_PATTERNS = [
 
 // â”€â”€ Install: pre-cache everything needed to run offline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 self.addEventListener('install', event => {
-  self.skipWaiting();
+  // No skipWaiting() here — new SW waits until no old clients are running.
+  // The page sends SKIP_WAITING when the user confirms the update banner.
+  // On first install (no old SW), the browser activates immediately without waiting.
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
       return Promise.all(
