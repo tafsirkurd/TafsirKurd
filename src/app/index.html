@@ -162,7 +162,7 @@
 <!-- Preload quran.json (1.5MB) so the fetch in app.js hits browser cache,
      not the network â€” eliminates the data-loading wait on first launch -->
 <link rel="preload" href="/data/quran.json" as="fetch" crossorigin="anonymous">
-<link rel="preload" href="/i18n/kmr-bundled.js?v=20260620b" as="script">
+<link rel="preload" href="/i18n/kmr-bundled.js?v=20260628a" as="script">
 <link rel="preload" href="/app/app.min.js?v=1216" as="script">
 <link rel="preload" href="/prayer/prayer.ui.js?v=20260616d" as="script">
 <!-- platform.js inlined: eliminates one parser-blocking network request -->
@@ -272,7 +272,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
       <div class="hdr-actions">
         <button class="hdr-btn" id="hdrGoalsBtn" onclick="App.tab('goals')" title="Goals"><i class="fas fa-bullseye"></i><span class="hdr-badge" id="goalsBadge"></span></button>
         <button class="hdr-btn" onclick="App.tab('bookmarks')" title="Bookmarks"><i class="fas fa-bookmark"></i></button>
-        <button class="hdr-btn" id="inboxBtn" onclick="App.openInbox()" title="Notifications"><i class="fas fa-bell"></i><span class="hdr-badge" id="inboxBadge" style="display:none"></span></button>
+        <button class="hdr-btn" id="inboxBtn" onclick="App.openInbox()" title="ئاگەهدارکرن"><i class="fas fa-bell"></i><span class="hdr-badge" id="inboxBadge">1</span></button>
         <button class="hdr-btn" onclick="App.toggleSearch()"><i class="fas fa-search"></i></button>
       </div>
     </div>
@@ -375,7 +375,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
       <div class="iv-overlay-handle"></div>
       <div class="iv-overlay-hdr">
         <div class="iv-overlay-icon iv-overlay-icon--saved"><i class="fas fa-bookmark"></i></div>
-        <span class="iv-overlay-title">پاراستەکان</span>
+        <span class="iv-overlay-title">نیشانکری</span>
         <button class="iv-overlay-close" onclick="App.ivCloseSaved()"><i class="fas fa-times"></i></button>
       </div>
       <div id="ivSavedList" class="iv-overlay-list"></div>
@@ -387,7 +387,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
       <div class="iv-overlay-handle"></div>
       <div class="iv-overlay-hdr">
         <div class="iv-overlay-icon iv-overlay-icon--history"><i class="fas fa-clock-rotate-left"></i></div>
-        <span class="iv-overlay-title">مێژووی تەماشاکردن</span>
+        <span class="iv-overlay-title">مێژوویا تەماشەکرنێ</span>
         <button class="iv-overlay-close" onclick="App.ivCloseHistory()"><i class="fas fa-times"></i></button>
       </div>
       <div id="ivHistoryList" class="iv-overlay-list"></div>
@@ -787,7 +787,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 <script>/* compat shim: old iOS builds set window.__kmrBundle; forward to KMR_TRANSLATIONS */
 (function(){Object.defineProperty(window,'__kmrBundle',{set:function(v){window.KMR_TRANSLATIONS=v;},get:function(){return window.KMR_TRANSLATIONS;},configurable:true});})();
 </script>
-<script src="/i18n/kmr-bundled.js?v=20260620b"></script>
+<script src="/i18n/kmr-bundled.js?v=20260628a"></script>
 <script src="/i18n/i18n.min.js?v=20260619a"></script>
 <!-- Script loading strategy:
      Prayer scripts: short fixed delay (300ms) â€” critical for main tab,
@@ -1049,7 +1049,7 @@ setTimeout(function(){
 <div id="inbox-modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.55);backdrop-filter:blur(4px)" onclick="if(event.target===this)App.closeInbox()">
   <div style="position:absolute;bottom:0;left:0;right:0;max-height:80vh;background:var(--bg);border-radius:18px 18px 0 0;overflow:hidden;display:flex;flex-direction:column">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid var(--border-light)">
-      <span style="font-size:16px;font-weight:700;color:var(--text-primary)" data-i18n="inbox.title">ئاگادارکرنەوەیین</span>
+      <span style="font-size:16px;font-weight:700;color:var(--text-primary)" data-i18n="inbox.title">ئاگەهدارکرن</span>
       <button onclick="App.closeInbox()" style="background:none;border:none;cursor:pointer;color:var(--text-secondary);font-size:18px;padding:4px"><i class="fas fa-times"></i></button>
     </div>
     <div id="inbox-list" style="overflow-y:auto;flex:1;padding:12px 0"></div>

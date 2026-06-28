@@ -2,11 +2,11 @@
 // Strips web-only font formats from the iOS Capacitor bundle after cap sync.
 // Apple's ITMS-90853 validator detects woff/woff2 by magic bytes and rejects them.
 //
-// For QCF4 mushaf fonts: converts woff2 → TTF using wawoff2 (WASM-based decompressor)
-// and writes them to qcf4ttf/ before removing qcf4/.
+// For QPC V1 mushaf fonts: converts woff2 → TTF into qpcv1ttf/ before removing qpcv1/.
+// App uses TTF on iOS so Mushaf works fully offline.
 //
-// For QPC V1 mushaf fonts: same treatment — converts woff2 → TTF into qpcv1ttf/
-// before removing qpcv1/. App uses TTF on iOS so Mushaf works fully offline.
+// For QPC V2 reader fonts: converts woff2 → TTF into qpcv2ttf/ before removing qpcv2/.
+// App uses TTF on iOS so Reader works fully offline.
 //
 // Other fonts: CSS already has ttf fallback src entries that survive the strip.
 
@@ -41,7 +41,7 @@ function rmFontsRecursive(dir) {
 }
 
 // Convert all woff2 files in srcDir to TTF files in dstDir using wawoff2.
-// label is used only for logging (e.g. 'qcf4', 'qpcv1').
+// label is used only for logging (e.g. 'qcf4', 'qpcv1', 'qpcv2').
 async function convertWoff2ToTTF(srcDir, dstDir, label) {
   if (!existsSync(srcDir)) {
     console.log(`  [${label}] source dir not found, skipping TTF conversion`);
@@ -54,7 +54,7 @@ async function convertWoff2ToTTF(srcDir, dstDir, label) {
     wawoff2 = mod.default || mod;
   } catch (e) {
     console.warn(`  [${label}] wawoff2 not installed — run: npm install --save-dev wawoff2`);
-    console.warn(`  [${label}] Skipping TTF conversion; iOS Mushaf will fall back to network fonts.`);
+    console.warn(`  [${label}] Skipping TTF conversion; iOS fonts will fall back to network.`);
     return 0;
   }
 
@@ -91,13 +91,10 @@ async function main() {
 
   const fontsDir  = join(IOS_PUBLIC, 'assets', 'fonts');
 
-  const qcf4Src   = join(fontsDir, 'qcf4');
-  const qcf4Dst   = join(fontsDir, 'qcf4ttf');
   const qpcv1Src  = join(fontsDir, 'qpcv1');
   const qpcv1Dst  = join(fontsDir, 'qpcv1ttf');
-
-  // Convert QCF4 woff2 → TTF for offline Mushaf on iOS (ITMS-90853 safe)
-  await convertWoff2ToTTF(qcf4Src, qcf4Dst, 'qcf4');
+  const qpcv2Src  = join(fontsDir, 'qpcv2');
+  const qpcv2Dst  = join(fontsDir, 'qpcv2ttf');
 
   // Convert QPC V1 woff2 → TTF for offline Mushaf on iOS (ITMS-90853 safe)
   const v1Count = await convertWoff2ToTTF(qpcv1Src, qpcv1Dst, 'qpcv1');
@@ -106,9 +103,18 @@ async function main() {
     process.exit(1);
   }
 
+  // Convert QPC V2 woff2 → TTF for offline Reader on iOS (ITMS-90853 safe)
+  const v2Count = await convertWoff2ToTTF(qpcv2Src, qpcv2Dst, 'qpcv2');
+  if (v2Count > 0 && v2Count !== 604) {
+    console.error(`  [qpcv2] ERROR: expected 604 TTFs, got ${v2Count}`);
+    process.exit(1);
+  }
+
   // Remove original woff2 directories now that TTF copies exist
-  rmDir(qcf4Src);
   rmDir(qpcv1Src);
+  rmDir(qpcv2Src);
+  // Remove qcf4 and qcf2 font dirs (no longer used by any active feature)
+  rmDir(join(fontsDir, 'qcf4'));
   rmDir(join(fontsDir, 'qcf2'));
 
   // Recursively strip all remaining .woff / .woff2 from font directories

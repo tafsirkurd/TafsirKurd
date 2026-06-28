@@ -178,20 +178,6 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  if (url.includes('qpc-v4-fonts.tefsirkurd.workers.dev')) {
-    event.respondWith(
-      caches.match(req).then(cached => {
-        if (cached) return cached;
-        return fetch(req, { mode: 'cors' }).then(res => {
-          if (res && res.status === 200) {
-            caches.open(CACHE_NAME).then(c => c.put(req, res.clone())).catch(() => {});
-          }
-          return res;
-        }).catch(() => new Response('', { status: 503 }));
-      })
-    );
-    return;
-  }
 
   // â”€â”€ External domains: pass through (Supabase, YouTube, CDNs, analytics) â”€â”€
   if (!isOwnOrigin) return;
