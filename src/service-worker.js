@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v1275';
+const CACHE_NAME = 'tafsir-kurd-v1276';
 
 // All files required to run the app fully offline.
 // IMPORTANT: version strings here must match the ?v= params in index.html exactly.
@@ -29,6 +29,7 @@ const PRECACHE = [
   '/data/quran.json',
   '/data/kurdish_tafsir.json',
   '/data/mushaf-v4-pages.json?v=2',
+  '/data/mushaf-v2-pages.json',
   '/data/mushaf-v1-pages.json',
   // Prayer static annual JSON â€” all 20 cities Ã— 2 years bundled for offline
   // Covers fresh-install offline and 30-day offline month-boundary on web
@@ -159,10 +160,9 @@ self.addEventListener('fetch', event => {
   const reqUrl = new URL(url);
   const isOwnOrigin = reqUrl.origin === self.location.origin;
 
-  // â”€â”€ Remote QCF mushaf fonts: cache-first (immutable per page number) â”€â”€â”€â”€
+  // â”€â”€ Remote mushaf fonts (V1/V2/QCF): cache-first (immutable per page number) â”€â”€â”€â”€
   // iOS strips local .bin files; iOS/web both fall back to this Cloudflare Worker.
   // Once cached the font loads instantly â€” Mushaf feels native-fast offline.
-  // QPC V1 fonts from QUL CDN — cache-first for iOS/Web offline
   if (url.includes('static-cdn.tarteel.ai/qul/fonts')) {
     event.respondWith(
       caches.match(req).then(cached => {
