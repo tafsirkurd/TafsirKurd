@@ -414,8 +414,13 @@ window.ForceUpdate = (function(){
   }
 
   // ── Soft update banner ────────────────────────────────────────────────────
-  // whatsNew: optional string from cfg.update_whats_new (admin-set release notes)
+  // Web/PWA only — native apps receive OS-level update notifications via the store.
+  // The hard overlay (showHard) still applies on native for forced-update enforcement.
   function showSoftBanner(whatsNew, minVersion) {
+    if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+      console.log('[Update] SOFT banner suppressed on native platform — web/PWA only');
+      return;
+    }
     if (document.getElementById('fuBanner')) return;
 
     var banner = document.createElement('div');
