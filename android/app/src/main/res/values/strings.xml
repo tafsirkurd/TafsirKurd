@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Tafsir Kurd</string>
-    <string name="title_activity_main">Tafsir Kurd</string>
+    <string name="app_name">TafsirKurd</string>
+    <string name="title_activity_main">TafsirKurd</string>
     <string name="package_name">com.tafsirkurd.app</string>
     <string name="custom_url_scheme">com.tafsirkurd.app</string>
 </resources>
