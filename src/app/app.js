@@ -1116,6 +1116,7 @@ function init(){
     applyKeepAwake();
     initTodayVerses();
     if(window.AppRating)AppRating.init(); // track launch count + first-launch date
+    console.log('[GOAL_OBJECT] on init:',localStorage.getItem('readingGoal'));
     renderSurahGrid();
     renderContinue();
 
@@ -1310,7 +1311,7 @@ function init(){
         if(_isMac&&!_isUserTap)return;
         if(extra.type==='verse'&&extra.s&&extra.a){
           App.tab('quran');
-          setTimeout(function(){App.openSurah(extra.s,extra.a,{source:'notification'});},300);
+          setTimeout(function(){App.openSurah(extra.s,extra.a,{source:'notification',canTrackGoal:false});},300);
         }
         if(extra.type==='video'&&extra.id){
           App.tab('islamvoice');
@@ -3209,7 +3210,7 @@ function _handlePushDeepLink(type,id){
       var parts=id.split(':');
       var s=+parts[0],a=+parts[1];
       App.tab('quran');
-      setTimeout(function(){App.openSurah(s,a,{source:'deep_link'});},300);
+      setTimeout(function(){App.openSurah(s,a,{source:'deep_link',canTrackGoal:false});},300);
 
     }else if(type==='islamvoice_episodes'||type==='video'){
       App.tab('islamvoice');
@@ -3844,7 +3845,7 @@ App._mkSearchItem=function(r,isPrimary){
       if(window.QuranSearch&&QuranSearch.trackTap)QuranSearch.trackTap(sn,an);
       _shAdd(q);
       HeaderOverlayManager.close();App.tab('quran');
-      setTimeout(function(){App.openSurah(sn,an,{source:'search'});},100);
+      setTimeout(function(){App.openSurah(sn,an,{source:'search',canTrackGoal:false});},100);
     };})(r.sn,r.an,S.search));
 
   }else if(r.type==='surah'){
@@ -3859,7 +3860,7 @@ App._mkSearchItem=function(r,isPrimary){
     item.appendChild(row);
     on(item,'click',(function(sn,q){return function(){
       _shAdd(q);
-      HeaderOverlayManager.close();App.openSurah(sn,undefined,{source:'search'});
+      HeaderOverlayManager.close();App.openSurah(sn,undefined,{source:'search',canTrackGoal:false});
     };})(r.sn,S.search));
 
   }else{
@@ -3881,7 +3882,7 @@ App._mkSearchItem=function(r,isPrimary){
       if(window.QuranSearch&&QuranSearch.trackTap)QuranSearch.trackTap(sn,an);
       _shAdd(q);
       HeaderOverlayManager.close();App.tab('quran');
-      setTimeout(function(){App.openSurah(sn,an,{source:'search'});},100);
+      setTimeout(function(){App.openSurah(sn,an,{source:'search',canTrackGoal:false});},100);
     };})(r.sn,r.an,S.search));
   }
 
@@ -3988,6 +3989,7 @@ function _refreshSurahCompletionBadges(){
   var goal=getGoal();
   var completed=(goal&&goal.completedSurahs)||[];
   var progress=(goal&&goal.surahProgress)||{};
+  console.log('[BADGE_RENDER]',{completed:completed.length,progressKeys:Object.keys(progress).length});
   grid.querySelectorAll('.surah-card').forEach(function(card){
     var n=parseInt(card.dataset.n);
     var st=card.querySelector('.surah-goal-state');
@@ -3996,11 +3998,14 @@ function _refreshSurahCompletionBadges(){
     if(completed.indexOf(n)>=0){
       var b=document.createElement('span');b.className='surah-done-badge';b.textContent='✓';
       st.appendChild(b);
-    } else if(progress[n]){
-      var s=SURAHS[n-1];
-      var p=document.createElement('span');p.className='surah-progress-badge';
-      p.textContent=String(progress[n])+(s?'/'+s.a:'');
-      st.appendChild(p);
+    } else {
+      var hw=progress[String(n)]||progress[n]||0;
+      if(hw){
+        var s=SURAHS[n-1];
+        var p=document.createElement('span');p.className='surah-progress-badge';
+        p.textContent=String(hw)+(s?'/'+s.a:'');
+        st.appendChild(p);
+      }
     }
   });
 }
@@ -4034,12 +4039,16 @@ function renderContinue(){
 
 /* ===== OPEN SURAH ===== */
 App.openSurah=function(num,scrollTo,opts){
-  // S.goalSessionActive is the single gate for goal progress.
-  // It is ONLY true when opts.goalSession===true (Continue Goal, prev/next within session).
-  // Every other open — surah grid, search, notification, bookmark, deep link — sets it false.
+  // S.readerSession tracks the current open context.
+  // canTrackGoal defaults to true when a goal exists (normal navigation).
+  // External sources (search/notification/bookmark/deep_link/audio) pass canTrackGoal:false.
   var _opts=opts||{};
-  S.readerOpenSource=_opts.source||'normal';
-  S.goalSessionActive=(_opts.goalSession===true);
+  S.readerSession={
+    source:_opts.source||'surah_grid',
+    canTrackGoal:(_opts.canTrackGoal!==undefined)?_opts.canTrackGoal:!!getGoal()
+  };
+  S.readerOpenSource=S.readerSession.source;
+  console.log('[OPEN_SURAH]',{surah:num,ayah:scrollTo,source:S.readerSession.source,canTrackGoal:S.readerSession.canTrackGoal});
   if(S.surah===num&&$('quranReader').classList.contains('on'))return; // already open
   if(tapGuard('openSurah',300))return; // prevent double-tap race
   var s=SURAHS[num-1]; // bounds-check before any state mutation
@@ -4074,7 +4083,7 @@ App.openSurah=function(num,scrollTo,opts){
 
 App.backToList=function(){
   H.light();
-  S.goalSessionActive=false; // leaving the reader always ends any goal session
+  S.readerSession=null; // leaving the reader clears goal context
   if(S.surah){
     try{localStorage.setItem('surah_scroll_'+S.surah,String($('ayahList').scrollTop))}catch(e){}
   }
@@ -5456,13 +5465,13 @@ function renderAyahs(surahNum,scrollTo){
   prevBtn.appendChild(icon('fas fa-arrow-right'));
   prevBtn.appendChild(document.createTextNode(' '+t('reader.prev_surah')));
   if(surahNum<=1)prevBtn.disabled=true;
-  on(prevBtn,'click',function(){App.openSurah(surahNum-1,undefined,{source:'prev_next',goalSession:S.goalSessionActive});});
+  on(prevBtn,'click',function(){App.openSurah(surahNum-1,undefined,{source:'prev_next',canTrackGoal:!!(S.readerSession&&S.readerSession.canTrackGoal)});});
   nav.appendChild(prevBtn);
   var nextBtn=el('button','surah-nav-btn');
   nextBtn.appendChild(document.createTextNode(t('reader.next_surah')+' '));
   nextBtn.appendChild(icon('fas fa-arrow-left'));
   if(surahNum>=114)nextBtn.disabled=true;
-  on(nextBtn,'click',function(){App.openSurah(surahNum+1,undefined,{source:'next_surah',goalSession:S.goalSessionActive});});
+  on(nextBtn,'click',function(){App.openSurah(surahNum+1,undefined,{source:'prev_next',canTrackGoal:!!(S.readerSession&&S.readerSession.canTrackGoal)});});
   nav.appendChild(nextBtn);
   list.appendChild(nav);
 
@@ -6882,7 +6891,7 @@ App.audioNext=function(){
       _scrollMushafToAyah(_advSurah,1,0);
       updateMushafPlayBtn();
     } else if(S.tab==='quran'){
-      App.openSurah(_advSurah,1,{source:'audio'});
+      App.openSurah(_advSurah,1,{source:'audio',canTrackGoal:false});
     }
   }
   else{App.audioClose()}
@@ -8565,7 +8574,7 @@ function renderBmList(bms){
     var openBtn=el('button','bm-card-btn');
     openBtn.appendChild(icon('fas fa-book-open'));
     openBtn.appendChild(document.createTextNode(' '+t('bookmarks.open')));
-    on(openBtn,'click',function(){App.tab('quran');setTimeout(function(){App.openSurah(bm.surah,bm.ayah,{source:'bookmark'})},100)});
+    on(openBtn,'click',function(){App.tab('quran');setTimeout(function(){App.openSurah(bm.surah,bm.ayah,{source:'bookmark',canTrackGoal:false})},100)});
     actions.appendChild(openBtn);
 
     var noteBtn=el('button','bm-card-btn');
@@ -8677,35 +8686,63 @@ function trackVerse(surah,ayah){
   _updateGoalsBadge();
   // Keep goal widget current — lightweight, no network
   pushGoalDataToWidget();
-  // Goal progress: only in an explicit goal session (Continue Goal → prev/next chain).
-  // S.goalSessionActive is false for every other open: surah grid, search, notification,
-  // bookmark, deep link, audio advance. Never updates goal from random navigation.
-  if(S.goalSessionActive)_updateGoalProgress(surah,ayah);
+  console.log('[TRACK_VERSE]',{surah:surah,ayah:ayah,canTrackGoal:!!(S.readerSession&&S.readerSession.canTrackGoal),source:S.readerSession&&S.readerSession.source});
+  if(S.readerSession&&S.readerSession.canTrackGoal)_updateGoalProgress(surah,ayah);
 }
 
+function _ensureGoalPointer(goal){
+  if(goal.pointerSurah)return goal;
+  if(!goal.surahProgress)goal.surahProgress={};
+  if(!goal.completedSurahs)goal.completedSurahs=[];
+  var _fi=1;
+  for(var _pi=1;_pi<=114;_pi++){if(goal.completedSurahs.indexOf(_pi)<0){_fi=_pi;break;}}
+  var _fsk=String(_fi);var _fsp=Number(goal.surahProgress[_fsk]||0);
+  var _fsi=SURAHS[_fi-1];
+  if(_fsi&&_fsp>=_fsi.a){
+    if(goal.completedSurahs.indexOf(_fi)<0)goal.completedSurahs.push(_fi);
+    goal.pointerSurah=_fi<114?_fi+1:114;goal.pointerAyah=1;
+  }else{
+    goal.pointerSurah=_fi;goal.pointerAyah=_fsp>0?_fsp:1;
+  }
+  return goal;
+}
 function _updateGoalProgress(surah,ayah){
-  // Only called when S.goalSessionActive===true — gate is in trackVerse.
   var goal=getGoal();
   if(!goal)return;
   if(!goal.surahProgress)goal.surahProgress={};
   if(!goal.completedSurahs)goal.completedSurahs=[];
-  console.log('[GOAL_TRACK]',{source:S.readerOpenSource,session:S.goalSessionActive,surah:surah,ayah:ayah,before:goal.surahProgress[surah],trackedSurah:goal.trackedSurah,trackedAyah:goal.trackedAyah});
-  var changed=false;
-  // Per-surah: strict high-water mark — Math.max so it NEVER decreases
-  var newHW=Math.max(goal.surahProgress[surah]||0,ayah);
-  if(newHW!==(goal.surahProgress[surah]||0)){goal.surahProgress[surah]=newHW;changed=true;}
-  // Tracked position: surah most recently read in goal session; ayah = high-water for it
-  if(goal.trackedSurah!==surah||(goal.surahProgress[surah]||0)>(goal.trackedAyah||0)){
-    goal.trackedSurah=surah;
-    goal.trackedAyah=goal.surahProgress[surah];
-    changed=true;
+  goal=_ensureGoalPointer(goal);
+  var ps=goal.pointerSurah||1;var pa=goal.pointerAyah||1;
+  console.log('[GOAL_POINTER]',{pointerSurah:ps,pointerAyah:pa,completedSurahs:goal.completedSurahs,progress:goal.surahProgress});
+  // Sequential gate: only the current pointer surah, and only forward ayahs
+  if(surah!==ps||ayah<pa){
+    console.log('[GOAL_SKIP_OUT_OF_SEQUENCE]',{surah:surah,ayah:ayah,pointerSurah:ps,pointerAyah:pa});
+    return;
   }
-  // Surah completion: only when tracker reaches the very last ayah
+  var sk=String(surah);var changed=false;
+  var prev=Number(goal.surahProgress[sk]||0);
+  var next=Math.max(prev,Number(ayah||0));
+  if(next>prev){goal.surahProgress[sk]=next;changed=true;}
   var s=SURAHS[surah-1];
-  if(s&&ayah>=s.a&&goal.completedSurahs.indexOf(surah)<0){
-    goal.completedSurahs.push(surah);changed=true;
+  if(s&&ayah>=s.a){
+    // Surah complete — add to completedSurahs and advance pointer to next surah
+    if(goal.completedSurahs.indexOf(surah)<0){goal.completedSurahs.push(surah);changed=true;}
+    goal.surahProgress[sk]=s.a;
+    if(surah<114){goal.pointerSurah=surah+1;goal.pointerAyah=1;}
+    else{goal.pointerSurah=114;goal.pointerAyah=s.a;goal.finished=true;}
+    changed=true;
+    console.log('[GOAL_COMPLETE_SURAH]',{surah:surah,nextPointerSurah:goal.pointerSurah,nextPointerAyah:goal.pointerAyah});
+  }else{
+    // Partial — advance pointer within this surah
+    goal.pointerSurah=surah;goal.pointerAyah=ayah;changed=true;
   }
-  if(changed){goal.updatedAt=Date.now();saveGoal(goal);_refreshSurahCompletionBadges();}
+  if(changed){
+    goal.updatedAt=Date.now();
+    console.log('[GOAL_SAVE_BEFORE]',{surahProgress:goal.surahProgress,pointerSurah:goal.pointerSurah,pointerAyah:goal.pointerAyah});
+    saveGoal(goal);
+    console.log('[GOAL_SAVE_AFTER_RAW]',localStorage.getItem('readingGoal'));
+    _refreshSurahCompletionBadges();
+  }
 }
 
 function calcBestStreak(log){
@@ -8959,9 +8996,11 @@ function renderGoals(){
   gc.appendChild(details);
   frag.appendChild(gc);
 
-  // Continue Goal card — shows tracked reading position (never polluted by random opens)
-  if(goal.trackedSurah){
-    var cgSurah=SURAHS[goal.trackedSurah-1];
+  // Continue Goal card — sequential pointer (never affected by random opens)
+  goal=_ensureGoalPointer(goal);
+  var _ps=goal.pointerSurah;var _pa=goal.pointerAyah||1;
+  if(_ps&&_ps<=114&&(_ps>1||_pa>1||(goal.completedSurahs||[]).length>0||(goal.surahProgress&&Object.keys(goal.surahProgress).length>0))){
+    var cgSurah=SURAHS[_ps-1];
     var cgCard=el('div','goal-card goal-continue-card');
     var cgHdr=el('div','goal-card-name');
     cgHdr.appendChild(icon('fas fa-book-open'));
@@ -8969,7 +9008,7 @@ function renderGoals(){
     cgCard.appendChild(cgHdr);
     var cgDets=el('div','goal-details');
     [{v:cgSurah?cgSurah.ar:'',l:t('goals.session.surah')||'سوورەت'},
-     {v:String(goal.trackedAyah||1),l:t('reader.ayah')||'ئایەت'},
+     {v:String(_pa),l:t('reader.ayah')||'ئایەت'},
      {v:String((goal.completedSurahs||[]).length),l:t('goals.done_surahs')||'تەواوبوو'}
     ].forEach(function(dd){
       var det=el('div','goal-detail');
@@ -8978,11 +9017,10 @@ function renderGoals(){
       cgDets.appendChild(det);
     });
     cgCard.appendChild(cgDets);
-    on(cgCard,'click',function(){
-      H.medium();
-      App.tab('quran');
-      setTimeout(function(){App.openSurah(goal.trackedSurah,goal.trackedAyah||1,{source:'continue_goal',goalSession:true});},300);
-    });
+    on(cgCard,'click',(function(ps,pa){return function(){
+      H.medium();App.tab('quran');
+      setTimeout(function(){App.openSurah(ps,pa,{source:'continue_goal',canTrackGoal:true});},300);
+    };}(_ps,_pa)));
     frag.appendChild(cgCard);
   }
 
@@ -12281,6 +12319,51 @@ function mergeSyncData(local,cloud){
     var lrv=parseInt(local[vrk]||'0');var crv=parseInt(cloud[vrk]||'0');
     if(lrv>0||crv>0){result[vrk]=String(Math.max(lrv,crv));}
   }
+
+  // readingGoal: smart merge — never let cloud LWW wipe local surahProgress/trackedSurah/trackedAyah
+  try{
+    var _lg=local.readingGoal?JSON.parse(local.readingGoal):null;
+    var _cg=cloud.readingGoal?JSON.parse(cloud.readingGoal):null;
+    if(!_lg&&!_cg){delete result.readingGoal;}
+    else if(!_lg){result.readingGoal=cloud.readingGoal;}
+    else if(!_cg){result.readingGoal=local.readingGoal;}
+    else if((_lg.created||0)!==(_cg.created||0)){
+      // Different goals (one was replaced) — use whichever was created more recently
+      result.readingGoal=(_lg.created||0)>=(_cg.created||0)?local.readingGoal:cloud.readingGoal;
+    }else{
+      // Same goal — merge additive fields, use newer updatedAt for tracked position
+      var _lgT=_lg.updatedAt||0;var _cgT=_cg.updatedAt||0;
+      var _gBase=_cgT>_lgT?_cg:_lg;
+      var _mg=Object.assign({},_gBase);
+      // surahProgress: max per surah (never decrease)
+      var _lsp=_lg.surahProgress||{};var _csp=_cg.surahProgress||{};
+      var _spAll={};
+      Object.keys(_lsp).forEach(function(k){_spAll[k]=true;});
+      Object.keys(_csp).forEach(function(k){_spAll[k]=true;});
+      var _sp={};
+      Object.keys(_spAll).forEach(function(k){_sp[k]=Math.max(Number(_lsp[k]||0),Number(_csp[k]||0));});
+      _mg.surahProgress=_sp;
+      // completedSurahs: union (add-only)
+      var _lcs=_lg.completedSurahs||[];var _ccs=_cg.completedSurahs||[];
+      var _csU={};
+      _lcs.forEach(function(n){_csU[n]=true;});_ccs.forEach(function(n){_csU[n]=true;});
+      _mg.completedSurahs=Object.keys(_csU).map(Number).sort(function(a,b){return a-b;});
+      // Recalculate sequential pointer from merged completedSurahs + surahProgress
+      var _fis=1;
+      for(var _spi=1;_spi<=114;_spi++){if(_mg.completedSurahs.indexOf(_spi)<0){_fis=_spi;break;}}
+      var _fsk2=String(_fis);var _fsp2=Number(_mg.surahProgress[_fsk2]||0);
+      var _fsInfo=SURAHS[_fis-1];
+      if(_fsInfo&&_fsp2>=_fsInfo.a){
+        if(_mg.completedSurahs.indexOf(_fis)<0)_mg.completedSurahs.push(_fis);
+        _mg.pointerSurah=_fis<114?_fis+1:114;_mg.pointerAyah=1;
+      }else{
+        _mg.pointerSurah=_fis;_mg.pointerAyah=_fsp2>0?_fsp2:1;
+      }
+      delete _mg.trackedSurah;delete _mg.trackedAyah;
+      _mg.updatedAt=Math.max(_lgT,_cgT)||undefined;
+      result.readingGoal=JSON.stringify(_mg);
+    }
+  }catch(_e_rg){}
 
   // FURTHEST: last read position — take whichever is deeper in the Quran,
   // UNLESS a full reset has happened (fullResetAt) — then use reset-winner's lastRead
