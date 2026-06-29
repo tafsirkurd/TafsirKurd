@@ -10,6 +10,7 @@ import android.provider.Settings;
 import android.util.Log;
 import android.webkit.CookieManager;
 import android.webkit.PermissionRequest;
+import android.webkit.RenderProcessGoneDetail;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import androidx.work.ExistingPeriodicWorkPolicy;
@@ -17,6 +18,7 @@ import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 import com.getcapacitor.BridgeActivity;
 import com.getcapacitor.BridgeWebChromeClient;
+import com.getcapacitor.WebViewListener;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import java.util.concurrent.TimeUnit;
@@ -52,6 +54,57 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(AudioPermissionPlugin.class);
         registerPlugin(AthanAlarmPlugin.class);
         super.onCreate(savedInstanceState);
+
+        // ── WebView renderer death recovery ──────────────────────────────────
+        // When the renderer dies (OOM, GPU driver crash, OEM kill):
+        //   1. Log the event.
+        //   2. Save a recovery marker to SharedPreferences.
+        //   3. Call Activity.recreate() for a clean restart — fresh WebView + bridge.
+        //      LocalStorage is preserved across recreate(), so the app restores its last state.
+        //   4. Loop-guard: if two deaths occur within 10 s, do not recurse into recreate().
+        getBridge().addWebViewListener(new WebViewListener() {
+            @Override
+            public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
+                boolean crashed  = detail.didCrash();
+                int     priority = detail.rendererPriorityAtExit();
+                String  reason   = crashed ? "crash" : "oom";
+                Log.e("WebView", "Renderer died — " + reason
+                    + " priority=" + priority
+                    + " pkg=" + getPackageName());
+
+                SharedPreferences prefs =
+                    getSharedPreferences("CapacitorStorage", MODE_PRIVATE);
+
+                // Loop guard: two deaths within 10 s → do not recurse
+                long lastDiedAt = prefs.getLong("renderer_died_at", 0L);
+                long now        = System.currentTimeMillis();
+                if (now - lastDiedAt < 10_000L) {
+                    Log.e("WebView", "Renderer died twice in 10 s — skipping recreate");
+                    prefs.edit().remove("rendererRecovery").remove("renderer_died_at").apply();
+                    return true; // prevent crash, do not recurse
+                }
+
+                // Save recovery marker — app.js reads this on next startup via Preferences
+                prefs.edit()
+                    .putString("rendererRecovery", reason)
+                    .putLong("renderer_died_at", now)
+                    .apply();
+
+                // Restart the Activity cleanly on the UI thread
+                runOnUiThread(new Runnable() {
+                    @Override public void run() {
+                        try {
+                            recreate();
+                        } catch (Exception e) {
+                            Log.e("WebView", "recreate() failed: " + e.getMessage());
+                            finish(); // last resort
+                        }
+                    }
+                });
+
+                return true; // prevent Activity crash
+            }
+        });
 
         // Set WebView and window background to match the user's saved theme immediately
         // after the bridge initialises — eliminates the color flash between splash and app.

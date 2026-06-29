@@ -1126,11 +1126,11 @@ function init(){
     setupPullToRefresh('panelBookmarks',function(_,done){_renderHash.bm=null;renderBookmarks();_renderHash.bm=_tabHash('bookmarks');done();});
     setupPullToRefresh('panelGoals',function(_,done){_renderHash.goals=null;renderGoals();_renderHash.goals=_tabHash('goals');done();});
     // IslamVoice: sync branch (isRecent/local render) calls done(); async fetch lets hard cap handle it
-    setupPullToRefresh('panelIslamvoice',function(isRecent,done){_renderHash.iv=null;if(!isRecent&&typeof App.ivRefresh==='function'){App.ivRefresh();}else{renderIslamVoice();done();}});
+    setupPullToRefresh('panelIslamvoice',function(isRecent,done){_renderHash.iv=null;if(!isRecent&&typeof App.ivRefresh==='function'){App.ivRefresh();setTimeout(done,900);}else{renderIslamVoice();done();}});
     setupPullToRefresh('panelSettings',function(_,done){_renderHash.settings=null;renderSettings();_renderHash.settings=_tabHash('settings');done();});
-    // Prayer/Gencine: sync render paths call done(); async refresh() lets hard cap handle it
-    setupPullToRefresh('panelPrayer',function(isRecent,done){if(window.PrayerUI){if(isRecent){PrayerUI.render();_renderHash.prayer=_tabHash('prayer');done();}else{PrayerUI.refresh();}}});
-    setupPullToRefresh('panelGencine',function(isRecent,done){if(window.GencineUI){if(isRecent){GencineUI._draw();done();}else{GencineUI.refresh();}}});
+    // Prayer/Gencine: sync render paths call done() immediately; async refresh() shows spinner for 900ms
+    setupPullToRefresh('panelPrayer',function(isRecent,done){if(window.PrayerUI){if(isRecent){PrayerUI.render();_renderHash.prayer=_tabHash('prayer');done();}else{PrayerUI.refresh();setTimeout(done,900);}}else{done();}});
+    setupPullToRefresh('panelGencine',function(isRecent,done){if(window.GencineUI){if(isRecent){GencineUI._draw();done();}else{GencineUI.refresh();setTimeout(done,900);}}else{done();}});
 
     // Fast-scroll pill for long lists
     if(window._initFastScroll) _initFastScroll();
@@ -1235,6 +1235,56 @@ function init(){
         console.log('[APP_LIFECYCLE] resume_refresh_done');
       }
     });
+
+    // ── Global error handlers ────────────────────────────────────────────────
+    // Catch uncaught JS exceptions and unhandled Promise rejections.
+    // Log to HealthLog (persists to sessionStorage for post-mortem) and console.
+    // Never crash the app — just capture.
+    window.onerror=function(msg,src,line,col,err){
+      var detail=(src?src.split('/').pop():'')+':'+(line||0)+(col?':'+col:'');
+      var message=String((err&&err.message)||msg||'unknown').slice(0,300);
+      if(window.HealthLog)HealthLog.add('js_error',message+' @ '+detail);
+      console.error('[UNCAUGHT]',message,'at',detail,err||'');
+      return false; // let the browser also log it
+    };
+    window.onunhandledrejection=function(ev){
+      var reason=ev&&ev.reason;
+      var message=String((reason&&reason.message)||reason||'unhandled rejection').slice(0,300);
+      if(window.HealthLog)HealthLog.add('promise_rejection',message);
+      console.error('[UNHANDLED REJECTION]',reason||ev);
+    };
+
+    // ── Low-memory response ──────────────────────────────────────────────────
+    // When the OS sends a memory warning: flush caches, cancel heavy work.
+    AppRuntime.on('lowMemory',function(){
+      if(window.HealthLog)HealthLog.add('low_memory','OS low-memory signal — flushing caches');
+      // Clear large in-memory caches
+      try{if(typeof _ssMemory!=='undefined'){_ssMemory=null;_ssMemTs=0;}}catch(e){}
+      // Free ~6 MB mushaf page bundles — they are re-fetched on demand from cache
+      try{window._mushafV1Pages=null;window._mushafV4Pages=null;_mushafV1DataP=null;_mushafV4DataP=null;}catch(e){}
+      // Free audio prefetch blobs — saves ~2–5 MB of blob URLs; audio re-fetches on demand
+      try{if(typeof clearPrefetch==='function'&&!S.audio.playing)clearPrefetch();}catch(e){}
+      // Force sync to cloud then pause sync interval to reduce background pressure
+      try{if(S.user&&typeof syncToCloud==='function')syncToCloud();}catch(e){}
+    });
+
+    // ── Renderer recovery check ──────────────────────────────────────────────
+    // If the WebView renderer died on a previous run, Java set rendererRecovery
+    // in CapacitorStorage SharedPreferences before calling Activity.recreate().
+    // Check for the flag here and show a brief recovery notice.
+    try{
+      if(window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.Preferences){
+        Capacitor.Plugins.Preferences.get({key:'rendererRecovery'}).then(function(r){
+          if(!r||!r.value)return;
+          Capacitor.Plugins.Preferences.remove({key:'rendererRecovery'});
+          if(window.HealthLog)HealthLog.add('renderer_recovery','Recovered from renderer death: '+r.value);
+          // Brief toast so the user knows the app self-healed
+          setTimeout(function(){
+            if(typeof toast==='function')toast('ئاپ ژنووکرا ✓');
+          },1200);
+        }).catch(function(){});
+      }
+    }catch(e){}
 
     // Handle iOS widget tap → deep link to prayer tab (tafsirkurd://prayer)
     try{
@@ -1353,6 +1403,7 @@ function init(){
     // doBack: performs the back action. opts.allowExit controls whether to exit the app.
     App.doBack=function(opts){
       var allowExit=opts&&opts.allowExit;
+      if(window.HeaderOverlayManager&&HeaderOverlayManager.getActive()){HeaderOverlayManager.close();return;}
       if($('fuOverlay')&&$('fuOverlay').classList.contains('on'))return; // hard block
       var _nmOv=document.querySelector('.note-modal-ov.on');if(_nmOv){_nmOv.classList.remove('on');return;}
       if($('khatmCelebOverlay')){App.closeGoalCelebration();return;}
@@ -1763,7 +1814,7 @@ function _startTabPrerender(){
   var jobs=[
     _shieldedJob(function(){renderBookmarks();_renderHash.bm=_tabHash('bookmarks');},'bookmarks',null),
     _shieldedJob(function(){renderGoals();_renderHash.goals=_tabHash('goals');},'goals',null),
-    // Settings: always pre-render — it's static DOM, cheap on all device tiers
+    // Settings: pre-render on all tiers but deferred so quran data loads first
     _shieldedJob(function(){renderSettings();_renderHash.settings=_tabHash('settings');},'settings','panelSettings'),
     _shieldedJob(function(){if(window.PrayerUI){PrayerUI.render();_renderHash.prayer=_tabHash('prayer');
       requestAnimationFrame(function(){var _s=document.getElementById('prayerSkyScene');if(_s&&S.tab!=='prayer')_s.classList.add('sky-paused');});}},'prayer','panelPrayer'),
@@ -2023,6 +2074,9 @@ function applyTheme(){
     try{window.Capacitor.Plugins.StatusBar.setBackgroundColor({color:bg})}catch(e){}
   }
 
+  // Keep content backdrop color in sync with theme
+  if(window.HeaderOverlayManager)HeaderOverlayManager.setBackdropColor(S.theme);
+
   // Resume sky one frame later so the new theme paints before animations restart.
   if(_skyWasRunning){requestAnimationFrame(function(){var _s=document.getElementById('prayerSkyScene');if(_s)_s.classList.remove('sky-paused');});}
 
@@ -2159,11 +2213,13 @@ App.tab=function(name){
     var rm=$('repeatModal');if(rm&&rm.style.display!=='none')App.closeRepeat&&App.closeRepeat();
     // Audio settings panel
     var ap=$('audioSettingsPanel');if(ap&&ap.style.display!=='none')App.closeAudioSettings&&App.closeAudioSettings();
-    // Inbox modal
-    var im=$('inbox-modal');if(im&&im.style.display!=='none')App.closeInbox&&App.closeInbox();
+    // Header panels (Search, Inbox) — HeaderOverlayManager closes whichever is open
+    if(window.HeaderOverlayManager)HeaderOverlayManager.close();
     // IV overlays
     var iso=$('ivSavedOverlay');if(iso&&iso.classList.contains('open'))App.ivCloseSaved&&App.ivCloseSaved();
     var iho=$('ivHistoryOverlay');if(iho&&iho.classList.contains('open'))App.ivCloseHistory&&App.ivCloseHistory();
+    // Reset any in-flight PTR so the panel doesn't stay translated after tab switch
+    _ptrResets.forEach(function(fn){try{fn();}catch(e){}});
   })();
 
   // Cancel any pending rAF render from a previous fast tab switch
@@ -2225,7 +2281,7 @@ App.tab=function(name){
       if(_skyEl2)_skyEl2.classList.add('sky-paused');
     }
     if(_prevTab==='quran'&&name!=='quran'){
-      var _sb=document.getElementById('searchBar');if(_sb)_sb.classList.remove('on');App.clearSearch();
+      App.clearSearch();
       if(_surahBadgeObs){_surahBadgeObs.disconnect();}
       clearMushafHighlights();
     }
@@ -3467,34 +3523,80 @@ function _appendSrcPills(item,srcs){
 
 
 
-App.toggleSearch=function(){
-  var bar=$('searchBar');
-  bar.classList.toggle('on');
-  if(bar.classList.contains('on')){
-    var inp=$('searchInput');
-    inp.focus();
-    // Restore last session query if input is empty
-    var lastQ='';try{lastQ=sessionStorage.getItem('qs_last')||'';}catch(e){}
-    if(lastQ&&!inp.value){
-      inp.value=lastQ;
-      App.onSearch(lastQ);
-    } else if(!inp.value){
-      App._renderSearchHistory();
+// ── HeaderOverlayManager ─────────────────────────────────────────────────────
+// Single manager for all header panels (Search, Inbox, etc.).
+// Guarantees only one panel is open at a time.
+// Owns the backdrop lifecycle, cleans up on tab switch / background / resize.
+var HeaderOverlayManager=(function(){
+  var _active=null;
+  var _closeFns={};
+  var _bdEl=null;
+  var _bdColors={
+    dark:'rgba(0,0,0,.24)',
+    light:'rgba(0,0,0,.14)',
+    noor:'rgba(70,45,10,.14)',
+    sakina:'rgba(0,12,8,.22)'
+  };
+  function _bd(){if(!_bdEl)_bdEl=document.getElementById('hdrBackdrop');return _bdEl;}
+  function _hideBackdrop(){var b=_bd();if(b)b.classList.remove('on');}
+  function _showBackdrop(){var b=_bd();if(b)b.classList.add('on');}
+  function _runClose(id){
+    var fn=_closeFns[id];
+    delete _closeFns[id];
+    try{if(fn)fn();}catch(e){if(window.HealthLog)HealthLog.add('hom_close_err',e&&e.message||e);}
+  }
+  function open(id,openFn,closeFn){
+    if(_active&&_active!==id){
+      var prev=_active;
+      _active=null;
+      _runClose(prev);
+      _hideBackdrop();
     }
-    // Close when tapping outside the search bar
-    setTimeout(function(){
-      function _outsideClose(e){
-        if(!bar.contains(e.target)){
-          document.removeEventListener('pointerdown',_outsideClose,true);
-          if(bar.classList.contains('on'))App.toggleSearch();
-        }
+    _active=id;
+    _closeFns[id]=closeFn||null;
+    _showBackdrop();
+    try{if(openFn)openFn();}catch(e){if(window.HealthLog)HealthLog.add('hom_open_err',e&&e.message||e);}
+  }
+  function close(){
+    if(!_active)return;
+    var id=_active;
+    _active=null;
+    _runClose(id);
+    _hideBackdrop();
+  }
+  function isOpen(id){return _active===id;}
+  function getActive(){return _active;}
+  function setBackdropColor(theme){var b=_bd();if(b)b.style.background=_bdColors[theme]||'rgba(0,0,0,.2)';}
+  // Auto-cleanup on app background and orientation change
+  AppRuntime.on('background',function(){close();});
+  AppRuntime.on('resize',function(){close();});
+  return{open:open,close:close,isOpen:isOpen,getActive:getActive,setBackdropColor:setBackdropColor};
+})();
+window.HeaderOverlayManager=HeaderOverlayManager;
+
+App.toggleSearch=function(){
+  if(HeaderOverlayManager.isOpen('search')){
+    HeaderOverlayManager.close();
+  }else{
+    HeaderOverlayManager.open('search',function(){
+      var bar=$('searchBar');
+      if(bar)bar.classList.add('on');
+      var inp=$('searchInput');
+      if(inp){
+        inp.focus();
+        var lastQ='';try{lastQ=sessionStorage.getItem('qs_last')||'';}catch(e){}
+        if(lastQ&&!inp.value){inp.value=lastQ;App.onSearch(lastQ);}
+        else if(!inp.value){App._renderSearchHistory();}
       }
-      document.addEventListener('pointerdown',_outsideClose,true);
-    },0);
-  } else {
-    App.clearSearch();
+    },function(){
+      var bar=$('searchBar');
+      if(bar)bar.classList.remove('on');
+      App.clearSearch();
+    });
   }
 };
+// Tapping the content backdrop closes whichever header panel is currently open
+App.onBackdropTap=function(){HeaderOverlayManager.close();};
 
 App.clearSearch=function(){
   clearTimeout(_searchTimer);_searchTimer=null;
@@ -3703,7 +3805,7 @@ App._mkSearchItem=function(r,isPrimary){
       H.selection();
       if(window.QuranSearch&&QuranSearch.trackTap)QuranSearch.trackTap(sn,an);
       _shAdd(q);
-      App.tab('quran');App.clearSearch();$('searchBar').classList.remove('on');
+      HeaderOverlayManager.close();App.tab('quran');
       setTimeout(function(){App.openSurah(sn,an);},100);
     };})(r.sn,r.an,S.search));
 
@@ -3719,7 +3821,7 @@ App._mkSearchItem=function(r,isPrimary){
     item.appendChild(row);
     on(item,'click',(function(sn,q){return function(){
       _shAdd(q);
-      App.openSurah(sn);App.clearSearch();$('searchBar').classList.remove('on');
+      HeaderOverlayManager.close();App.openSurah(sn);
     };})(r.sn,S.search));
 
   }else{
@@ -3740,7 +3842,7 @@ App._mkSearchItem=function(r,isPrimary){
       H.selection();
       if(window.QuranSearch&&QuranSearch.trackTap)QuranSearch.trackTap(sn,an);
       _shAdd(q);
-      App.tab('quran');App.clearSearch();$('searchBar').classList.remove('on');
+      HeaderOverlayManager.close();App.tab('quran');
       setTimeout(function(){App.openSurah(sn,an);},100);
     };})(r.sn,r.an,S.search));
   }
@@ -4505,6 +4607,11 @@ function _mushafWrapSpreads(view){
 function renderMushafView(){
   var view=$('mushafView');
   if(!view||!S.surah)return;
+  // Remove stale per-render listeners from the previous call.
+  // These were added inside the async .then() below, so they can't be caught
+  // by the synchronous guard above — store and remove explicitly here.
+  if(_mushafHdrScrollFn){view.removeEventListener('scroll',_mushafHdrScrollFn);_mushafHdrScrollFn=null;}
+  if(_mushafTouchFn){view.removeEventListener('touchstart',_mushafTouchFn);_mushafTouchFn=null;}
   // Start bundle fetch immediately so it's ready before the first page loads
   _loadMushafV1BundledData();
   clearMushafHighlights();
@@ -4645,13 +4752,13 @@ function renderMushafView(){
           if(ns&&$('readerName')){var _rnm=$('readerName'),_rnn=ns.en+' - '+ns.ar;if(_rnm.textContent!==_rnn){_rnm.style.opacity='0';(function(_t){setTimeout(function(){_rnm.textContent=_t;_rnm.style.opacity='1';},140);}(_rnn));}}
         },200);
       }
-      view.addEventListener('scroll',_updateHeaderFromScroll,{passive:true});
+      _mushafHdrScrollFn=_updateHeaderFromScroll;
+      view.addEventListener('scroll',_mushafHdrScrollFn,{passive:true});
     })();
 
     // Cancel any in-flight smooth scroll when the user touches the mushaf
-    view.addEventListener('touchstart',function(){
-      if(_mushafScrollAnim){_mushafScrollAnim.cancelled=true;_mushafScrollAnim=null;}
-    },{passive:true});
+    _mushafTouchFn=function(){if(_mushafScrollAnim){_mushafScrollAnim.cancelled=true;_mushafScrollAnim=null;}};
+    view.addEventListener('touchstart',_mushafTouchFn,{passive:true});
 
     // iPad (any orientation â‰¥768px): page-by-page horizontal navigation
     if(document.documentElement.classList.contains('is-ipad')&&window.innerWidth>=768){
@@ -5474,10 +5581,16 @@ var _mqInFlight=[];    // page numbers mid-load — eviction skips these
 var _mqScrolling=false,_mqScrollTimer=null;
 var _mqScrollEl=null,_mqScrollFn=null;
 var MAX_MQ=2,MAX_MQ_KEPT=10; // 10 pages × ~300 DOM nodes × ~50KB font each
+// Track mushaf view listeners so they are removed before re-adding on re-render.
+// Without this, every renderMushafView() call accumulates another scroll+touch
+// handler on the same element, causing redundant setTimeout work per scroll event.
+var _mushafHdrScrollFn=null;
+var _mushafTouchFn=null;
 
 // Evict pages farthest from anchor, preserving slot heights to avoid scroll jump
 function _mqEvictFar(anchor){
-  var max=document.documentElement.classList.contains('perf-critical')?6:MAX_MQ_KEPT;
+  var _dcl=document.documentElement.classList;
+  var max=_dcl.contains('perf-critical')?6:_dcl.contains('perf-low')?8:MAX_MQ_KEPT;
   if(_mqLoadedPages.length<=max)return;
   var view=$('mushafView');
   while(_mqLoadedPages.length>max){
@@ -9984,21 +10097,24 @@ setTimeout(function(){
   App.openInbox=function(){
     var modal=$('inbox-modal');
     if(!modal)return;
-    modal.style.display='block';
-    _renderInbox(_inboxItems);
-    _markSeen();
-    var badge=$('inboxBadge');
-    if(badge)badge.style.display='none';
-    _fetchAndMerge().then(function(items){
-      _inboxItems=items;
-      _renderInbox(items);
-      _inboxBadgeUpdate(items);
+    HeaderOverlayManager.open('inbox',function(){
+      modal.style.display='block';
+      _renderInbox(_inboxItems);
+      _markSeen();
+      var badge=$('inboxBadge');
+      if(badge)badge.style.display='none';
+      _fetchAndMerge().then(function(items){
+        _inboxItems=items;
+        _renderInbox(items);
+        _inboxBadgeUpdate(items);
+      });
+    },function(){
+      if(modal)modal.style.display='none';
     });
   };
 
   App.closeInbox=function(){
-    var modal=$('inbox-modal');
-    if(modal)modal.style.display='none';
+    if(HeaderOverlayManager.isOpen('inbox'))HeaderOverlayManager.close();
   };
 
   window._initInbox=_initInbox;
@@ -10521,7 +10637,15 @@ function mkToggleRow(labelText,isOn,onToggle,subText){
   row.appendChild(left);
   var toggle=el('div','toggle'+(isOn?' on':''));
   toggle.appendChild(el('div','toggle-knob'));
-  on(toggle,'click',function(){H.light();onToggle();});
+  on(toggle,'click',function(){
+    H.light();
+    toggle.classList.toggle('on');
+    try{onToggle();}
+    catch(e){
+      toggle.classList.toggle('on'); // revert visual on failure
+      if(window.HealthLog)HealthLog.add('toggle_crash',e&&e.message||e);
+    }
+  });
   row.appendChild(toggle);
   return row;
 }
@@ -10638,7 +10762,17 @@ async function openAboutSheet(type){
     _cfgOverlayEl.classList.add('on');
     _cfgSheetEl.style.display='';
     _cfgSheetEl.classList.add('open');
-    ss=await getSiteSettings();
+    try{ss=await getSiteSettings();}catch(e){
+      clear(body);
+      var _errEl=el('div','ab-error');
+      _errEl.style.cssText='display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px;color:var(--text2,#888);text-align:center;gap:12px';
+      var _errIc=el('i');_errIc.className='fas fa-circle-exclamation';_errIc.style.cssText='font-size:1.8rem;opacity:.4';
+      _errEl.appendChild(_errIc);
+      _errEl.appendChild(el('div','',_tl('error_loading','بارکردن سەرنەکەوت')));
+      body.appendChild(_errEl);
+      if(window.HealthLog)HealthLog.add('about_sheet_error',e&&e.message||e);
+      return;
+    }
     clear(body);
   }else{
     _cfgOverlayEl.classList.add('on');
@@ -10975,7 +11109,16 @@ function _showIgPicker(){
   });
 }
 
+var _renderSettingsScheduled=false;
 function renderSettings(){
+  if(_renderSettingsScheduled)return;
+  _renderSettingsScheduled=true;
+  (window.requestAnimationFrame||function(fn){setTimeout(fn,16);})(function(){
+    _renderSettingsScheduled=false;
+    _renderSettingsNow();
+  });
+}
+function _renderSettingsNow(){
   var content=$('settingsContent');
   var frag=document.createDocumentFragment();
 
@@ -11031,31 +11174,54 @@ function renderSettings(){
   frag.appendChild(profile);
 
   // ── (1) Reading Stats Card ────────────────────
-  var log=getReadLog();
-  var bms=getBookmarks();
-  var totalRead=calcTotalRead(log);
-  var streak=calcStreak(log);
-  var bestStreak=calcBestStreak(log);
-  var khatmCount=Math.floor(totalRead/6236);
-  var pLog=getPrayerLog();
-  var totalPrayers=Object.keys(pLog).reduce(function(acc,d){return acc+_TRACK_PRAYERS.filter(function(p){return pLog[d]&&pLog[d][p];}).length;},0);
+  // Always render immediately with — placeholders; fill real values after paint
+  // so Settings is instant on all tiers including low/critical devices.
   function _tl(key,fb){var v=t(key);return(v&&v!==key)?v:fb;}
   var statsCard=el('div','stats-card');
-  [[icon('fas fa-book-open'),totalRead,_tl('settings.stats_ayahs','ئایەتێن خواندی')],
-   [icon('fas fa-fire'),streak,_tl('settings.stats_streak','بەردەوامیا ڕۆژان')],
-   [icon('fas fa-bookmark'),bms.length,_tl('settings.stats_bookmarks','نیشانکری')],
-   [icon('fas fa-ranking-star'),bestStreak,_tl('settings.stats_best_streak','بلندترین بەردەوامییا خواندنێ')],
-   [icon('fas fa-star'),khatmCount,_tl('settings.stats_khatm','ختم')],
-   [icon('fas fa-mosque'),totalPrayers,_tl('settings.stats_prayers','نڤێژ')]
-  ].forEach(function(item){
+  var _statDefs=[
+    [icon('fas fa-book-open'),'—',_tl('settings.stats_ayahs','ئایەتێن خواندی')],
+    [icon('fas fa-fire'),'—',_tl('settings.stats_streak','بەردەوامیا ڕۆژان')],
+    [icon('fas fa-bookmark'),'—',_tl('settings.stats_bookmarks','نیشانکری')],
+    [icon('fas fa-ranking-star'),'—',_tl('settings.stats_best_streak','بلندترین بەردەوامییا خواندنێ')],
+    [icon('fas fa-star'),'—',_tl('settings.stats_khatm','ختم')],
+    [icon('fas fa-mosque'),'—',_tl('settings.stats_prayers','نڤێژ')]
+  ];
+  var _statNumEls=[];
+  _statDefs.forEach(function(item){
     var col=el('div','stats-col');
     var ic=item[0];ic.className+=' stats-icon';
     col.appendChild(ic);
-    col.appendChild(el('div','stats-num',String(item[1])));
+    var numEl=el('div','stats-num',item[1]);
+    _statNumEls.push(numEl);
+    col.appendChild(numEl);
     col.appendChild(el('div','stats-lbl',item[2]));
     statsCard.appendChild(col);
   });
   frag.appendChild(statsCard);
+  // Defer expensive calculation until idle — never blocks first render
+  (window.requestIdleCallback
+    ?function(fn){requestIdleCallback(fn,{timeout:2000});}
+    :function(fn){setTimeout(fn,120);}
+  )(function(){
+    try{
+      var log=getReadLog();
+      var bms=getBookmarks();
+      var totalRead=calcTotalRead(log);
+      var streak=calcStreak(log);
+      var bestStreak=calcBestStreak(log);
+      var khatmCount=Math.floor(totalRead/6236);
+      var pLog=getPrayerLog();
+      var totalPrayers=Object.keys(pLog).reduce(function(acc,d){
+        return acc+_TRACK_PRAYERS.filter(function(p){return pLog[d]&&pLog[d][p];}).length;
+      },0);
+      if(!statsCard.isConnected)return; // settings re-rendered while we were computing
+      [totalRead,streak,bms.length,bestStreak,khatmCount,totalPrayers].forEach(function(v,i){
+        if(_statNumEls[i])_statNumEls[i].textContent=String(v);
+      });
+    }catch(e){
+      if(window.HealthLog)HealthLog.add('stats_calc_error',e&&e.message||e);
+    }
+  });
 
   // ── Appearance ───────────────────────────────
   var g1=el('div','settings-group');
@@ -11091,7 +11257,14 @@ function renderSettings(){
     card.appendChild(el('div','theme-card-name',th.name));
     card.appendChild(el('div','theme-card-sub',th.sub));
     var chk=el('div','theme-card-check');chk.appendChild(icon('fas fa-check'));card.appendChild(chk);
-    on(card,'click',function(){S.theme=th.id;applyTheme();try{localStorage.setItem('themeUserChosen','1');}catch(e){}H.light();renderSettings();});
+    on(card,'click',function(){
+      S.theme=th.id;applyTheme();
+      try{localStorage.setItem('themeUserChosen','1');}catch(e){}
+      H.light();
+      // Update active state in-place — no full re-render needed
+      tGrid.querySelectorAll('.theme-card').forEach(function(c){c.classList.remove('on');});
+      card.classList.add('on');
+    });
     tGrid.appendChild(card);
   });
   g1.appendChild(tGrid);
@@ -11103,33 +11276,29 @@ function renderSettings(){
   g2.appendChild(mkToggleRow('نیشادانا تەفسیرێ',S.showTafsir,function(){
     S.showTafsir=!S.showTafsir;
     localStorage.setItem('showTafsir',String(S.showTafsir));
-    applyShowTafsir();renderSettings();
+    applyShowTafsir(); // toggle updates in-place via mkToggleRow
   }));
   g2.appendChild(mkToggleRow('چوونا ئۆتۆماتیکی بۆ سورەتا دویڤدا',S.autoAdvance,function(){
     S.autoAdvance=!S.autoAdvance;
     localStorage.setItem('autoAdvance',String(S.autoAdvance));
-    renderSettings();
   },'دەمێ دەنگێ سوورەتەکێ ب دوماهی دهێت'));
   g2.appendChild(mkToggleRow('گوهدان و دیتنا قورئانێ د هەمان دەمدا.',S.scrollFollowsAudio,function(){
     S.scrollFollowsAudio=!S.scrollFollowsAudio;
     localStorage.setItem('scrollFollowsAudio',String(S.scrollFollowsAudio));
-    renderSettings();
   },'ئەرێ تە دڤێت دەمێ گوهدانا قورئانێ، نڤیسین ئوتوماتیک بچیتە ئایەتا دویڤدا؟ ئەڤێ هەلبژێرە.'));
   g2.appendChild(mkToggleRow('دەمێ خواندنا قورئانێ، شاشە ڤەنامریت',S.keepAwake,function(){
     S.keepAwake=!S.keepAwake;
     localStorage.setItem('keepAwake',String(S.keepAwake));
-    applyKeepAwake();renderSettings();
+    applyKeepAwake();
   }));
   g2.appendChild(mkToggleRow('دەمێ دەرکەفتنێ، دەنگێ قورئانێ دمینیت.',S.bgAudio,function(){
     S.bgAudio=!S.bgAudio;
     localStorage.setItem('bgAudio',String(S.bgAudio));
-    renderSettings();
   }));
   var _hapticRow=mkToggleRow('لەرزینا دەستی',S.hapticFeedback,function(){
     S.hapticFeedback=!S.hapticFeedback;
     localStorage.setItem('hapticFeedback',String(S.hapticFeedback));
     H.success();
-    renderSettings();
   },'لەرزین دگەل هەر هەلبژارتنەکێ');
   var _hapticSupported=!!(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Haptics)||!!navigator.vibrate;
   if(!_hapticSupported){
@@ -11204,12 +11373,11 @@ function renderSettings(){
   // App notifications toggle (new video, new book — NOT prayer)
   var _appNotifOn=localStorage.getItem('appNotifEnabled')!=='false';
   g4.appendChild(mkToggleRow(
-    _appNotifOn ? 'چاڵاككرنا بیرئینانان' : 'نەچاڵاككرنا بیرئینانان',
+    'بیرئینانان',
     _appNotifOn,
     function(){
       _appNotifOn=!_appNotifOn;
       localStorage.setItem('appNotifEnabled',String(_appNotifOn));
-      renderSettings();
     },
     'ڕاوەستاندنا چاڵاکییا بیرئینانان (پەرتوکێن نوی، فەرموودە، ڤیدیو، ئایەت، زکر..)'
   ));
@@ -12417,7 +12585,9 @@ function startCloudSync(){
   _isNewDeviceLogin=!prevUserId||prevUserId!==S.user.id||!localStorage.getItem('_lastSyncTs');
   lsSet('_lastUserId',S.user.id);
   loadFromCloud(function(){
-    S.syncInterval=setInterval(syncToCloud,30000);
+    // On low-end devices use a longer sync interval to reduce background CPU
+    var _syncMs=(window.TKPerf&&(window.TKPerf.level==='low'||window.TKPerf.level==='critical'))?60000:30000;
+    S.syncInterval=setInterval(syncToCloud,_syncMs);
     subscribeRealtime();
     // Flush any dirty data queued while offline (app killed before sync completed)
     if(localStorage.getItem('_syncPendingDirty')==='1'){setTimeout(syncToCloud,1000);}
@@ -13654,6 +13824,15 @@ function _ptrAnyOverlayOpen(){
   if(_ro&&_ro.style.display!=='none'&&parseFloat(_ro.style.opacity||'0')>0)return true;
   var _qs=document.getElementById('quickSettings');
   if(_qs&&parseFloat(_qs.style.opacity||'0')>0&&_qs.style.pointerEvents!=='none')return true;
+  if(document.querySelector('.qs-sheet.on'))return true;
+  if(document.querySelector('.repeat-modal.on'))return true;
+  if(document.querySelector('.copy-modal.on'))return true;
+  if(document.querySelector('.audio-settings-panel.on'))return true;
+  if(document.querySelector('.wizard.on'))return true;
+  if(document.querySelector('.ppp-panel.on'))return true;
+  if(document.querySelector('.ppp-day-overlay.on'))return true;
+  if(document.querySelector('.full-player.open'))return true;
+  if(document.querySelector('.iv-overlay.open'))return true;
   return false;
 }
 
@@ -13664,377 +13843,219 @@ var _ptrIsAndroid=(function(){
 })();
 
 // â”€â”€ setupPullToRefresh â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Design goals:
-//   touchstart  — validate gates, cache everything, zero work in move path
-//   touchmove   — calculate delta only, schedule rAF; no DOM reads, no layout
-//   rAF         — apply transform + opacity only; single pending rAF at a time
-//   touchend    — commit or snap; refresh runs async after animation settles
+// States: idle -> pulling -> refreshing -> settling -> idle
+// No momentum lock. No generation counters. No cross-panel flags.
+// _reset() is safe to call from any state at any time.
 function setupPullToRefresh(panelId,refreshFn,checkFn){
   var panel=$(panelId);
   if(!panel)return;
   ensurePtrSpinner();
 
-  // â”€â”€ Tuning â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // iOS keeps the original values. Android uses tighter constants:
-  //   Lower DEAD_ZONE arms PTR before Chrome's ~6px compositor scroll threshold.
-  //   Lower RESISTANCE gives a heavier feel that matches Android conventions.
-  //   Higher THRESHOLD offsets the earlier arm to avoid accidental triggers.
-  //   Wider DIR_CHECK_PX requires a more decisive horizontal gesture to cancel.
-  var DEAD_ZONE    = _ptrIsAndroid ? 4   : 8;    // px raw — jitter filter only
-  var THRESHOLD    = _ptrIsAndroid ? 88  : 80;   // px visual to arm trigger
-  var MAX_PULL     = 108;                         // px visual ceiling
-  var RESISTANCE   = _ptrIsAndroid ? 0.38: 0.45; // panel visual / raw finger travel
-  var DIR_CHECK_PX = _ptrIsAndroid ? 8   : 6;    // Manhattan px before direction locks
-  var LOCK_BASE    = 700;
-  var COOLDOWN_MS  = 2500;
+  var DEAD_ZONE    = _ptrIsAndroid ? 4   : 8;
+  var THRESHOLD    = _ptrIsAndroid ? 88  : 80;
+  var MAX_PULL     = 108;
+  var RESISTANCE   = _ptrIsAndroid ? 0.38: 0.45;
+  var DIR_CHECK_PX = _ptrIsAndroid ? 8   : 6;
   var RECENT_MS    = 30000;
-  var SCROLL_SETTLE_MS = 350;                     // ms after last scroll before PTR can arm
-  var TOP_EPSILON  = _ptrIsAndroid ? 3 : 1;       // px: max scrollTop still considered "at top"
+  var TOP_EPSILON  = _ptrIsAndroid ? 3   : 1;
+  var SCROLL_SETTLE_MS = 300;
+  var SETTLE_MS    = 260;
 
-  // â”€â”€ Per-panel state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  var startY=0,startX=0;
-  var armed=false,pulling=false,refreshing=false,_snapDone=false;
-  var _ticked=false,_dirDecided=false;
-  var _momentumLock=false,_momentumTimer=null;
-  var _lastRefreshTime=0;
-  // _spinnerY: fixed viewport Y for spinner, captured once on touchstart.
-  // Constant during the gesture — no recalculation per frame.
+  var _rm=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion:reduce)').matches);
+
+  // Single state variable
+  var _state='idle'; // 'idle'|'pulling'|'refreshing'|'settling'
+
+  // Per-gesture
+  var _startY=0,_startX=0,_dy=0;
+  var _dirDecided=false,_ticked=false,_rafPending=false;
   var _spinnerY=-60;
-  // _panelScrolled: updated by scroll listener — avoids scrollTop DOM read in touchmove.
-  var _panelScrolled=false;
-  var _lastScrollTime=0;    // timestamp of last scroll event inside this panel subtree
-  var _activeScroller=null; // actual scroll container detected on touchstart
-  var _latestDy=0,_rafPending=false;
-  var _vBuf=[],_VN=5;
+  var _capTimer=null;
+  var _lastScrollTime=0,_panelScrolled=false;
+  var _lastRefreshTime=0;
 
-  // â”€â”€ Debug metrics (gated: window._ptrDebugMode = true to enable) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  var _dbg={moves:0,rafs:0,prevs:0,t0:0,dtSum:0,dtN:0,lastT:0};
+  function _dbg(m){if(window.__PTR_DEBUG)console.log('[PTR:'+panelId+'] '+m);}
+  function _blk(r){if(window.__PTR_DEBUG)console.log('[PTR:'+panelId+'] blocked: '+r);}
 
-  // â”€â”€ Scroll tracker — catches scroll on panel AND nested containers â”€â”€â”€â”€â”€â”€â”€â”€
-  // scroll events do NOT bubble, so panel.addEventListener('scroll') misses nested
-  // scrollers like #settingsContent and #gencineContent which are the real scrollers
-  // for those tabs. document capture fires for ALL scroll targets in the subtree.
-  // Android threshold 6px: WebView overscroll glow transiently moves scrollTop 1-3px.
-  document.addEventListener('scroll',function(e){
-    if(!panel.contains(e.target))return;
-    var st=(e.target).scrollTop||0;
-    _lastScrollTime=Date.now();
-    _panelScrolled=st>(_ptrIsAndroid?6:2);
-  },{passive:true,capture:true});
-
-  // â”€â”€ Rubber band — resistance from pixel zero, steeper above threshold â”€â”€â”€â”€â”€â”€â”€
-  // Below threshold: linear at RESISTANCE factor (light, native feel)
-  // Above threshold: extra resistance so pull "stalls" near MAX_PULL
   function _rubberBand(raw){
     var v=raw*RESISTANCE;
     if(v<=THRESHOLD)return v;
     return Math.min(THRESHOLD+(v-THRESHOLD)*0.28,MAX_PULL);
   }
 
-  function _endVelocity(){
-    if(_vBuf.length<2)return 0;
-    var a=_vBuf[0],b=_vBuf[_vBuf.length-1],dt=b.t-a.t;
-    return dt>10?(b.y-a.y)/dt:0;
-  }
-
-  // Walk from touch target toward panel boundary.
-  // Returns the first ancestor whose scrollTop > 0 (the element that has actually scrolled),
-  // or the panel itself when nothing inside has scrolled (we are at the true top).
-  // This correctly identifies #settingsContent / #gencineContent as the real scrollers
-  // instead of their non-scrolling outer panels.
-  function _findScrollContainer(node){
-    var cur=node;
-    while(cur&&cur!==panel){
-      if((cur.scrollTop||0)>0)return cur;
-      cur=cur.parentElement;
-    }
-    return panel;
-  }
-
-  function _setMomentumLock(){
-    var v=_endVelocity();
-    var ms=v<-1.5?1400:v<-0.7?950:LOCK_BASE;
-    _momentumLock=true;
-    clearTimeout(_momentumTimer);
-    _momentumTimer=setTimeout(function(){_momentumLock=false;},ms);
-    _vBuf=[];
-  }
-
-  function _clearWillChange(){
-    panel.style.willChange='';
-    if(ptrSpinner)ptrSpinner.style.willChange='';
-  }
-
-  // Hard reset — visibilitychange / tab-switch / interrupted gesture
-  function _forceReset(){
+  // Hard reset — safe from any state
+  function _reset(){
+    clearTimeout(_capTimer);_capTimer=null;
+    _state='idle';
+    _rafPending=false;_dirDecided=false;_ticked=false;_dy=0;
+    panel.style.transform='';panel.style.willChange='';
+    panel.classList.remove('ptr-pulling','ptr-releasing');
     if(ptrSpinner){
       ptrSpinner.style.transition='none';
       ptrSpinner.style.transform='translate(-50%,'+_spinnerY+'px) scale(0)';
-      ptrSpinner.style.opacity='0';
+      ptrSpinner.style.opacity='0';ptrSpinner.style.willChange='';
       ptrSpinner.classList.remove('refreshing','ptr-snapping');
     }
-    panel.style.transform='';
-    _clearWillChange();
-    panel.classList.remove('ptr-pulling','ptr-releasing');
-    if(refreshing)_ptrGlobalRefreshing=false;
-    armed=false;pulling=false;refreshing=false;_snapDone=true;
-    _ticked=false;_dirDecided=false;_rafPending=false;_vBuf=[];
+    _dbg('→ idle (reset)');
   }
-  _ptrResets.push(_forceReset);
+  _ptrResets.push(_reset);
 
-  // Smooth cancel — two-phase: remove ptr-pulling this frame, add transition in next rAF
-  // so the browser captures the current translateY as the animation "from" value.
-  function _cancelPull(){
-    _rafPending=false;
-    if(pulling){
-      pulling=false;
-      panel.classList.remove('ptr-pulling');
-      requestAnimationFrame(function(){
-        if(refreshing)return;
-        _clearWillChange();
-        panel.classList.add('ptr-releasing');
-        panel.style.transform='';
-        ptrSpinner.style.transition='transform .22s cubic-bezier(0,0,.2,1),opacity .18s';
-        ptrSpinner.style.opacity='0';
-        ptrSpinner.style.transform='translate(-50%,'+_spinnerY+'px) scale(0)';
-        setTimeout(function(){
-          panel.classList.remove('ptr-releasing');
-          ptrSpinner.style.transition='';
-        },240);
-      });
-    }
-    armed=false;_ticked=false;_dirDecided=false;
-  }
+  // Listen on the panel element directly, not document capture — prevents 7 permanent
+  // capture-phase scroll handlers accumulating and firing on every scroll in the app.
+  // The panel is the scroll container; scroll events fire on it directly.
+  panel.addEventListener('scroll',function(e){
+    _lastScrollTime=Date.now();
+    _panelScrolled=(e.target.scrollTop||0)>(_ptrIsAndroid?6:2);
+  },{passive:true});
 
-  // â”€â”€ rAF visual update — ALL style writes live here â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // Called at most once per display frame. No DOM reads. Only transform + opacity.
   function _updateVisuals(){
     _rafPending=false;
-    if(!pulling)return;
-    if(window._ptrDebugMode)_dbg.rafs++;
-    var pullRaw=_latestDy-DEAD_ZONE;
-    if(pullRaw<0)return;
-    var pull=_rubberBand(pullRaw);
-    panel.style.transform='translateY('+pull+'px)';
-    // Spinner: fixed position captured on touchstart — no recalculation per frame.
-    // Opacity and scale grow independently for a smooth emerge effect.
-    ptrSpinner.style.opacity=String(Math.min(pullRaw/50,1));
-    ptrSpinner.style.transform='translate(-50%,'+_spinnerY+'px) scale('+Math.min(pullRaw/55,1)+')';
-    // Arc rotates up to 360Â° at threshold — one full turn signals "ready to release"
-    if(_ptrArc)_ptrArc.style.transform='rotate('+Math.min(pullRaw*2.0,360)+'deg)';
+    if(_state!=='pulling')return;
+    var raw=_dy-DEAD_ZONE;if(raw<0)return;
+    var pull=_rubberBand(raw);
+    if(!_rm)panel.style.transform='translateY('+pull+'px)';
+    ptrSpinner.style.opacity=String(Math.min(raw/50,1));
+    ptrSpinner.style.transform='translate(-50%,'+_spinnerY+'px) scale('+Math.min(raw/55,1)+')';
+    if(_ptrArc&&!_rm)_ptrArc.style.transform='rotate('+Math.min(raw*2.0,360)+'deg)';
     if(!_ticked&&pull>=THRESHOLD){_ticked=true;H.selection();}
   }
 
-  // ── touchstart ────────────────────────────────────────────────────────────
-  // All expensive work (DOM queries, getBoundingClientRect) happens here only.
-  // Nothing computed here is repeated in touchmove.
-  on(panel,'touchstart',function(e){
-    _vBuf=[];
-    // Second finger added while PTR is active — force-reset so panel snaps back immediately (no rAF delay).
-    if(e.touches.length>1){if(armed||pulling){_forceReset();}return;}
-    if(refreshing||_momentumLock||_ptrGlobalRefreshing)return;
-    if(window._sbLocked)return; // swipe-back gesture active — do not compete
-    if(checkFn&&!checkFn())return;
-    if(document.body.classList.contains('tk-tab-switching'))return;
-    var ae=document.activeElement;
-    if(ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA'||ae.isContentEditable))return;
-    if(panel.querySelector('.search-results.on')||panel.querySelector('.search-bar-wrap.open'))return;
-    if(_ptrAnyOverlayOpen())return;
-    if(e.target&&_ptrInHorizScroll(e.target))return;
-    if(Date.now()-_lastRefreshTime<COOLDOWN_MS)return;
-    // Identify the actual scroll container for this gesture — may be a nested element
-    // (#settingsContent, #gencineContent) rather than the outer panel itself.
-    // _findScrollContainer walks from touch target upward: first ancestor with scrollTop>0
-    // is the real scroller; falls back to panel when already at the true top.
-    _activeScroller=_findScrollContainer(e.target||panel);
-    if(_activeScroller.scrollTop>TOP_EPSILON)return; // mid-page — never arm PTR
-    if(Date.now()-_lastScrollTime<SCROLL_SETTLE_MS)return; // momentum may still be settling
+  // settling -> idle
+  function _toIdle(){
+    if(_state!=='settling')return; // _reset() may have already moved us past this
+    panel.classList.remove('ptr-releasing');
+    if(ptrSpinner){ptrSpinner.classList.remove('ptr-snapping');ptrSpinner.style.transition='';}
+    panel.style.willChange='';if(ptrSpinner)ptrSpinner.style.willChange='';
+    _state='idle';
+    _dbg('settling -> idle');
+  }
 
-    startY=e.touches[0].clientY;
-    startX=e.touches[0].clientX;
-    _panelScrolled=false; // document capture listener flips this if any nested scroller moves
-    // Spinner Y: fixed position just inside the gap that opens above the panel.
-    // Captured once — no per-frame getBoundingClientRect.
+  // refreshing -> settling
+  function _toSettling(){
+    if(_state!=='refreshing')return;
+    clearTimeout(_capTimer);_capTimer=null;
+    _state='settling';
+    _dbg('refreshing -> settling');
+    panel.style.transform='';
+    if(ptrSpinner){
+      ptrSpinner.style.transition='transform .24s cubic-bezier(0,0,.2,1),opacity .2s';
+      ptrSpinner.style.transform='translate(-50%,'+_spinnerY+'px) scale(0)';
+      ptrSpinner.style.opacity='0';
+      ptrSpinner.classList.remove('refreshing');
+    }
+    setTimeout(_toIdle,SETTLE_MS);
+  }
+
+  // touchstart
+  panel.addEventListener('touchstart',function(e){
+    if(_state==='refreshing'||_state==='settling')return;
+    if(e.touches.length>1){if(_state==='pulling')_reset();return;}
+    if(_state!=='idle')return;
+    if(window._sbLocked){_blk('swipe_back');return;}
+    if(checkFn&&!checkFn()){_blk('checkFn');return;}
+    if(document.body.classList.contains('tk-tab-switching')){_blk('tab_switching');return;}
+    var ae=document.activeElement;
+    if(ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA'||ae.isContentEditable)){_blk('input');return;}
+    if(panel.querySelector('.search-results.on')||panel.querySelector('.search-bar-wrap.open')){_blk('search');return;}
+    if(_ptrAnyOverlayOpen()){_blk('overlay');return;}
+    if(e.target&&_ptrInHorizScroll(e.target)){_blk('horiz_scroll');return;}
+    var _cur=e.target||panel;
+    while(_cur&&_cur!==panel){if((_cur.scrollTop||0)>0)break;_cur=_cur.parentElement;}
+    var _scr=(_cur&&_cur!==panel)?_cur:panel;
+    if((_scr.scrollTop||0)>TOP_EPSILON){_blk('scrollTop='+_scr.scrollTop);return;}
+    if(Date.now()-_lastScrollTime<SCROLL_SETTLE_MS){_blk('scroll_settle');return;}
+    _startY=e.touches[0].clientY;_startX=e.touches[0].clientX;
+    _dy=0;_dirDecided=false;_ticked=false;_panelScrolled=false;
     _spinnerY=Math.max((panel.getBoundingClientRect().top||0)+18,46);
-    armed=true;_dirDecided=false;pulling=false;_snapDone=false;
-    if(window._ptrDebugMode){_dbg.moves=0;_dbg.rafs=0;_dbg.prevs=0;_dbg.t0=Date.now();_dbg.dtSum=0;_dbg.dtN=0;_dbg.lastT=Date.now();}
+    _state='pulling';
+    _dbg('idle -> pulling');
   },{passive:true});
 
-  // â”€â”€ touchmove â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // Hot path — must do almost no work:
-  //   1. push velocity sample
-  //   2. compute dy/dx (arithmetic only)
-  //   3. direction lock once — no sqrt, Manhattan distance
-  //   4. store dy, schedule one rAF
-  // NO DOM reads (scrollTop replaced by _panelScrolled cache).
-  // NO class or style writes (deferred to rAF and the pulling-start block).
+  // touchmove
   panel.addEventListener('touchmove',function(e){
-    var _now=Date.now();
-    if(e.touches.length>1){if(armed||pulling){_forceReset();}return;}
-    _vBuf.push({y:e.touches[0].clientY,t:_now});
-    if(_vBuf.length>_VN)_vBuf.shift();
-
-    if(!armed||refreshing)return;
-
-    if(window._ptrDebugMode){
-      var _dt=_now-_dbg.lastT;_dbg.lastT=_now;
-      _dbg.dtSum+=_dt;_dbg.dtN++;_dbg.moves++;
-    }
-
-    var dy=e.touches[0].clientY-startY;
-    var dx=e.touches[0].clientX-startX;
-
-    if(dy<=0){_cancelPull();return;}
-    // Use cached flag — avoids forced synchronous layout from scrollTop read
-    if(_panelScrolled){_cancelPull();return;}
-
-    // Direction lock: Manhattan distance, no sqrt.
-    // Cancel if |dx| > 55% of dy — gesture has significant horizontal component.
+    if(_state!=='pulling')return;
+    if(e.touches.length>1){_reset();return;}
+    var cDy=e.touches[0].clientY-_startY;
+    var cDx=e.touches[0].clientX-_startX;
+    if(cDy<=0||_panelScrolled){_reset();return;}
     if(!_dirDecided){
-      var absDx=dx<0?-dx:dx;
-      if(absDx+dy>=DIR_CHECK_PX){
+      var absDx=cDx<0?-cDx:cDx;
+      if(absDx+cDy>=DIR_CHECK_PX){
         _dirDecided=true;
-        if(absDx>dy*0.55){_cancelPull();return;}
+        if(absDx>cDy*0.55){_reset();return;}
       }
     }
-
-    // Android: call preventDefault before the dead zone so Chrome's compositor
-    // cannot start scrolling the panel during those first ~4px of downward travel.
-    // Only fires when the gesture is clearly vertical (dy >= |dx|).
-    // armed guarantees scrollTop=0, no overlay, no input, no tab-switching.
-    if(_ptrIsAndroid&&e.cancelable){
-      var _absDxEarly=dx<0?-dx:dx;
-      if(dy>=_absDxEarly){e.preventDefault();}
+    if(_ptrIsAndroid&&e.cancelable){var absDx2=cDx<0?-cDx:cDx;if(cDy>=absDx2)e.preventDefault();}
+    if(cDy>=DEAD_ZONE){
+      if(!panel.classList.contains('ptr-pulling')){
+        panel.style.willChange='transform';ptrSpinner.style.willChange='transform,opacity';
+        panel.classList.add('ptr-pulling');panel.classList.remove('ptr-releasing');
+        ptrSpinner.classList.remove('ptr-snapping');ptrSpinner.style.transition='none';
+      }
+      if(e.cancelable)e.preventDefault();
     }
-
-    if(dy<DEAD_ZONE)return;
-
-    // First frame past dead zone: promote layers, arm visuals, subtle haptic.
-    // Only class + willChange writes here — actual style deferred to rAF.
-    if(!pulling){
-      pulling=true;
-      panel.style.willChange='transform';
-      ptrSpinner.style.willChange='transform,opacity';
-      panel.classList.add('ptr-pulling');
-      panel.classList.remove('ptr-releasing');
-      ptrSpinner.classList.remove('ptr-snapping');
-      ptrSpinner.style.transition='none';
-      H.selection();
-    }
-
-    // preventDefault must be synchronous — cannot defer to rAF
-    if(e.cancelable){
-      e.preventDefault();
-      if(window._ptrDebugMode)_dbg.prevs++;
-    }
-
-    _latestDy=dy;
+    _dy=cDy;
     if(!_rafPending){_rafPending=true;requestAnimationFrame(_updateVisuals);}
   },{passive:false});
 
-  // â”€â”€ touchend â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  function _doTouchEnd(){
-    _setMomentumLock();
-    _ticked=false;_dirDecided=false;_rafPending=false;
-    if(!pulling||refreshing){armed=false;return;}
-
-    pulling=false;armed=false;
-    panel.classList.remove('ptr-pulling');
-    panel.classList.add('ptr-releasing');
-    ptrSpinner.style.transition='transform .24s cubic-bezier(0,0,.2,1),opacity .2s';
-    ptrSpinner.classList.add('ptr-snapping');
-
-    var currentY=parseFloat((panel.style.transform.match(/translateY\(([^p]+)px\)/)||[,'0'])[1])||0;
-
-    if(window._ptrDebugMode){
-      var _elapsed=Date.now()-_dbg.t0;
-      var _avgMs=_dbg.dtN>0?(_dbg.dtSum/_dbg.dtN).toFixed(1):'?';
-      console.log('[PTR] moves='+_dbg.moves+' rafs='+_dbg.rafs+' prevs='+_dbg.prevs
-        +' avg-interval='+_avgMs+'ms total='+_elapsed+'ms currentY='+currentY.toFixed(1)+'px');
-      window._ptrLastDebug={moves:_dbg.moves,rafs:_dbg.rafs,prevs:_dbg.prevs,avgIntervalMs:+_avgMs,totalMs:_elapsed,currentY:currentY};
-    }
-
-    if(currentY>=THRESHOLD*0.75){
-      // â”€â”€ TRIGGERED â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-      refreshing=true;
-      _ptrGlobalRefreshing=true;
-      var _prevRefreshTime=_lastRefreshTime;
-      _lastRefreshTime=Date.now();
-
-      // Settle panel and spinner into held loading position.
-      // Android: defer transform to rAF so .ptr-releasing transition has one frame
-      // to register before the style change lands — prevents the hard jump to holdY.
-      var holdY=44;
+  // touchend
+  panel.addEventListener('touchend',function(e){
+    if(e.touches.length>0){if(_state==='pulling')_reset();return;}
+    if(_state!=='pulling')return;
+    var curY=parseFloat((panel.style.transform.match(/translateY\(([^p]+)px\)/)||[,'0'])[1])||0;
+    _rafPending=false;
+    if(curY>=THRESHOLD*0.75){
+      // pulling -> refreshing
+      _state='refreshing';
+      _dbg('pulling -> refreshing');
+      panel.classList.remove('ptr-pulling');panel.classList.add('ptr-releasing');
+      if(ptrSpinner){
+        ptrSpinner.style.transition='transform .24s cubic-bezier(0,0,.2,1),opacity .2s';
+        ptrSpinner.classList.add('ptr-snapping');
+      }
       H.medium();
+      var holdY=44;
       if(_ptrIsAndroid){
         requestAnimationFrame(function(){
+          if(_state!=='refreshing')return; // _reset() fired before this frame
           panel.style.transform='translateY('+holdY+'px)';
-          ptrSpinner.style.transform='translate(-50%,'+_spinnerY+'px) scale(1)';
-          ptrSpinner.style.opacity='1';
-          ptrSpinner.classList.add('refreshing');
+          if(ptrSpinner){ptrSpinner.style.transform='translate(-50%,'+_spinnerY+'px) scale(1)';ptrSpinner.style.opacity='1';ptrSpinner.classList.add('refreshing');}
         });
       }else{
         panel.style.transform='translateY('+holdY+'px)';
-        ptrSpinner.style.transform='translate(-50%,'+_spinnerY+'px) scale(1)';
-        ptrSpinner.style.opacity='1';
-        ptrSpinner.classList.add('refreshing');
+        if(ptrSpinner){ptrSpinner.style.transform='translate(-50%,'+_spinnerY+'px) scale(1)';ptrSpinner.style.opacity='1';ptrSpinner.classList.add('refreshing');}
       }
-
-      function _snapBack(){
-        if(_snapDone)return;
-        _snapDone=true;
-        _clearWillChange();
-        panel.style.transform='';
-        ptrSpinner.style.transition='transform .24s cubic-bezier(0,0,.2,1),opacity .2s';
-        ptrSpinner.style.transform='translate(-50%,'+_spinnerY+'px) scale(0)';
-        ptrSpinner.style.opacity='0';
-        ptrSpinner.classList.remove('refreshing');
-        setTimeout(function(){
-          panel.classList.remove('ptr-releasing');
-          ptrSpinner.classList.remove('ptr-snapping');
-          ptrSpinner.style.transition='';
-          refreshing=false;
-          _ptrGlobalRefreshing=false;
-        },260);
-      }
-      _snapDone=false;
-      // Hard cap — fires if refreshFn never calls done() (async paths, network timeout)
-      var _hardCap=setTimeout(_snapBack,1500);
-      // done() is passed to refreshFn so sync renders snap back as soon as content is ready,
-      // rather than waiting a fixed 600ms minimum.
       var _doneCalled=false;
-      function _ptrDone(){
-        if(_doneCalled)return;
+      function done(){
+        if(_doneCalled||_state!=='refreshing')return;
         _doneCalled=true;
-        clearTimeout(_hardCap);
-        // Brief 200ms hold lets the user see the refreshed content before spinner hides
-        setTimeout(_snapBack,200);
+        setTimeout(_toSettling,200);
       }
-
-      var _isRecent=_prevRefreshTime>0&&(Date.now()-_prevRefreshTime)<RECENT_MS;
-      try{refreshFn(_isRecent,_ptrDone);}catch(e){console.warn('[PTR] refreshFn error:',e);_ptrDone();}
-
+      _capTimer=setTimeout(function(){if(_state==='refreshing')_toSettling();},1500);
+      var _isRecent=_lastRefreshTime>0&&(Date.now()-_lastRefreshTime)<RECENT_MS;
+      _lastRefreshTime=Date.now();
+      try{refreshFn(_isRecent,done);}catch(ex){console.warn('[PTR]',ex);done();}
     }else{
-      // â”€â”€ BELOW THRESHOLD — snap back silently â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-      _clearWillChange();
+      // pulling -> idle (sub-threshold)
+      _dbg('pulling -> idle (sub-threshold)');
+      _state='idle'; // set immediately so next gesture can start without waiting
+      panel.classList.remove('ptr-pulling');panel.classList.add('ptr-releasing');
       panel.style.transform='';
-      ptrSpinner.style.transform='translate(-50%,'+_spinnerY+'px) scale(0)';
-      ptrSpinner.style.opacity='0';
+      if(ptrSpinner){
+        ptrSpinner.style.transition='transform .22s cubic-bezier(0,0,.2,1),opacity .18s';
+        ptrSpinner.style.opacity='0';
+        ptrSpinner.style.transform='translate(-50%,'+_spinnerY+'px) scale(0)';
+      }
       setTimeout(function(){
+        if(_state!=='idle')return; // new gesture started — skip cleanup to avoid corrupting it
         panel.classList.remove('ptr-releasing');
-        ptrSpinner.classList.remove('ptr-snapping');
-        ptrSpinner.style.transition='';
-      },260);
+        if(ptrSpinner)ptrSpinner.style.transition='';
+        panel.style.willChange='';if(ptrSpinner)ptrSpinner.style.willChange='';
+      },240);
     }
-  }
-
-  on(panel,'touchend',function(e){
-    // If another finger is still on screen, abort the gesture rather than
-    // committing (or half-committing) a refresh with phantom data.
-    if(e.touches.length>0){if(armed||pulling){_forceReset();}return;}
-    _doTouchEnd();
   });
-  on(panel,'touchcancel',function(){_setMomentumLock();_cancelPull();});
+
+  panel.addEventListener('touchcancel',function(){if(_state==='pulling')_reset();});
 }
 
 /* ===== ISLAMVOICE ===== */

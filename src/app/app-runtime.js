@@ -172,6 +172,14 @@
         }
       });
     } catch (e) { console.warn('[AppRuntime] appStateChange hook failed:', e); }
+
+    // Low-memory warning from OS (Android onTrimMemory / iOS memoryWarning)
+    try {
+      AP.addListener('lowMemory', function () {
+        console.warn('[AppRuntime] lowMemory signal received');
+        _emit('lowMemory', { at: Date.now() });
+      });
+    } catch (e) { /* Capacitor App may not support this on all versions */ }
   }
 
   // ── Capacitor: Keyboard (ONE owner) ───────────────────────────────────────
@@ -643,6 +651,65 @@
         timeouts:  _toEntries.length,
         paused:    _schedPaused,
       };
+    },
+  };
+
+  // ── HealthLog ─────────────────────────────────────────────────────────────
+  // Circular buffer of diagnostic events. Referenced throughout app.js with
+  // window.HealthLog guards. Persists crash-class events to sessionStorage so
+  // a post-reload post-mortem is possible.
+  var _HL_MAX = 100;
+  var _hl = [];
+  try { var _hlPrev = sessionStorage.getItem('__healthlog'); if (_hlPrev) _hl = JSON.parse(_hlPrev).slice(-_HL_MAX); } catch(e) {}
+
+  window.HealthLog = {
+    add: function(type, msg) {
+      try {
+        var entry = { ts: Date.now(), type: String(type || ''), msg: String(msg || '').slice(0, 400) };
+        _hl.push(entry);
+        if (_hl.length > _HL_MAX) _hl.shift();
+        // Persist on crash/error events so post-mortem survives a reload
+        if (type && /(crash|error|oom|fatal|renderer)/.test(type)) {
+          try { sessionStorage.setItem('__healthlog', JSON.stringify(_hl)); } catch(e) {}
+        }
+      } catch(e) {}
+    },
+    getAll:  function() { return _hl.slice(); },
+    last:    function(n) { return _hl.slice(-(n || 10)); },
+    dump:    function() { return JSON.stringify(_hl, null, 2); },
+    clear:   function() { _hl = []; try { sessionStorage.removeItem('__healthlog'); } catch(e) {} },
+  };
+
+  // ── CrashShield ───────────────────────────────────────────────────────────
+  // Shows a gentle placeholder when a panel fails to render, preventing blank
+  // screens on low-end devices. app.js calls showFallback/clearFallback with
+  // window.CrashShield guards around every panel render.
+  window.CrashShield = {
+    showFallback: function(panelId, name) {
+      try {
+        var panel = document.getElementById(panelId);
+        if (!panel || panel.querySelector('.cs-fallback')) return;
+        var fb = document.createElement('div');
+        fb.className = 'cs-fallback';
+        fb.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px;color:var(--text2,#888);text-align:center;gap:14px;pointer-events:none;min-height:160px';
+        var ic = document.createElement('i');
+        ic.className = 'fas fa-exclamation-circle';
+        ic.style.cssText = 'font-size:2rem;opacity:.35';
+        fb.appendChild(ic);
+        var lbl = document.createElement('div');
+        lbl.style.cssText = 'font-size:.85rem;opacity:.5;max-width:240px';
+        lbl.textContent = (name || panelId);
+        fb.appendChild(lbl);
+        panel.insertBefore(fb, panel.firstChild);
+      } catch(e) {}
+    },
+    clearFallback: function(panelId) {
+      try {
+        var panel = document.getElementById(panelId);
+        if (!panel) return;
+        var fbs = panel.querySelectorAll('.cs-fallback');
+        for (var i = 0; i < fbs.length; i++) { if (fbs[i].parentNode) fbs[i].parentNode.removeChild(fbs[i]); }
+      } catch(e) {}
     },
   };
 

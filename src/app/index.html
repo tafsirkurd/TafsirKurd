@@ -198,7 +198,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 <link rel="stylesheet" href="/app/app-styles.min.css?v=14">
 <style>
 /* Search bar — open: spring bounce */
-.search-bar.on{transform:translateY(0) scale(1);opacity:1;pointer-events:auto;padding:10px 16px 12px;max-height:600px;transition:max-height .01s,padding .01s,opacity .3s cubic-bezier(0.34,1.56,0.64,1),transform .3s cubic-bezier(0.34,1.56,0.64,1)}
+.search-bar.on{transform:translateY(0) scale(1);opacity:1;pointer-events:auto;padding:10px 16px 12px;max-height:600px;position:relative;z-index:51;transition:max-height .01s,padding .01s,opacity .3s cubic-bezier(0.34,1.56,0.64,1),transform .3s cubic-bezier(0.34,1.56,0.64,1)}
 /* Search bar — close: smooth slide up + fade */
 .search-bar{transform:translateY(-14px) scale(0.96);opacity:0;transition:max-height 0s .22s,padding 0s .22s,opacity .2s ease-in,transform .2s ease-in}
 /* Input row springs in */
@@ -207,6 +207,13 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 /* × button rotates in */
 .search-bar.on .search-clear{animation:_sb-x .3s cubic-bezier(0.34,1.56,0.64,1) both}
 @keyframes _sb-x{from{transform:rotate(-90deg) scale(0.5);opacity:0}to{transform:rotate(0deg) scale(1);opacity:1}}
+/* Content backdrop — dims content below header when any header panel is open.
+   Starts at --hdr-total-h so it never covers the status bar, safe-area, or header.
+   z-index 49: below header (100) and header panels (51+), above content (0).
+   Tabbar (300) stays interactive above this. Opacity-only — GPU-composited, no layout. */
+.hdr-backdrop{position:fixed;top:var(--hdr-total-h,58px);left:0;right:0;bottom:0;z-index:49;pointer-events:none;opacity:0;background:rgba(0,0,0,.2);transition:opacity .18s ease;will-change:opacity}
+.hdr-backdrop.on{opacity:1;pointer-events:auto}
+@media(prefers-reduced-motion:reduce){.hdr-backdrop{transition:none}}
 </style>
 <script>requestAnimationFrame(function(){requestAnimationFrame(function(){document.documentElement.classList.remove('preload');});});</script>
 </head>
@@ -1107,7 +1114,7 @@ setTimeout(function(){
 
 
 <!-- ── Notification Inbox Modal ────────────────────────────── -->
-<div id="inbox-modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.55);backdrop-filter:blur(4px)" onclick="if(event.target===this)App.closeInbox()">
+<div id="inbox-modal" style="display:none;position:fixed;top:var(--hdr-total-h,58px);left:0;right:0;bottom:0;z-index:52" onclick="if(event.target===this)App.closeInbox()">
   <div style="position:absolute;bottom:0;left:0;right:0;max-height:80vh;background:var(--bg);border-radius:18px 18px 0 0;overflow:hidden;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px)">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid var(--border-light);padding-top:max(16px,env(safe-area-inset-top,16px))">
       <span style="font-size:16px;font-weight:700;color:var(--text-primary)" data-i18n="inbox.title">ئاگەهدارکرن</span>
@@ -1116,4 +1123,6 @@ setTimeout(function(){
     <div id="inbox-list" style="overflow-y:auto;flex:1;padding:12px 0;-webkit-overflow-scrolling:touch"></div>
   </div>
 </div>
+<!-- Content backdrop — shown when a header panel (search) is open; dims content, header stays active -->
+<div id="hdrBackdrop" class="hdr-backdrop" onclick="App.onBackdropTap&&App.onBackdropTap()"></div>
 </body></html>

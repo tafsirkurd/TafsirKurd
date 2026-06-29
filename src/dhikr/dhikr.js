@@ -4271,9 +4271,10 @@ window.GencineUI = {
       //   DPR cap at 2  — 3× retina across 200+ pages = instant OOM; 2× is sharp
       var _rq = [], _rqActive = 0, _renderedNums = [];
       var _scrollingPdf = false, _scrollPdfTimer = null;
-      var MAX_RQ = 2, MAX_KEPT = 10;
+      var _dcls = document.documentElement.classList;
+      var MAX_RQ = 2, MAX_KEPT = _dcls.contains('perf-critical') ? 5 : _dcls.contains('perf-low') ? 7 : 10;
       var _dpr = Math.min(window.devicePixelRatio || 1,
-        document.documentElement.classList.contains('perf-critical') ? 1 : 2);
+        _dcls.contains('perf-critical') ? 1 : 2);
 
       function _evictFarPages(anchor) {
         while (_renderedNums.length > MAX_KEPT) {
