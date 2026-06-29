@@ -121,9 +121,18 @@ public class MainActivity extends BridgeActivity {
             }
             getBridge().getWebView().setBackgroundColor(themeColor);
             getWindow().getDecorView().setBackgroundColor(themeColor);
-            // Set native status bar color to match header — prevents the wrong color
-            // showing during cold launch before JS/Capacitor StatusBar plugin runs.
-            getWindow().setStatusBarColor(themeColor);
+            // Capacitor 8 Android runs in overlay mode (overlaysWebView=true by default) —
+            // the WebView extends behind the status bar. The native status bar must be
+            // transparent so the WebView CSS header is the only background visible there.
+            // A solid themeColor here would composite on top of the glass header and cause
+            // a tint mismatch between the status bar area and the visible header surface.
+            getWindow().setStatusBarColor(Color.TRANSPARENT);
+            // Android 10+ (API 29) defaults to enforcing status bar contrast by adding a
+            // semi-transparent scrim for icon readability. Disable it — our WebView header
+            // provides the background and handles icon contrast via StatusBar.setStyle().
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                getWindow().setStatusBarContrastEnforced(false);
+            }
             // Status bar icon style: dark icons on light themes, light icons on dark themes
             boolean isLightTheme = "light".equals(savedTheme) || "noor".equals(savedTheme);
             android.view.View dv = getWindow().getDecorView();

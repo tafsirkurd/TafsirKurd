@@ -2061,17 +2061,37 @@ function getTopChromeColor(theme){
   return {dark:'#0a0a0a',light:'#fafafa',noor:'#f4e8cc',sakina:'#0c1c12'}[theme]||'#0a0a0a';
 }
 
-// Apply native status bar color and icon style to match the header surface.
-// Called on every theme change and on every app resume to prevent mismatch.
+// Cached overlay state: true = WebView draws behind status bar (Capacitor 8 Android default).
+// null = not yet determined (first call triggers async detection via getInfo).
+var _sbOverlays=null;
+
+// Apply native status bar icon style to match the header surface.
+// Called on every theme change and on every app resume.
+//
+// OVERLAY MODE NOTE: In Capacitor 8 Android (overlaysWebView=true), the WebView extends
+// behind the native status bar. setBackgroundColor() would apply a solid native color
+// ON TOP of the WebView glass header, causing a visible tint mismatch.
+// When overlay=true, we skip setBackgroundColor — the WebView CSS header IS the background.
+// When overlay=false (non-overlay native bar), we apply the solid color.
 function _applyStatusBar(theme){
   var color=getTopChromeColor(theme);
   var isDark=theme==='dark'||theme==='sakina';
-  // Keep meta[theme-color] current (Chrome Android browser mode + PWA)
+  // Keep meta[theme-color] current (Chrome Android browser + PWA mode)
   try{var _tm=document.querySelector('meta[name="theme-color"]');if(_tm)_tm.setAttribute('content',color);}catch(e){}
-  // Native Capacitor StatusBar
   var SB=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.StatusBar;
   if(!SB)return;
-  try{SB.setBackgroundColor({color:color});}catch(e){}
+  if(_sbOverlays===null){
+    // First call: detect overlay mode, then apply background only if not overlaying.
+    try{SB.getInfo().then(function(info){
+      _sbOverlays=!!info.overlays;
+      if(!_sbOverlays)try{SB.setBackgroundColor({color:color});}catch(e){}
+    }).catch(function(){
+      _sbOverlays=false;
+      try{SB.setBackgroundColor({color:color});}catch(e){}
+    });}catch(e){}
+  }else if(!_sbOverlays){
+    try{SB.setBackgroundColor({color:color});}catch(e){}
+  }
   try{SB.setStyle({style:isDark?'DARK':'LIGHT'});}catch(e){}
 }
 
