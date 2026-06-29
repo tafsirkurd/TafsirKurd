@@ -2147,6 +2147,25 @@ App.tab=function(name){
   }
   H.light(); // different-tab switch — clear selection feel
 
+  // Close any open panels/modals when switching tabs
+  (function(){
+    // Mushaf settings (dynamically created sheet)
+    var ms=$('mushafSettingsSheet');if(ms){var p=ms.querySelector('.mushaf-settings-pane');if(p){p.classList.remove('on');setTimeout(function(){if(ms.parentNode)ms.parentNode.removeChild(ms);},260);}}
+    // Reader quick settings sheet
+    var qs=$('qsSheet');if(qs&&qs.classList.contains('on'))App.closeReaderSettings&&App.closeReaderSettings();
+    // Copy modal
+    var cm=$('copyModal');if(cm&&cm.classList.contains('on'))App.closeCopyModal&&App.closeCopyModal();
+    // Repeat modal
+    var rm=$('repeatModal');if(rm&&rm.style.display!=='none')App.closeRepeat&&App.closeRepeat();
+    // Audio settings panel
+    var ap=$('audioSettingsPanel');if(ap&&ap.style.display!=='none')App.closeAudioSettings&&App.closeAudioSettings();
+    // Inbox modal
+    var im=$('inbox-modal');if(im&&im.style.display!=='none')App.closeInbox&&App.closeInbox();
+    // IV overlays
+    var iso=$('ivSavedOverlay');if(iso&&iso.classList.contains('open'))App.ivCloseSaved&&App.ivCloseSaved();
+    var iho=$('ivHistoryOverlay');if(iho&&iho.classList.contains('open'))App.ivCloseHistory&&App.ivCloseHistory();
+  })();
+
   // Cancel any pending rAF render from a previous fast tab switch
   if(_pendingTabRaf){cancelAnimationFrame(_pendingTabRaf);_pendingTabRaf=null;}
 
@@ -9880,7 +9899,7 @@ setTimeout(function(){
     }).length;
     var badge=$('inboxBadge');
     if(!badge)return;
-    if(unread>0){badge.style.display='';badge.textContent=unread>9?'9+':String(unread);}
+    if(unread>0){badge.style.display='inline-flex';badge.textContent=unread>9?'9+':String(unread);}
     else{badge.style.display='none';}
   }
 
@@ -9899,7 +9918,7 @@ setTimeout(function(){
     items.forEach(function(n){
       var isNew=n.sent_at&&new Date(n.sent_at).getTime()>lastSeen;
       var item=document.createElement('div');
-      item.style.cssText='padding:14px 20px;border-bottom:1px solid var(--border-light);cursor:pointer;position:relative'+(isNew?';background:rgba(var(--primary-rgb,79,142,247),.04)':'');
+      item.style.cssText='padding:14px 20px;border-bottom:1px solid var(--border-light);cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent'+(isNew?';background:rgba(var(--primary-rgb,79,142,247),.04)':'');
       if(isNew){
         var dot=document.createElement('span');
         dot.style.cssText='position:absolute;top:16px;inset-inline-start:8px;width:6px;height:6px;border-radius:50%;background:var(--accent,#4f8ef7)';
@@ -9918,6 +9937,10 @@ setTimeout(function(){
       item.appendChild(body);
       item.appendChild(date);
       item.addEventListener('click',function(){
+        // Remove unread dot and highlight immediately on click
+        item.style.background='';
+        var d=item.querySelector('span');
+        if(d&&d.style.borderRadius==='50%')d.style.display='none';
         if(n.deep_link_type&&n.deep_link_type!=='none'){
           try{App.handleNotifTap&&App.handleNotifTap({type:n.deep_link_type,id:n.deep_link_id});}catch(e){}
         }
@@ -9928,10 +9951,8 @@ setTimeout(function(){
   }
 
   function _initInbox(){
-    // Show cached immediately (instant badge, no waiting)
     var cached=_loadCache();
     if(cached.length){_inboxItems=cached;_inboxBadgeUpdate(cached);}
-    // Then fetch incremental updates in background
     _fetchAndMerge().then(function(items){
       _inboxItems=items;
       _inboxBadgeUpdate(items);
@@ -9946,10 +9967,10 @@ setTimeout(function(){
     _markSeen();
     var badge=$('inboxBadge');
     if(badge)badge.style.display='none';
-    // Refresh in background, update view if new items arrive
     _fetchAndMerge().then(function(items){
       _inboxItems=items;
       _renderInbox(items);
+      _inboxBadgeUpdate(items);
     });
   };
 
@@ -9959,6 +9980,18 @@ setTimeout(function(){
   };
 
   window._initInbox=_initInbox;
+
+  App.handleNotifTap=function(notif){
+    if(!notif||!notif.type||notif.type==='none')return;
+    if(notif.type==='video'){
+      App.tab('video');
+      if(notif.id){
+        setTimeout(function(){
+          try{window.tvApp&&window.tvApp.playEpisode(notif.id);}catch(e){}
+        },400);
+      }
+    }
+  };
 })();
 
 /* ===== WIDGET DATA PUSH ===== */

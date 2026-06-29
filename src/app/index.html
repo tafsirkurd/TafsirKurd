@@ -272,7 +272,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
       <div class="hdr-actions">
         <button class="hdr-btn" id="hdrGoalsBtn" onclick="App.tab('goals')" title="Goals"><i class="fas fa-bullseye"></i><span class="hdr-badge" id="goalsBadge"></span></button>
         <button class="hdr-btn" onclick="App.tab('bookmarks')" title="Bookmarks"><i class="fas fa-bookmark"></i></button>
-        <button class="hdr-btn" id="inboxBtn" onclick="App.openInbox()" title="ئاگەهدارکرن"><i class="fas fa-bell"></i><span class="hdr-badge" id="inboxBadge">1</span></button>
+        <button class="hdr-btn" id="inboxBtn" onclick="App.openInbox()" title="ئاگەهدارکرن" style="position:relative"><i class="fas fa-bell"></i><span id="inboxBadge" style="display:none;align-items:center;justify-content:center;position:absolute;top:2px;right:2px;min-width:16px;height:16px;width:auto;padding:0 4px;border-radius:8px;background:#e53e3e;color:#fff;font-size:10px;font-weight:700;line-height:1;pointer-events:none"></span></button>
         <button class="hdr-btn" onclick="App.toggleSearch()"><i class="fas fa-search"></i></button>
       </div>
     </div>
@@ -652,7 +652,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 </div>
 
 <!-- REPEAT MANAGER MODAL -->
-<div class="repeat-modal" id="repeatModal">
+<div class="repeat-modal" id="repeatModal" onclick="if(event.target===this)App.closeRepeat()">
   <div class="repeat-modal-content">
     <div class="repeat-modal-hdr">
       <h3 data-i18n="repeat.title" data-t="android_h3_17">دووبارەکرن</h3>
@@ -1108,12 +1108,12 @@ setTimeout(function(){
 
 <!-- ── Notification Inbox Modal ────────────────────────────── -->
 <div id="inbox-modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.55);backdrop-filter:blur(4px)" onclick="if(event.target===this)App.closeInbox()">
-  <div style="position:absolute;bottom:0;left:0;right:0;max-height:80vh;background:var(--bg);border-radius:18px 18px 0 0;overflow:hidden;display:flex;flex-direction:column">
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid var(--border-light)">
+  <div style="position:absolute;bottom:0;left:0;right:0;max-height:80vh;background:var(--bg);border-radius:18px 18px 0 0;overflow:hidden;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px)">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid var(--border-light);padding-top:max(16px,env(safe-area-inset-top,16px))">
       <span style="font-size:16px;font-weight:700;color:var(--text-primary)" data-i18n="inbox.title">ئاگەهدارکرن</span>
-      <button onclick="App.closeInbox()" style="background:none;border:none;cursor:pointer;color:var(--text-secondary);font-size:18px;padding:4px"><i class="fas fa-times"></i></button>
+      <button onclick="App.closeInbox()" style="background:none;border:none;cursor:pointer;color:var(--text-secondary);font-size:18px;padding:4px;-webkit-tap-highlight-color:transparent"><i class="fas fa-times"></i></button>
     </div>
-    <div id="inbox-list" style="overflow-y:auto;flex:1;padding:12px 0"></div>
+    <div id="inbox-list" style="overflow-y:auto;flex:1;padding:12px 0;-webkit-overflow-scrolling:touch"></div>
   </div>
 </div>
 </body></html>
