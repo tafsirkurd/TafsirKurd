@@ -3950,7 +3950,8 @@ function renderSurahGrid(){
     ayahsEl.className='surah-ayahs';
     ayahsEl.textContent=s.a+' '+ayahLbl;
     info.appendChild(deco);info.appendChild(nameEn);info.appendChild(ayahsEl);
-    card.appendChild(imgPanel);card.appendChild(badge);card.appendChild(info);
+    var goalState=document.createElement('div');goalState.className='surah-goal-state';
+    card.appendChild(imgPanel);card.appendChild(badge);card.appendChild(info);card.appendChild(goalState);
     frag.appendChild(card);
   }
   grid.textContent='';
@@ -3977,6 +3978,30 @@ function renderSurahGrid(){
   }
   _surahBadgeObs.disconnect();
   grid.querySelectorAll('.surah-card').forEach(function(card){_surahBadgeObs.observe(card);});
+  _refreshSurahCompletionBadges();
+}
+
+function _refreshSurahCompletionBadges(){
+  var grid=$('surahGrid');
+  if(!grid)return;
+  var goal=getGoal();
+  var completed=(goal&&goal.completedSurahs)||[];
+  var progress=(goal&&goal.surahProgress)||{};
+  grid.querySelectorAll('.surah-card').forEach(function(card){
+    var n=parseInt(card.dataset.n);
+    var st=card.querySelector('.surah-goal-state');
+    if(!st)return;
+    st.textContent='';
+    if(completed.indexOf(n)>=0){
+      var b=document.createElement('span');b.className='surah-done-badge';b.textContent='✓';
+      st.appendChild(b);
+    } else if(progress[n]){
+      var s=SURAHS[n-1];
+      var p=document.createElement('span');p.className='surah-progress-badge';
+      p.textContent=String(progress[n])+(s?'/'+s.a:'');
+      st.appendChild(p);
+    }
+  });
 }
 
 /* ===== CONTINUE READING ===== */
@@ -8644,6 +8669,29 @@ function trackVerse(surah,ayah){
   _updateGoalsBadge();
   // Keep goal widget current — lightweight, no network
   pushGoalDataToWidget();
+  // Update tracked reading position (only real ayah-by-ayah reads drive goal progress)
+  _updateGoalProgress(surah,ayah);
+}
+
+function _updateGoalProgress(surah,ayah){
+  var goal=getGoal();
+  if(!goal)return;
+  var changed=false;
+  // Per-surah high-water mark
+  if(!goal.surahProgress)goal.surahProgress={};
+  if(ayah>(goal.surahProgress[surah]||0)){goal.surahProgress[surah]=ayah;changed=true;}
+  // Overall tracked position — high-water mark only, never regresses
+  if(!goal.trackedSurah||surah>goal.trackedSurah||
+     (surah===goal.trackedSurah&&ayah>(goal.trackedAyah||0))){
+    goal.trackedSurah=surah;goal.trackedAyah=ayah;changed=true;
+  }
+  // Surah completion — only when tracker reaches final ayah
+  var s=SURAHS[surah-1];
+  if(s&&ayah>=s.a){
+    if(!goal.completedSurahs)goal.completedSurahs=[];
+    if(goal.completedSurahs.indexOf(surah)<0){goal.completedSurahs.push(surah);changed=true;}
+  }
+  if(changed){goal.updatedAt=Date.now();saveGoal(goal);_refreshSurahCompletionBadges();}
 }
 
 function calcBestStreak(log){
@@ -8896,6 +8944,33 @@ function renderGoals(){
   });
   gc.appendChild(details);
   frag.appendChild(gc);
+
+  // Continue Goal card — shows tracked reading position (never polluted by random opens)
+  if(goal.trackedSurah){
+    var cgSurah=SURAHS[goal.trackedSurah-1];
+    var cgCard=el('div','goal-card goal-continue-card');
+    var cgHdr=el('div','goal-card-name');
+    cgHdr.appendChild(icon('fas fa-book-open'));
+    cgHdr.appendChild(document.createTextNode(' '+(t('goals.continue_position')||'بەردەوامی خواندنا ئامانجی')));
+    cgCard.appendChild(cgHdr);
+    var cgDets=el('div','goal-details');
+    [{v:cgSurah?cgSurah.ar:'',l:t('goals.session.surah')||'سوورەت'},
+     {v:String(goal.trackedAyah||1),l:t('reader.ayah')||'ئایەت'},
+     {v:String((goal.completedSurahs||[]).length),l:t('goals.done_surahs')||'تەواوبوو'}
+    ].forEach(function(dd){
+      var det=el('div','goal-detail');
+      det.appendChild(el('div','goal-detail-val',dd.v));
+      det.appendChild(el('div','goal-detail-lbl',dd.l));
+      cgDets.appendChild(det);
+    });
+    cgCard.appendChild(cgDets);
+    on(cgCard,'click',function(){
+      H.medium();
+      App.tab('quran');
+      setTimeout(function(){App.openSurah(goal.trackedSurah,goal.trackedAyah||1);},300);
+    });
+    frag.appendChild(cgCard);
+  }
 
   // Last session card
   var sessions=getRecentSessions();
