@@ -1347,17 +1347,18 @@ private func hafsFont(size: CGFloat) -> Font {
     Font.custom("KFGQPCHAFSUthmanicScript-Regula", size: size)
 }
 
-// Lock screen — Arabic (13 pt, 2 lines) + reference (9 pt)
+// Lock screen — Arabic (14 pt, 2 lines, minimumScaleFactor 0.82) + reference (9 pt)
 private struct AyahLockView: View {
     let entry: AyahEntry
     var body: some View {
         if let d = entry.data {
-            VStack(alignment: .trailing, spacing: 5) {
+            VStack(alignment: .trailing, spacing: 4) {
                 Text(d.arabic)
-                    .font(hafsFont(size: 13))
+                    .font(hafsFont(size: 14))
                     .foregroundStyle(AnyShapeStyle(.primary))
                     .multilineTextAlignment(.trailing)
                     .lineLimit(2)
+                    .minimumScaleFactor(0.82)
                     .frame(maxWidth: .infinity, alignment: .trailing)
                 Text(d.reference)
                     .font(.system(size: 9, weight: .light))
@@ -1463,11 +1464,10 @@ struct TafsirKurdAyahEntryView: View {
         Group {
             if family == .systemLarge {
                 AyahLargeView(entry: entry)
-            } else if family == .systemSmall {
-                AyahMediumView(entry: entry)
-            } else if family == .systemMedium {
+            } else if family == .systemMedium || family == .systemSmall {
                 AyahMediumView(entry: entry)
             } else {
+                // .accessoryRectangular (lock screen)
                 AyahLockView(entry: entry)
             }
         }
