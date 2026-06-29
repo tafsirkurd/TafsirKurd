@@ -1310,7 +1310,7 @@ function init(){
         if(_isMac&&!_isUserTap)return;
         if(extra.type==='verse'&&extra.s&&extra.a){
           App.tab('quran');
-          setTimeout(function(){App.openSurah(extra.s,extra.a);},300);
+          setTimeout(function(){App.openSurah(extra.s,extra.a,'notification');},300);
         }
         if(extra.type==='video'&&extra.id){
           App.tab('islamvoice');
@@ -3209,7 +3209,7 @@ function _handlePushDeepLink(type,id){
       var parts=id.split(':');
       var s=+parts[0],a=+parts[1];
       App.tab('quran');
-      setTimeout(function(){App.openSurah(s,a);},300);
+      setTimeout(function(){App.openSurah(s,a,'notification');},300);
 
     }else if(type==='islamvoice_episodes'||type==='video'){
       App.tab('islamvoice');
@@ -3844,7 +3844,7 @@ App._mkSearchItem=function(r,isPrimary){
       if(window.QuranSearch&&QuranSearch.trackTap)QuranSearch.trackTap(sn,an);
       _shAdd(q);
       HeaderOverlayManager.close();App.tab('quran');
-      setTimeout(function(){App.openSurah(sn,an);},100);
+      setTimeout(function(){App.openSurah(sn,an,'search');},100);
     };})(r.sn,r.an,S.search));
 
   }else if(r.type==='surah'){
@@ -3859,7 +3859,7 @@ App._mkSearchItem=function(r,isPrimary){
     item.appendChild(row);
     on(item,'click',(function(sn,q){return function(){
       _shAdd(q);
-      HeaderOverlayManager.close();App.openSurah(sn);
+      HeaderOverlayManager.close();App.openSurah(sn,undefined,'search');
     };})(r.sn,S.search));
 
   }else{
@@ -3881,7 +3881,7 @@ App._mkSearchItem=function(r,isPrimary){
       if(window.QuranSearch&&QuranSearch.trackTap)QuranSearch.trackTap(sn,an);
       _shAdd(q);
       HeaderOverlayManager.close();App.tab('quran');
-      setTimeout(function(){App.openSurah(sn,an);},100);
+      setTimeout(function(){App.openSurah(sn,an,'search');},100);
     };})(r.sn,r.an,S.search));
   }
 
@@ -4032,7 +4032,8 @@ function renderContinue(){
 }
 
 /* ===== OPEN SURAH ===== */
-App.openSurah=function(num,scrollTo){
+App.openSurah=function(num,scrollTo,source){
+  S.readerOpenSource=source||'normal';
   if(S.surah===num&&$('quranReader').classList.contains('on'))return; // already open
   if(tapGuard('openSurah',300))return; // prevent double-tap race
   var s=SURAHS[num-1]; // bounds-check before any state mutation
@@ -8557,7 +8558,7 @@ function renderBmList(bms){
     var openBtn=el('button','bm-card-btn');
     openBtn.appendChild(icon('fas fa-book-open'));
     openBtn.appendChild(document.createTextNode(' '+t('bookmarks.open')));
-    on(openBtn,'click',function(){App.tab('quran');setTimeout(function(){App.openSurah(bm.surah,bm.ayah)},100)});
+    on(openBtn,'click',function(){App.tab('quran');setTimeout(function(){App.openSurah(bm.surah,bm.ayah,'bookmark')},100)});
     actions.appendChild(openBtn);
 
     var noteBtn=el('button','bm-card-btn');
@@ -8674,18 +8675,24 @@ function trackVerse(surah,ayah){
 }
 
 function _updateGoalProgress(surah,ayah){
+  // Source gate: only normal reading and goal-continue taps drive goal progress.
+  // Search, notification, bookmark, deep-link opens are explicitly excluded.
+  var src=S.readerOpenSource||'normal';
+  if(src!=='normal'&&src!=='goal_continue')return;
   var goal=getGoal();
   if(!goal)return;
   var changed=false;
-  // Per-surah high-water mark
+  // Per-surah high-water mark — never decreases
   if(!goal.surahProgress)goal.surahProgress={};
-  if(ayah>(goal.surahProgress[surah]||0)){goal.surahProgress[surah]=ayah;changed=true;}
-  // Overall tracked position — high-water mark only, never regresses
-  if(!goal.trackedSurah||surah>goal.trackedSurah||
-     (surah===goal.trackedSurah&&ayah>(goal.trackedAyah||0))){
-    goal.trackedSurah=surah;goal.trackedAyah=ayah;changed=true;
-  }
-  // Surah completion — only when tracker reaches final ayah
+  var prevAyah=goal.surahProgress[surah]||0;
+  if(ayah>prevAyah){goal.surahProgress[surah]=ayah;changed=true;}
+  // Tracked position: record the surah most recently read in normal context;
+  // ayah is always the high-water mark for that surah (no regression within a surah).
+  // We do NOT compare surah numbers — that caused random opens to override everything.
+  goal.trackedSurah=surah;
+  goal.trackedAyah=goal.surahProgress[surah]; // high-water for this surah, never lower
+  changed=true;
+  // Surah completion — only when tracker reaches the final ayah
   var s=SURAHS[surah-1];
   if(s&&ayah>=s.a){
     if(!goal.completedSurahs)goal.completedSurahs=[];
@@ -8967,7 +8974,7 @@ function renderGoals(){
     on(cgCard,'click',function(){
       H.medium();
       App.tab('quran');
-      setTimeout(function(){App.openSurah(goal.trackedSurah,goal.trackedAyah||1);},300);
+      setTimeout(function(){App.openSurah(goal.trackedSurah,goal.trackedAyah||1,'goal_continue');},300);
     });
     frag.appendChild(cgCard);
   }
