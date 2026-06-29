@@ -1190,6 +1190,8 @@ function init(){
       // Native resume: full refresh sequence (runs once per foreground — dedup prevents double)
       if(window.Capacitor){
         console.log('[APP_LIFECYCLE] resume_refresh_start');
+        // Re-apply native status bar color — OS can reset it after background/resume
+        _applyStatusBar(S.theme);
         ForceUpdate.check();
         initTodayVerses();
         (function(){
@@ -2052,14 +2054,34 @@ function loadTafsirData(){
 }
 
 /* ===== THEME & SIZES ===== */
+
+// Single source of truth for the top-chrome surface color (status bar + safe-area + header).
+// Must exactly match the CSS [data-theme] --bg values so native and WebView surfaces are identical.
+function getTopChromeColor(theme){
+  return {dark:'#0a0a0a',light:'#fafafa',noor:'#f4e8cc',sakina:'#0c1c12'}[theme]||'#0a0a0a';
+}
+
+// Apply native status bar color and icon style to match the header surface.
+// Called on every theme change and on every app resume to prevent mismatch.
+function _applyStatusBar(theme){
+  var color=getTopChromeColor(theme);
+  var isDark=theme==='dark'||theme==='sakina';
+  // Keep meta[theme-color] current (Chrome Android browser mode + PWA)
+  try{var _tm=document.querySelector('meta[name="theme-color"]');if(_tm)_tm.setAttribute('content',color);}catch(e){}
+  // Native Capacitor StatusBar
+  var SB=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.StatusBar;
+  if(!SB)return;
+  try{SB.setBackgroundColor({color:color});}catch(e){}
+  try{SB.setStyle({style:isDark?'DARK':'LIGHT'});}catch(e){}
+}
+
 function applyTheme(){
   // Pause sky CSS animations during theme cascade to prevent compositor jank.
   var _skyEl=document.getElementById('prayerSkyScene');
   var _skyWasRunning=_skyEl&&!_skyEl.classList.contains('sky-paused');
   if(_skyWasRunning)_skyEl.classList.add('sky-paused');
 
-  var bgMap={light:'#fafafa',dark:'#0a0a0a',sakina:'#0c1c12',noor:'#f4e8cc'};
-  var bg=bgMap[S.theme]||'#fafafa';
+  var bg=getTopChromeColor(S.theme);
   document.documentElement.setAttribute('data-theme',S.theme);
   // Keep inline --bg in sync with the startup anti-flash script (index.html head).
   // Without this, the startup inline style overrides CSS [data-theme] rules on every theme switch.
@@ -2068,11 +2090,7 @@ function applyTheme(){
   localStorage.setItem('theme',S.theme);
   if(window.S&&S.user)debouncedSync();
   _nativeSyncTheme(S.theme);
-  if(window.Capacitor&&window.Capacitor.Plugins.StatusBar){
-    var isDark=S.theme==='dark'||S.theme==='sakina';
-    try{window.Capacitor.Plugins.StatusBar.setStyle({style:isDark?'DARK':'LIGHT'})}catch(e){}
-    try{window.Capacitor.Plugins.StatusBar.setBackgroundColor({color:bg})}catch(e){}
-  }
+  _applyStatusBar(S.theme);
 
   // Keep content backdrop color in sync with theme
   if(window.HeaderOverlayManager)HeaderOverlayManager.setBackdropColor(S.theme);

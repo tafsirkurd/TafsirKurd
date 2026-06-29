@@ -121,6 +121,19 @@ public class MainActivity extends BridgeActivity {
             }
             getBridge().getWebView().setBackgroundColor(themeColor);
             getWindow().getDecorView().setBackgroundColor(themeColor);
+            // Set native status bar color to match header — prevents the wrong color
+            // showing during cold launch before JS/Capacitor StatusBar plugin runs.
+            getWindow().setStatusBarColor(themeColor);
+            // Status bar icon style: dark icons on light themes, light icons on dark themes
+            boolean isLightTheme = "light".equals(savedTheme) || "noor".equals(savedTheme);
+            android.view.View dv = getWindow().getDecorView();
+            int sysUi = dv.getSystemUiVisibility();
+            if (isLightTheme) {
+                sysUi |= android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+            } else {
+                sysUi &= ~android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+            }
+            dv.setSystemUiVisibility(sysUi);
         } catch (Exception e) {
             Log.w("ThemeInit", "Could not apply saved theme color: " + e.getMessage());
         }
