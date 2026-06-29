@@ -164,10 +164,10 @@ html.perf-critical .app{transition:opacity .05s ease-out!important}
 .tabbar{transition:opacity .18s ease,transform .2s cubic-bezier(.4,0,1,1)}
 body.keyboard-open .tabbar{opacity:0;transform:translateY(100%);pointer-events:none}
 :root{--top-chrome-bg:#050505}[data-theme=light]{--top-chrome-bg:#fafafa}[data-theme=noor]{--top-chrome-bg:#f4e8cc}[data-theme=dark]{--top-chrome-bg:#050505}[data-theme=sakina]{--top-chrome-bg:#080f0a}
-/* ── Surah card goal completion badges — absolute overlay, never affects flex layout ── */
+/* ── Surah card goal badges — absolute overlay on image area, zero layout impact ── */
 .surah-card{position:relative}
-.surah-goal-state{position:absolute;top:8px;inset-inline-end:8px;z-index:3;pointer-events:none;display:flex;align-items:center}
-.surah-done-badge{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,.25)}
-.surah-progress-badge{display:inline-flex;align-items:center;padding:2px 6px;border-radius:20px;background:color-mix(in srgb,var(--surface) 80%,var(--accent) 20%);color:var(--accent);font-size:10px;font-weight:600;direction:ltr;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.surah-goal-state{position:absolute;top:8px;right:8px;z-index:5;pointer-events:none;display:flex;align-items:center;max-width:64px}
+.surah-done-badge{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;font-weight:700;box-shadow:0 1px 5px rgba(0,0,0,.35);flex-shrink:0}
+.surah-progress-badge{display:inline-flex;align-items:center;padding:3px 6px;border-radius:999px;background:rgba(0,0,0,.55);color:#fff;font-size:10px;font-weight:600;direction:ltr;white-space:nowrap;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,.3)}
 /* ── Continue Goal card in goals tab ────────────────────────────────────── */
 .goal-continue-card{cursor:pointer;border-inline-start:3px solid var(--accent)}
