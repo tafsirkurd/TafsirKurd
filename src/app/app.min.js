@@ -1310,7 +1310,7 @@ function init(){
         if(_isMac&&!_isUserTap)return;
         if(extra.type==='verse'&&extra.s&&extra.a){
           App.tab('quran');
-          setTimeout(function(){App.openSurah(extra.s,extra.a,{source:'notification',trackGoal:false});},300);
+          setTimeout(function(){App.openSurah(extra.s,extra.a,{source:'notification'});},300);
         }
         if(extra.type==='video'&&extra.id){
           App.tab('islamvoice');
@@ -3209,7 +3209,7 @@ function _handlePushDeepLink(type,id){
       var parts=id.split(':');
       var s=+parts[0],a=+parts[1];
       App.tab('quran');
-      setTimeout(function(){App.openSurah(s,a,{source:'deep_link',trackGoal:false});},300);
+      setTimeout(function(){App.openSurah(s,a,{source:'deep_link'});},300);
 
     }else if(type==='islamvoice_episodes'||type==='video'){
       App.tab('islamvoice');
@@ -3844,7 +3844,7 @@ App._mkSearchItem=function(r,isPrimary){
       if(window.QuranSearch&&QuranSearch.trackTap)QuranSearch.trackTap(sn,an);
       _shAdd(q);
       HeaderOverlayManager.close();App.tab('quran');
-      setTimeout(function(){App.openSurah(sn,an,{source:'search',trackGoal:false});},100);
+      setTimeout(function(){App.openSurah(sn,an,{source:'search'});},100);
     };})(r.sn,r.an,S.search));
 
   }else if(r.type==='surah'){
@@ -3859,7 +3859,7 @@ App._mkSearchItem=function(r,isPrimary){
     item.appendChild(row);
     on(item,'click',(function(sn,q){return function(){
       _shAdd(q);
-      HeaderOverlayManager.close();App.openSurah(sn,undefined,{source:'search',trackGoal:false});
+      HeaderOverlayManager.close();App.openSurah(sn,undefined,{source:'search'});
     };})(r.sn,S.search));
 
   }else{
@@ -3881,7 +3881,7 @@ App._mkSearchItem=function(r,isPrimary){
       if(window.QuranSearch&&QuranSearch.trackTap)QuranSearch.trackTap(sn,an);
       _shAdd(q);
       HeaderOverlayManager.close();App.tab('quran');
-      setTimeout(function(){App.openSurah(sn,an,{source:'search',trackGoal:false});},100);
+      setTimeout(function(){App.openSurah(sn,an,{source:'search'});},100);
     };})(r.sn,r.an,S.search));
   }
 
@@ -3951,7 +3951,8 @@ function renderSurahGrid(){
     ayahsEl.textContent=s.a+' '+ayahLbl;
     info.appendChild(deco);info.appendChild(nameEn);info.appendChild(ayahsEl);
     var goalState=document.createElement('div');goalState.className='surah-goal-state';
-    card.appendChild(imgPanel);card.appendChild(badge);card.appendChild(info);card.appendChild(goalState);
+    imgPanel.appendChild(goalState);
+    card.appendChild(imgPanel);card.appendChild(badge);card.appendChild(info);
     frag.appendChild(card);
   }
   grid.textContent='';
@@ -4033,13 +4034,12 @@ function renderContinue(){
 
 /* ===== OPEN SURAH ===== */
 App.openSurah=function(num,scrollTo,opts){
-  // opts = {source:'surah_grid'|'search'|'notification'|'bookmark'|'deep_link'|'audio'|..., trackGoal:bool}
-  // External sources (search/notification/bookmark/deep_link/audio) pass trackGoal:false explicitly.
-  // Normal navigation passes nothing or {source} — trackGoal defaults to true when a goal exists.
+  // S.goalSessionActive is the single gate for goal progress.
+  // It is ONLY true when opts.goalSession===true (Continue Goal, prev/next within session).
+  // Every other open — surah grid, search, notification, bookmark, deep link — sets it false.
   var _opts=opts||{};
   S.readerOpenSource=_opts.source||'normal';
-  var _hasGoal=!!getGoal();
-  S.goalTrackingEnabled=(_opts.trackGoal!==false)&&_hasGoal;
+  S.goalSessionActive=(_opts.goalSession===true);
   if(S.surah===num&&$('quranReader').classList.contains('on'))return; // already open
   if(tapGuard('openSurah',300))return; // prevent double-tap race
   var s=SURAHS[num-1]; // bounds-check before any state mutation
@@ -4074,7 +4074,7 @@ App.openSurah=function(num,scrollTo,opts){
 
 App.backToList=function(){
   H.light();
-  S.goalTrackingEnabled=false; // leaving the reader always ends any goal session
+  S.goalSessionActive=false; // leaving the reader always ends any goal session
   if(S.surah){
     try{localStorage.setItem('surah_scroll_'+S.surah,String($('ayahList').scrollTop))}catch(e){}
   }
@@ -5456,13 +5456,13 @@ function renderAyahs(surahNum,scrollTo){
   prevBtn.appendChild(icon('fas fa-arrow-right'));
   prevBtn.appendChild(document.createTextNode(' '+t('reader.prev_surah')));
   if(surahNum<=1)prevBtn.disabled=true;
-  on(prevBtn,'click',function(){App.openSurah(surahNum-1,undefined,{source:'prev_next',trackGoal:S.goalTrackingEnabled});});
+  on(prevBtn,'click',function(){App.openSurah(surahNum-1,undefined,{source:'prev_next',goalSession:S.goalSessionActive});});
   nav.appendChild(prevBtn);
   var nextBtn=el('button','surah-nav-btn');
   nextBtn.appendChild(document.createTextNode(t('reader.next_surah')+' '));
   nextBtn.appendChild(icon('fas fa-arrow-left'));
   if(surahNum>=114)nextBtn.disabled=true;
-  on(nextBtn,'click',function(){App.openSurah(surahNum+1,undefined,{source:'next_surah',trackGoal:S.goalTrackingEnabled});});
+  on(nextBtn,'click',function(){App.openSurah(surahNum+1,undefined,{source:'next_surah',goalSession:S.goalSessionActive});});
   nav.appendChild(nextBtn);
   list.appendChild(nav);
 
@@ -6882,7 +6882,7 @@ App.audioNext=function(){
       _scrollMushafToAyah(_advSurah,1,0);
       updateMushafPlayBtn();
     } else if(S.tab==='quran'){
-      App.openSurah(_advSurah,1,{source:'audio',trackGoal:false});
+      App.openSurah(_advSurah,1,{source:'audio'});
     }
   }
   else{App.audioClose()}
@@ -8565,7 +8565,7 @@ function renderBmList(bms){
     var openBtn=el('button','bm-card-btn');
     openBtn.appendChild(icon('fas fa-book-open'));
     openBtn.appendChild(document.createTextNode(' '+t('bookmarks.open')));
-    on(openBtn,'click',function(){App.tab('quran');setTimeout(function(){App.openSurah(bm.surah,bm.ayah,{source:'bookmark',trackGoal:false})},100)});
+    on(openBtn,'click',function(){App.tab('quran');setTimeout(function(){App.openSurah(bm.surah,bm.ayah,{source:'bookmark'})},100)});
     actions.appendChild(openBtn);
 
     var noteBtn=el('button','bm-card-btn');
@@ -8677,19 +8677,19 @@ function trackVerse(surah,ayah){
   _updateGoalsBadge();
   // Keep goal widget current — lightweight, no network
   pushGoalDataToWidget();
-  // Goal tracking: only when an explicit goal session is active.
-  // S.goalTrackingEnabled is set to true only via Continue Goal; cleared on every other
-  // App.openSurah() call and on backToList(). Never fires from search/notif/bookmark/random.
-  if(S.goalTrackingEnabled)_updateGoalProgress(surah,ayah);
+  // Goal progress: only in an explicit goal session (Continue Goal → prev/next chain).
+  // S.goalSessionActive is false for every other open: surah grid, search, notification,
+  // bookmark, deep link, audio advance. Never updates goal from random navigation.
+  if(S.goalSessionActive)_updateGoalProgress(surah,ayah);
 }
 
 function _updateGoalProgress(surah,ayah){
-  // Only called when S.goalTrackingEnabled===true — gate is in trackVerse.
+  // Only called when S.goalSessionActive===true — gate is in trackVerse.
   var goal=getGoal();
   if(!goal)return;
   if(!goal.surahProgress)goal.surahProgress={};
   if(!goal.completedSurahs)goal.completedSurahs=[];
-  console.log('[GOAL_TRACK]',{source:S.readerOpenSource,enabled:S.goalTrackingEnabled,surah:surah,ayah:ayah,before:goal.surahProgress[surah],trackedSurah:goal.trackedSurah,trackedAyah:goal.trackedAyah});
+  console.log('[GOAL_TRACK]',{source:S.readerOpenSource,session:S.goalSessionActive,surah:surah,ayah:ayah,before:goal.surahProgress[surah],trackedSurah:goal.trackedSurah,trackedAyah:goal.trackedAyah});
   var changed=false;
   // Per-surah: strict high-water mark — Math.max so it NEVER decreases
   var newHW=Math.max(goal.surahProgress[surah]||0,ayah);
@@ -8981,7 +8981,7 @@ function renderGoals(){
     on(cgCard,'click',function(){
       H.medium();
       App.tab('quran');
-      setTimeout(function(){App.openSurah(goal.trackedSurah,goal.trackedAyah||1,{source:'continue_goal',trackGoal:true});},300);
+      setTimeout(function(){App.openSurah(goal.trackedSurah,goal.trackedAyah||1,{source:'continue_goal',goalSession:true});},300);
     });
     frag.appendChild(cgCard);
   }
