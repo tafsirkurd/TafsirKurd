@@ -92,3 +92,77 @@ html.android:not(.low-end-device) .prayer-grid-card--interactive:nth-child(5),ht
 .sd-wx-temp{display:inline-block;margin-right:6px;background:color-mix(in srgb,var(--accent) 15%,transparent);color:var(--text);border-radius:4px;padding:1px 6px;font-size:.7rem;font-weight:600;font-variant-numeric:tabular-nums}#readerName{transition:opacity .15s ease}.sd-streak-badge{display:inline-block;font-size:.58rem;font-weight:700;padding:1px 6px;border-radius:20px;margin-right:4px;vertical-align:middle;background:rgba(245,158,11,.18);color:#92400e;border:1px solid rgba(245,158,11,.3)}.sd-icon-done{color:#16a34a;background:rgba(22,163,74,.12);border-color:rgba(22,163,74,.3)}.sd-card-greeting{cursor:default}.sd-card-greeting .sd-icon{color:#15803d;background:rgba(22,163,74,.12);border-color:rgba(22,163,74,.3)}.sd-card-greeting .sd-tag{color:#166534;background:rgba(22,163,74,.18);border-color:rgba(22,163,74,.3)}@media(max-height:480px){.sky-scene{height:160px;min-height:160px}}
 [data-theme=dark] .mushaf-text-page .mushaf-qcf-line,[data-theme=dark] .mushaf-text-page .mushaf-flow-verse,[data-theme=dark] .mushaf-text-page .mushaf-ayah-seg,[data-theme=dark] .mushaf-text-page .mushaf-bismillah,[data-theme=dark] .mushaf-text-page .mushaf-surah-banner,[data-theme=dark] .mushaf-text-page .surah-name-ar,[data-theme=sakina] .mushaf-text-page .mushaf-qcf-line,[data-theme=sakina] .mushaf-text-page .mushaf-flow-verse,[data-theme=sakina] .mushaf-text-page .mushaf-ayah-seg,[data-theme=sakina] .mushaf-text-page .mushaf-bismillah,[data-theme=sakina] .mushaf-text-page .mushaf-surah-banner,[data-theme=sakina] .mushaf-text-page .surah-name-ar{color:#f5f0e8}
 [data-theme=dark] .mushaf-text-page .mushaf-ayah-seg span:not([class^="tj-"]),[data-theme=sakina] .mushaf-text-page .mushaf-ayah-seg span:not([class^="tj-"]){color:#f5f0e8}#sw-update-card{position:fixed;top:calc(env(safe-area-inset-top,0px) + var(--hdr-h,58px) + 14px);left:18px;right:18px;z-index:10002;max-width:520px;margin:0 auto;background:var(--bg2);border:1px solid var(--border);border-left:4px solid #3b82f6;border-radius:20px;padding:16px 16px 14px 16px;box-shadow:0 8px 40px rgba(0,0,0,.13),0 2px 10px rgba(0,0,0,.07);opacity:0;transform:translateY(-10px) scale(0.97);transition:opacity .35s cubic-bezier(.16,1,.3,1),transform .42s cubic-bezier(.34,1.56,.64,1);will-change:transform,opacity;pointer-events:none;}#sw-update-card.swu-in{opacity:1;transform:translateY(0) scale(1);pointer-events:auto;}#sw-update-card.swu-out{opacity:0;transform:translateY(-14px) scale(0.96);transition:opacity .28s ease,transform .3s cubic-bezier(.55,0,.1,1);}.swu-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px;}.swu-icon-wrap{width:38px;height:38px;border-radius:12px;background:rgba(59,130,246,.12);color:#3b82f6;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}.swu-text{flex:1;min-width:0;}.swu-title{font-size:.875rem;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:3px;}.swu-desc{font-size:.78rem;color:var(--text2);line-height:1.45;}.swu-close{width:30px;height:30px;min-width:44px;min-height:44px;margin:-7px -7px 0 0;border-radius:50%;background:var(--bg3);color:var(--text2);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:background .15s,color .15s;}.swu-close:hover{background:var(--border2)}.swu-close:active{background:var(--border2)}.swu-actions{display:flex;align-items:center;gap:8px;}.swu-refresh-btn{flex:1;height:44px;border-radius:12px;background:#3b82f6;color:#fff;font-size:.84rem;font-weight:700;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;letter-spacing:.01em;transition:opacity .15s,transform .12s;display:flex;align-items:center;justify-content:center;gap:7px;}.swu-refresh-btn:active{opacity:.82;transform:scale(.97)}.swu-later-btn{height:44px;padding:0 18px;border-radius:12px;background:transparent;color:var(--text2);font-size:.82rem;font-weight:600;border:1px solid var(--border);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s,color .15s;white-space:nowrap;}.swu-later-btn:hover{background:var(--bg3)}.swu-later-btn:active{background:var(--bg3)}@media(min-width:600px){#sw-update-card{max-width:480px}}@supports((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){#sw-update-card{-webkit-backdrop-filter:blur(20px) saturate(1.5);backdrop-filter:blur(20px) saturate(1.5);background:rgba(255,255,255,.92)}[data-theme=dark] #sw-update-card{background:rgba(22,22,22,.92)}[data-theme=noor] #sw-update-card,[data-theme=parchment] #sw-update-card{background:rgba(253,244,227,.93)}[data-theme=sakina] #sw-update-card,[data-theme=emerald] #sw-update-card{background:rgba(17,35,24,.93)}}[class*=nav-rail-open] #sw-update-card,html.is-ipad #sw-update-card{left:calc(var(--nav-rail-w,0px) + 18px)}.ms-font-selector{display:flex;gap:6px;margin-bottom:4px}.ms-font-btn{flex:1;padding:9px 8px;border-radius:var(--r-m);border:1.5px solid var(--border);background:var(--bg2);color:var(--text);font-size:.9rem;font-weight:500;cursor:pointer;transition:background .15s,border-color .15s,color .15s;text-align:center}.ms-font-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}.ms-font-btn.locked{opacity:.45;cursor:default}.ms-font-dark-note{font-size:.78rem;color:var(--text3);line-height:1.4;margin-top:2px;padding:6px 2px}
+/* ── Motion system refinements v1 ──────────────────────────────────────────────────
+   Appended block – higher specificity or later position wins over earlier rules.
+   Do not edit individual rules above; patch here to keep diffs reviewable.      */
+
+/* Fix 1: prefers-reduced-motion used 'NaNs' (invalid CSS) – browser ignores it,
+   so reduced-motion users got full animations. Restored to 0.01ms.              */
+@media(prefers-reduced-motion:reduce){*,::after,::before{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important;scroll-behavior:auto!important}.splash{transition:opacity .15s!important}.app{transition:opacity .08s ease-out!important}}
+
+/* Fix 2: perf-critical same NaNs bug */
+html.perf-critical *,html.perf-critical ::after,html.perf-critical ::before{transition-duration:0.01ms!important;animation-duration:0.01ms!important;animation-iteration-count:1!important}
+html.perf-critical .splash{transition:opacity .1s!important}
+html.perf-critical .app{transition:opacity .05s ease-out!important}
+
+/* Fix 3: heatmap cell active was scale(2.2) – cell should press IN, not explode */
+.heatmap-cell:active{transform:scale(.94)}
+
+/* Fix 4: tab bar icon active squish .80→.88 – controlled, not toy-like */
+.tab-item:active i{transform:scale(.88)}
+
+/* Fix 5: normalize extreme press scales */
+.fp-btn:active{transform:scale(.88)}
+.fp-btn-lg:active{transform:scale(.91)}
+.reciter-dl-btn:active{transform:scale(.92)}
+.year-nav button:active{transform:scale(.92)}
+.ppp-cal-cell:not(.empty):not(.future):active{transform:scale(.92)}
+
+/* Fix 6: spring easing on functional UI → premium deceleration
+   cubic-bezier(.34,1.56,.64,1) kept only for celebratory moments (nsCardPop, etc.)
+   Functional elements (player controls, reciter rows) should not bounce.        */
+.fp-btn-sm{transition:transform .18s var(--ease),opacity .15s}
+.fp-btn-lg{transition:transform .18s var(--ease),box-shadow .4s var(--ease),opacity .15s}
+.fp-speed-btn{transition:background .22s var(--ease),color .22s var(--ease),border-color .22s var(--ease),transform .18s var(--ease)}
+.fp-reciter-row{transition:background .2s var(--ease),transform .18s var(--ease)}
+.reciter-dl-btn{transition:background .22s var(--ease),color .22s var(--ease),box-shadow .22s var(--ease),transform .18s var(--ease)}
+
+/* Fix 7: notification banner entrance – spring feels cartoonish for system messages */
+.top-bnr-host{transition:opacity .2s ease,transform .26s cubic-bezier(.16,1,.3,1);will-change:transform,opacity}
+.top-bnr.out{opacity:0;transform:translateY(20px);transition:opacity .16s ease,transform .2s cubic-bezier(.4,0,.2,1)}
+
+/* Fix 8: overscroll containment – prevents scroll rubber-banding from propagating
+   to the Capacitor WebView shell and competing with the custom PTR gesture.     */
+.panel{overscroll-behavior-y:contain}
+.dl-sheet,.book-overlay-panel,.iv-spk-sheet,.pcso-sheet,.prayer-settings-sheet,.note-modal-card,.sidebar{overscroll-behavior-y:contain}
+/* ── Native-feel polish v1 ─────────────────────────────────────────────────────
+   Applied after audit. All rules are additive overrides — no existing rules
+   were modified. Ordered by category. */
+
+/* Fix: full-player and rec-picker open flash — backwards fill holds the
+   from{translateY(100%)} keyframe on the first paint frame */
+.full-player.open{animation:.36s cubic-bezier(.22,1,.36,1) slideUp backwards!important}
+.rec-picker.open{animation:.3s cubic-bezier(.22,1,.36,1) slideUp backwards!important}
+
+/* Fix: repeat-modal and copy-modal had no open animation — add slideUp entry
+   so open/close are symmetric (close is handled in JS via inline animation) */
+.repeat-modal.on{animation:slideUp .28s cubic-bezier(.22,1,.36,1) backwards}
+.copy-modal.on{animation:slideUp .28s cubic-bezier(.22,1,.36,1) backwards}
+
+/* Fix: IslamVoice overlay backdrop was opacity-popping in — fade it */
+.iv-overlay.open{animation:fadeIn .2s ease}
+
+/* Fix: hdr-btn active scale .84 → .88 (less aggressive, matches iOS nav bar) */
+.hdr-btn:active{transform:scale(.88)!important}
+
+/* Fix: tab-item active — add container background so the whole hit area responds */
+.tab-item:active{background:var(--surface-h)}
+
+/* Fix: list rows had no active press state — every tappable row needs immediate feedback */
+.ayah-item:active,.iv-ep-row:active,.iv-ep-item:active,.reciter-card:active,.goal-card:active,.s-row:active{background:var(--surface-h)}
+
+/* ── Keyboard-open: hide tabbar while keyboard is visible ──────────────────
+   body.keyboard-open is added by the resize-based detector in app.js.
+   Tab bar slides down out of view; restores smoothly when keyboard closes. */
+.tabbar{transition:opacity .18s ease,transform .2s cubic-bezier(.4,0,1,1)}
+body.keyboard-open .tabbar{opacity:0;transform:translateY(100%);pointer-events:none}

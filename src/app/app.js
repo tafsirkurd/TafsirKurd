@@ -6061,8 +6061,12 @@ App.openReaderSettings=function(){
 App.closeReaderSettings=function(){
   $('qsOverlay').classList.remove('on');
   var qs=$('qsSheet');
-  qs.classList.remove('on');
-  qs.style.display='none';
+  qs.style.animation='slideDown .22s cubic-bezier(.4,0,1,1) both';
+  setTimeout(function(){
+    qs.style.animation='';
+    qs.classList.remove('on');
+    qs.style.display='none';
+  },210);
 };
 function applyShowTafsir(){
   document.querySelectorAll('.ayah-tafsir').forEach(function(el){
@@ -6950,7 +6954,11 @@ App.openCopyModal=function(surah,ayah){
   $('copyTo').max=maxAyah;$('copyTo').value=Math.min(ayah+2,maxAyah);
   $('copyModal').classList.add('on');
 };
-App.closeCopyModal=function(){$('copyModal').classList.remove('on')};
+App.closeCopyModal=function(){
+  var p=$('copyModal');
+  p.style.animation='slideDown .22s cubic-bezier(.4,0,1,1) both';
+  setTimeout(function(){p.style.animation='';p.classList.remove('on');},210);
+};
 App.copyShowRange=function(){$('copyMainOpts').style.display='none';$('copyRangeOpts').style.display=''};
 App.copyBackToMain=function(){$('copyMainOpts').style.display='';$('copyRangeOpts').style.display='none'};
 App.copyFmtSelect=function(btn,fmt){
@@ -6998,7 +7006,9 @@ App.openAudioSettings=function(){
   renderAudioSettings();
 };
 App.closeAudioSettings=function(){
-  $('audioSettingsPanel').classList.remove('on');
+  var p=$('audioSettingsPanel');
+  p.style.animation='slideDown .22s cubic-bezier(.4,0,1,1) both';
+  setTimeout(function(){p.style.animation='';p.classList.remove('on');},210);
 };
 
 function renderAudioSettings(){
@@ -8034,7 +8044,9 @@ App.openRepeat=function(){
 };
 
 App.closeRepeat=function(){
-  $('repeatModal').classList.remove('on');
+  var p=$('repeatModal');
+  p.style.animation='slideDown .22s cubic-bezier(.4,0,1,1) both';
+  setTimeout(function(){p.style.animation='';p.classList.remove('on');},210);
 };
 
 App.repeatMode=function(mode){
@@ -9166,7 +9178,10 @@ App.openPrayerProgress=function(){
 };
 App.closePrayerProgress=function(){
   _stopPppTick();_stopPppCdTick();
-  var p=$('prayerProgressPanel');if(p)p.classList.remove('on');
+  var p=$('prayerProgressPanel');
+  if(!p)return;
+  p.style.animation='slideDown .22s cubic-bezier(.4,0,1,1) both';
+  setTimeout(function(){p.style.animation='';p.classList.remove('on');},210);
 };
 App.openPrayerDay=function(dKey){
   var log=getPrayerLog();var dayLog=log[dKey]||{};
@@ -9215,7 +9230,14 @@ App.openPrayerDay=function(dKey){
   $('pppDayOverlay').classList.add('on');
 };
 App.closePrayerDay=function(){
-  $('pppDayOverlay').classList.remove('on');
+  var overlay=$('pppDayOverlay');
+  if(!overlay)return;
+  var sheet=overlay.querySelector('.ppp-day-sheet');
+  if(sheet)sheet.style.animation='slideDown .22s cubic-bezier(.4,0,1,1) both';
+  setTimeout(function(){
+    if(sheet)sheet.style.animation='';
+    overlay.classList.remove('on');
+  },210);
 };
 
 function _pppStreakVal(n){return n>0?'🔥 '+n:'0';}
@@ -10248,7 +10270,9 @@ App.openWizard=function(){
   renderWizardStep();
 };
 App.closeWizard=function(){
-  $('wizard').classList.remove('on');
+  var p=$('wizard');
+  p.style.animation='slideDown .22s cubic-bezier(.4,0,1,1) both';
+  setTimeout(function(){p.style.animation='';p.classList.remove('on');},210);
 };
 App.openDeleteConfirm=function(){
   $('goalConfirmOverlay').classList.add('on');
@@ -15357,5 +15381,69 @@ function startApp(){
   // i18n:updated already handled at top of file (line ~558) — no duplicate here
 }
 if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',startApp)}else{startApp()}
+
+// ── Scroll performance: activate the tk-scrolling CSS pause system ──────────────
+// CSS body.tk-scrolling rules pause sky-scene *, streak-ring.pulse, fp-btn-lg.playing.
+// rAF-throttled: no matter how many scroll events fire per frame, classList is touched
+// at most once per frame. capture:true catches scroll on any nested panel.
+(function(){
+  var _st=null,_raf=false;
+  function _frame(){
+    _raf=false;
+    if(!_st)document.body.classList.add('tk-scrolling');
+    clearTimeout(_st);
+    _st=setTimeout(function(){_st=null;document.body.classList.remove('tk-scrolling');},150);
+  }
+  function _onScroll(){
+    if(!_raf){_raf=true;requestAnimationFrame(_frame);}
+  }
+  document.addEventListener('scroll',_onScroll,{passive:true,capture:true});
+})();
+
+// ── Keyboard-open detection: hide tabbar while keyboard is visible ──────────
+// adjustResize shrinks window.innerHeight when keyboard opens — visualViewport
+// alone won't detect this. We track the max observed innerHeight as a baseline,
+// reset it only when width changes (orientation change, not keyboard).
+// Adds/removes body.keyboard-open; CSS slides tabbar out of view.
+(function(){
+  var _kbOpen=false,_raf=null,_prevW=window.innerWidth,_maxH=window.innerHeight;
+
+  function _clear(){
+    if(_kbOpen){_kbOpen=false;document.body.classList.remove('keyboard-open');}
+  }
+
+  function _check(){
+    _raf=null;
+    var w=window.innerWidth;
+    if(w!==_prevW){
+      // Width changed = orientation, not keyboard — reset baseline
+      _prevW=w;_maxH=window.innerHeight;_clear();return;
+    }
+    if(window.innerHeight>_maxH)_maxH=window.innerHeight;
+    // adjustNothing / iOS path: visualViewport shrinks, innerHeight stays
+    var kbVV=0;
+    if(window.visualViewport)kbVV=Math.max(0,window.innerHeight-window.visualViewport.height-window.visualViewport.offsetTop);
+    // adjustResize path: innerHeight shrinks vs. our max baseline
+    var kbRS=Math.max(0,_maxH-window.innerHeight);
+    var open=Math.max(kbVV,kbRS)>100;
+    if(open!==_kbOpen){_kbOpen=open;document.body.classList.toggle('keyboard-open',open);}
+  }
+
+  function _sched(){if(!_raf)_raf=requestAnimationFrame(_check);}
+
+  // Safety net: on resume/visibility restore, clear stuck state if no input is focused
+  function _onVisible(){
+    if(document.visibilityState==='visible'){
+      var a=document.activeElement;
+      var inputFocused=a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA'||a.isContentEditable);
+      if(!inputFocused)_clear();
+    }
+  }
+
+  window.addEventListener('resize',_sched,{passive:true});
+  if(window.visualViewport)window.visualViewport.addEventListener('resize',_sched,{passive:true});
+  document.addEventListener('visibilitychange',_onVisible);
+  // Capacitor app resume fires this too via App plugin state-change → visibilitychange
+})();
 
 })();
