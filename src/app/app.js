@@ -6088,15 +6088,28 @@ function updateMushafProgress(view){
   // ── Current visible surah (updates on scroll) ─────────────────────────────
   var _currentSurah=sessionSurah;
   function _detectSurah(){
-    // Find the last surah banner whose top is at/above the current scroll position
-    var banners=view.querySelectorAll('.mushaf-surah-banner[data-surah]');
-    if(!banners.length)return _currentSurah;
     var scrollTop=view.scrollTop;
+    // Estimate current page from scroll position — used as fallback when
+    // fast-scroll skips past unloaded pages whose banners don't exist in DOM yet.
+    var _avgPh=view.scrollHeight>0?view.scrollHeight/604:900;
+    var _estPage=Math.min(604,Math.max(1,Math.round(scrollTop/_avgPh)+1));
+
+    // Find the last rendered surah banner at/above current scroll
+    var banners=view.querySelectorAll('.mushaf-surah-banner[data-surah]');
     var best=null;var bestTop=-1;
     for(var b=0;b<banners.length;b++){
       var bTop=banners[b].offsetTop;
       if(bTop<=scrollTop+80&&bTop>bestTop){bestTop=bTop;best=banners[b];}
     }
+
+    // If no banner found, or the closest banner is more than 3 avg page-heights
+    // behind (fast-scroll jumped over unloaded pages), use page-range estimation.
+    if(!best||(scrollTop-bestTop>_avgPh*3)){
+      for(var s=_MUSHAF_PAGE_RANGES.length-1;s>=0;s--){
+        if(_estPage>=_MUSHAF_PAGE_RANGES[s][0])return s+1;
+      }
+    }
+
     if(!best)best=banners[0]; // all banners below fold — show first surah
     return parseInt(best.dataset.surah)||_currentSurah;
   }
