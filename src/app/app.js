@@ -5847,16 +5847,17 @@ function updateProgress(list,total){
 
   // maxSeen = highest ayah committed this session (for trackVerse + save-merge).
   // currentAyah = ayah the reading line is on right now (for display).
-  // Both start at 0; display resets to 0 on open — never show stale saved state.
-  var maxSeen=0;
-  var currentAyah=0;
+  // Seed both from _savedMax so bar shows saved progress immediately on open.
+  var maxSeen=_savedMax;
+  var currentAyah=_savedMax;
 
   if(_debug)console.log('[ReaderProgress] OPEN surah='+surahId+' savedMax='+_savedMax+' total='+total);
 
   (function(){var fe=$('readerProgressFill'),le=$('readerAyahLabel'),pe=$('readerPct');
-    if(fe)fe.style.width='0%';
-    if(le)le.textContent='0/'+total+' '+t('reader.ayah');
-    if(pe)pe.textContent='0%';
+    var _ip=_savedMax>0?Math.min(100,Math.round(_savedMax/total*100)):0;
+    if(fe)fe.style.width=_ip+'%';
+    if(le)le.textContent=(_savedMax||0)+'/'+total+' '+t('reader.ayah');
+    if(pe)pe.textContent=_ip+'%';
   })();
 
   var _rafPending=false;
