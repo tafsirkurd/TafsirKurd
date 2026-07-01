@@ -5869,11 +5869,13 @@ function updateProgress(list,total){
       _rafPending=false;
       if(destroyed||S.surah!==surahId)return;
       if(ayah>0){try{localStorage.setItem('lastRead',JSON.stringify({surah:surahId,ayah:ayah}))}catch(e){}}
-      var pct=Math.min(100,Math.round(ayah/total*100));
+      // Display the furthest point reached — never lower when scrolling back
+      var displayAyah=Math.max(ayah,maxSeen);
+      var pct=Math.min(100,Math.round(displayAyah/total*100));
       $('readerProgressFill').style.width=pct+'%';
-      $('readerAyahLabel').textContent=ayah+'/'+total+' '+t('reader.ayah');
+      $('readerAyahLabel').textContent=displayAyah+'/'+total+' '+t('reader.ayah');
       $('readerPct').textContent=pct+'%';
-      if(_debug)console.log('[ReaderProgress] header: ayah='+ayah+' pct='+pct+'%');
+      if(_debug)console.log('[ReaderProgress] header: ayah='+ayah+' display='+displayAyah+' pct='+pct+'%');
     });
   }
 
