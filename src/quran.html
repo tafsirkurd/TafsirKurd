@@ -9838,6 +9838,23 @@
 
             updateStatsUI();
             updateContinueReading();
+
+            // If the surah reader was already open when loadUserData() finished
+            // (common: reader opens from URL params before async load completes),
+            // refresh the progress bar now that readAyahs is populated.
+            if (currentSurahNumber) {
+                const readerPage = document.getElementById('surahReaderPage');
+                if (readerPage && readerPage.classList.contains('visible')) {
+                    updateSurahProgressIndicator(currentSurahNumber);
+                    // Also restore visual read marks on already-loaded ayahs
+                    document.querySelectorAll('.ayah[data-surah][data-ayah]').forEach(el => {
+                        const key = el.getAttribute('data-surah') + ':' + el.getAttribute('data-ayah');
+                        if (activityTracker.readAyahs && activityTracker.readAyahs.has(key)) {
+                            el.classList.add('ayah-read');
+                        }
+                    });
+                }
+            }
         }
 
         function saveUserData() {
@@ -10617,11 +10634,20 @@
             }, 500); // Small delay to ensure elements are rendered
         }
 
+        // Single scroll handler reference — removed and replaced on each surah open
+        // to prevent listener accumulation when navigating between surahs.
+        let _scrollProgressHandler = null;
+
         // Setup scroll-based progress update (for all users)
         function setupScrollProgress() {
-            let ticking = false;
+            // Remove previous listener before adding new one
+            if (_scrollProgressHandler) {
+                window.removeEventListener('scroll', _scrollProgressHandler);
+                _scrollProgressHandler = null;
+            }
 
-            window.addEventListener('scroll', () => {
+            let ticking = false;
+            _scrollProgressHandler = () => {
                 if (!ticking) {
                     window.requestAnimationFrame(() => {
                         updateScrollBasedProgress();
@@ -10629,7 +10655,8 @@
                     });
                     ticking = true;
                 }
-            });
+            };
+            window.addEventListener('scroll', _scrollProgressHandler, { passive: true });
         }
 
         // Update progress based on scroll position
@@ -10644,17 +10671,27 @@
             const viewportMiddle = window.pageYOffset + (window.innerHeight / 2);
 
             // Count how many ayahs the user has scrolled past (top of ayah is above viewport middle)
-            let ayahsRead = 0;
+            let ayahsScrolled = 0;
             for (let i = 0; i < ayahElements.length; i++) {
                 const rect = ayahElements[i].getBoundingClientRect();
                 const ayahTop = rect.top + window.pageYOffset;
                 if (ayahTop <= viewportMiddle) {
-                    ayahsRead = i + 1;
+                    ayahsScrolled = i + 1;
                 } else {
                     break;
                 }
             }
 
+            // Historical: how many ayahs in this surah are in readAyahs (never go below this)
+            let historicalRead = 0;
+            if (isUserAuthenticated && activityTracker.readAyahs && currentSurahNumber) {
+                for (let i = 1; i <= totalAyahs; i++) {
+                    if (activityTracker.readAyahs.has(currentSurahNumber + ':' + i)) historicalRead++;
+                }
+            }
+
+            // Display the higher of scroll position vs saved progress
+            const ayahsRead = Math.max(ayahsScrolled, historicalRead);
             const percentage = Math.min(100, Math.round((ayahsRead / totalAyahs) * 100));
 
             // Update sticky progress bar
