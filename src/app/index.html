@@ -197,18 +197,8 @@ if(window.isNativePlatform&&window.Capacitor.Plugins.StatusBar){
 html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 </style>
 <link rel="preload" href="/app/app-styles.min.css?v=27" as="style">
-<link rel="stylesheet" href="/app/app-styles.min.css?v=26">
+<link rel="stylesheet" href="/app/app-styles.min.css?v=27">
 <style>
-/* Search bar — open: spring bounce */
-.search-bar.on{transform:translateY(0) scale(1);opacity:1;pointer-events:auto;padding:10px 16px 12px;max-height:600px;position:relative;z-index:51;transition:max-height .01s,padding .01s,opacity .3s cubic-bezier(0.34,1.56,0.64,1),transform .3s cubic-bezier(0.34,1.56,0.64,1)}
-/* Search bar — close: smooth slide up + fade */
-.search-bar{transform:translateY(-14px) scale(0.96);opacity:0;transition:max-height 0s .22s,padding 0s .22s,opacity .2s ease-in,transform .2s ease-in}
-/* Input row springs in */
-.search-bar.on .search-wrap{animation:_sb-in .32s cubic-bezier(0.34,1.56,0.64,1) both}
-@keyframes _sb-in{from{transform:scale(0.94) translateY(-6px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
-/* × button rotates in */
-.search-bar.on .search-clear{animation:_sb-x .3s cubic-bezier(0.34,1.56,0.64,1) both}
-@keyframes _sb-x{from{transform:rotate(-90deg) scale(0.5);opacity:0}to{transform:rotate(0deg) scale(1);opacity:1}}
 /* Content backdrop — dims content below header when any header panel is open.
    Starts at --hdr-total-h so it never covers the status bar, safe-area, or header.
    z-index 49: below header (100) and header panels (51+), above content (0).
@@ -327,8 +317,10 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 <!-- TAB: BOOKMARKS -->
 <section class="panel" id="panelBookmarks" data-tab="bookmarks">
   <div class="hdr">
-    <button class="hdr-btn" onclick="App.tab('quran')" style="margin-inline-end:4px"><i class="fas fa-arrow-right"></i></button>
-    <div class="hdr-title"><span data-i18n="header.bookmarks" data-t="android_span_2">نیشانکرین</span></div>
+    <div class="hdr-main">
+      <button class="hdr-btn" onclick="App.tab('quran')" style="margin-inline-end:4px"><i class="fas fa-arrow-right"></i></button>
+      <div class="hdr-title"><span data-i18n="header.bookmarks" data-t="android_span_2">نیشانکرین</span></div>
+    </div>
   </div>
   <div id="bmStats"></div>
   <div id="bmControls"></div>
@@ -338,9 +330,11 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 <!-- TAB: GOALS -->
 <section class="panel" id="panelGoals" data-tab="goals">
   <div class="hdr">
-    <button class="hdr-btn" onclick="App.tab('quran')" style="margin-inline-end:4px"><i class="fas fa-arrow-right"></i></button>
-    <div class="hdr-title"><span data-i18n="header.goals" data-t="android_span_3">ئارمانج</span></div>
-    <button class="hdr-text-btn" onclick="App.openWizard()"><i class="fas fa-plus"></i> <span data-i18n="header.goals_new" data-t="android_span_4">نوی</span></button>
+    <div class="hdr-main">
+      <button class="hdr-btn" onclick="App.tab('quran')" style="margin-inline-end:4px"><i class="fas fa-arrow-right"></i></button>
+      <div class="hdr-title"><span data-i18n="header.goals" data-t="android_span_3">ئارمانج</span></div>
+      <button class="hdr-text-btn" onclick="App.openWizard()"><i class="fas fa-plus"></i> <span data-i18n="header.goals_new" data-t="android_span_4">نوی</span></button>
+    </div>
   </div>
   <div id="goalsContent"></div>
 </section>
@@ -410,35 +404,37 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 
 <!-- TAB: SETTINGS -->
 <section class="panel" id="panelSettings" data-tab="settings">
-  <div class="hdr"><div class="hdr-title"><span data-t="android_span_6">ڕێکخستن</span></div></div>
+  <div class="hdr"><div class="hdr-main"><div class="hdr-title"><span data-t="android_span_6">ڕێکخستن</span></div></div></div>
   <div class="settings-content" id="settingsContent"></div>
 </section>
 
 <!-- TAB: GENCINE (Religious Treasure) -->
 <section class="panel" id="panelGencine" data-tab="gencine">
   <div class="hdr">
-    <button class="hdr-btn" id="gencineBackBtn" style="display:none;margin-inline-end:4px" onclick="GencineUI.goHome()"><i class="fas fa-arrow-right"></i></button>
-    <div class="hdr-title" id="gencineHdrTitle" style="transform:translateX(-1px)"><span>گەنجینەیا ئیسلامێ</span></div>
-    <div id="booksHdrBtns" style="display:none;gap:2px">
-      <button class="hdr-btn" id="bookSheikhBtn" title="ماموستا" data-i18n-title="iv.sheikh_title"><i class="fas fa-user-tie"></i></button>
-      <button class="hdr-btn" id="bookSavedBtn" title="پاراستە" data-i18n-title="iv.saved_title"><i class="fas fa-bookmark"></i></button>
-      <button class="hdr-btn" id="bookReadBtn" title="هاتییە خویندن" data-i18n-title="iv.read_title"><i class="fas fa-check-circle"></i></button>
-      <button class="hdr-btn" id="bookDlBtn" title="داونلۆدکراو" data-i18n-title="dl.manage"><i class="fas fa-cloud-download-alt"></i></button>
-      <button class="hdr-btn" id="bookSearchBtn" title="گەڕان" data-i18n-title="iv.search_title"><i class="fas fa-search"></i></button>
+    <div class="hdr-main">
+      <button class="hdr-btn" id="gencineBackBtn" style="display:none;margin-inline-end:4px" onclick="GencineUI.goHome()"><i class="fas fa-arrow-right"></i></button>
+      <div class="hdr-title" id="gencineHdrTitle" style="transform:translateX(-1px)"><span>گەنجینەیا ئیسلامێ</span></div>
+      <div id="booksHdrBtns" style="display:none;gap:2px">
+        <button class="hdr-btn" id="bookSheikhBtn" title="ماموستا" data-i18n-title="iv.sheikh_title"><i class="fas fa-user-tie"></i></button>
+        <button class="hdr-btn" id="bookSavedBtn" title="پاراستە" data-i18n-title="iv.saved_title"><i class="fas fa-bookmark"></i></button>
+        <button class="hdr-btn" id="bookReadBtn" title="هاتییە خویندن" data-i18n-title="iv.read_title"><i class="fas fa-check-circle"></i></button>
+        <button class="hdr-btn" id="bookDlBtn" title="داونلۆدکراو" data-i18n-title="dl.manage"><i class="fas fa-cloud-download-alt"></i></button>
+        <button class="hdr-btn" id="bookSearchBtn" title="گەڕان" data-i18n-title="iv.search_title"><i class="fas fa-search"></i></button>
+      </div>
+      <div id="gencSearchBtns" style="display:none;gap:2px">
+        <button class="hdr-btn" id="gencSearchBtn" title="لێگەڕیان" data-i18n-title="iv.search_title"><i class="fas fa-search"></i></button>
+      </div>
+      <div id="pdfNavBtns" style="display:none;align-items:center;gap:2px">
+        <button class="hdr-btn" id="pdfPrevBtn" title="پەڕەی پێشوو"><i class="fas fa-chevron-up"></i></button>
+        <input id="pdfPageInd" type="number" min="1" inputmode="numeric" pattern="[0-9]*"
+          style="width:52px;text-align:center;font-size:.75rem;font-variant-numeric:tabular-nums;
+                 color:var(--text1);background:var(--bg2);border:1.5px solid var(--border);
+                 border-radius:7px;padding:4px 2px;-moz-appearance:textfield;outline:none">
+        <button class="hdr-btn" id="pdfNextBtn" title="پەڕەی دواتر"><i class="fas fa-chevron-down"></i></button>
+      </div>
+      <button class="hdr-btn" id="pdfTocBtn" style="display:none" title="فهرست"><i class="fas fa-list-ul"></i></button>
+      <button class="hdr-btn" id="pdfFsBtn" style="display:none" title="پڕ شاشە" data-i18n-title="qs.fullscreen"><i class="fas fa-expand"></i></button>
     </div>
-    <div id="gencSearchBtns" style="display:none;gap:2px">
-      <button class="hdr-btn" id="gencSearchBtn" title="لێگەڕیان" data-i18n-title="iv.search_title"><i class="fas fa-search"></i></button>
-    </div>
-    <div id="pdfNavBtns" style="display:none;align-items:center;gap:2px">
-      <button class="hdr-btn" id="pdfPrevBtn" title="پەڕەی پێشوو"><i class="fas fa-chevron-up"></i></button>
-      <input id="pdfPageInd" type="number" min="1" inputmode="numeric" pattern="[0-9]*"
-        style="width:52px;text-align:center;font-size:.75rem;font-variant-numeric:tabular-nums;
-               color:var(--text1);background:var(--bg2);border:1.5px solid var(--border);
-               border-radius:7px;padding:4px 2px;-moz-appearance:textfield;outline:none">
-      <button class="hdr-btn" id="pdfNextBtn" title="پەڕەی دواتر"><i class="fas fa-chevron-down"></i></button>
-    </div>
-    <button class="hdr-btn" id="pdfTocBtn" style="display:none" title="فهرست"><i class="fas fa-list-ul"></i></button>
-    <button class="hdr-btn" id="pdfFsBtn" style="display:none" title="پڕ شاشە" data-i18n-title="qs.fullscreen"><i class="fas fa-expand"></i></button>
   </div>
   <div id="gencineContent"></div>
 </section>
@@ -446,11 +442,13 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 <!-- TAB: PRAYER TIMES -->
 <section class="panel" id="panelPrayer" data-tab="prayer">
   <div class="hdr">
-    <div class="hdr-title"><span>دەمێن بانگی</span></div>
-    <div style="display:flex;gap:4px">
-      <button class="hdr-btn" id="hdrPrayerBtn" onclick="App.openPrayerProgress()" title="Prayer Progress" aria-label="Prayer Progress"><i class="fas fa-chart-line"></i><span class="hdr-badge" id="prayerBadge"></span></button>
-      <button class="hdr-btn" onclick="QiblaUI.open()" title="Qibla"><i class="fas fa-location-arrow"></i></button>
-      <button class="hdr-btn" onclick="PrayerUI.openSettings()" title="Settings"><i class="fas fa-sliders-h"></i></button>
+    <div class="hdr-main">
+      <div class="hdr-title"><span>دەمێن بانگی</span></div>
+      <div style="display:flex;gap:4px">
+        <button class="hdr-btn" id="hdrPrayerBtn" onclick="App.openPrayerProgress()" title="Prayer Progress" aria-label="Prayer Progress"><i class="fas fa-chart-line"></i><span class="hdr-badge" id="prayerBadge"></span></button>
+        <button class="hdr-btn" onclick="QiblaUI.open()" title="Qibla"><i class="fas fa-location-arrow"></i></button>
+        <button class="hdr-btn" onclick="PrayerUI.openSettings()" title="Settings"><i class="fas fa-sliders-h"></i></button>
+      </div>
     </div>
   </div>
   <div id="prayerContent" class="panel-scroll"></div>
@@ -1120,8 +1118,8 @@ setTimeout(function(){
 
 
 <!-- ── Notification Inbox Modal ────────────────────────────── -->
-<div id="inbox-modal" style="display:none;position:fixed;top:var(--hdr-total-h,58px);left:0;right:0;bottom:0;z-index:52" onclick="if(event.target===this)App.closeInbox()">
-  <div style="position:absolute;bottom:0;left:0;right:0;max-height:80vh;background:var(--bg);border-radius:18px 18px 0 0;overflow:hidden;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px)">
+<div id="inbox-modal" style="display:none;position:fixed;top:var(--hdr-total-h,58px);left:0;right:0;bottom:calc(var(--tab-h,60px) + var(--safe-b,0px));z-index:52" onclick="if(event.target===this)App.closeInbox()">
+  <div style="position:absolute;bottom:0;left:0;right:0;max-height:80vh;background:var(--bg);border-radius:18px 18px 0 0;overflow:hidden;display:flex;flex-direction:column;padding-bottom:0">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid var(--border-light);padding-top:max(16px,env(safe-area-inset-top,16px))">
       <span style="font-size:16px;font-weight:700;color:var(--text-primary)" data-i18n="inbox.title">ئاگەهدارکرن</span>
       <button onclick="App.closeInbox()" style="background:none;border:none;cursor:pointer;color:var(--text-secondary);font-size:18px;padding:4px;-webkit-tap-highlight-color:transparent"><i class="fas fa-times"></i></button>
