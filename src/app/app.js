@@ -4092,8 +4092,7 @@ App.openSurah=function(num,scrollTo,opts){
   if(S.mushafMode){
     var btn=$('mushafToggleBtn');if(btn)btn.classList.add('on');
     var al=$('ayahList');if(al)al.style.display='none';
-    var mv=$('mushafView');if(mv){mv.style.display='';renderMushafView();}
-    if(scrollTo&&scrollTo>1)_scrollMushafToAyah(num,scrollTo,0);
+    var mv=$('mushafView');if(mv){mv.style.display='';renderMushafView(scrollTo>1?scrollTo:0);}
     _preBufferMushafAyah();
   }
 };
@@ -4701,7 +4700,7 @@ function _mushafWrapSpreads(view){
   view.scrollLeft=0;
 }
 
-function renderMushafView(){
+function renderMushafView(targetAyah){
   var view=$('mushafView');
   if(!view||!S.surah)return;
   // Remove stale per-render listeners from the previous call.
@@ -4738,7 +4737,16 @@ function renderMushafView(){
     // Al-Fatiha from any surah works like a real Mushaf.
     // Pre-scroll to near the target surah before the observer fires so the
     // initial intersection check loads pages around the right position.
-    var _estPx=(pages.start-1)*560; // ~560px per skeleton page
+    // If targeting a specific ayah, estimate which page it's on so the initial
+    // scroll positions the IO observer near that page instead of the surah banner.
+    var _targetPage=null;
+    if(targetAyah&&targetAyah>1){
+      var _sa=SURAHS[_renderSurah-1];
+      var _ta=_sa?_sa.a:1;
+      _targetPage=pages.start+Math.floor((targetAyah-1)/_ta*(pages.end-pages.start+1));
+      _targetPage=Math.max(pages.start,Math.min(pages.end,_targetPage));
+    }
+    var _estPx=_targetPage?(_targetPage-1)*560:(pages.start-1)*560; // ~560px per skeleton page
     // Build all 604 page containers in a DocumentFragment (single DOM insertion)
     // with no children — CSS min-height keeps scroll range intact. Skeletons are
     // added by the IO callback just before data loads, cutting initial DOM nodes
@@ -4797,40 +4805,70 @@ function renderMushafView(){
     // so one scrollTop assignment lands exactly on ayah 1 with no jitter.
     var _preStart=Math.max(1,pages.start-8);
     var _prePromises=[];
-    for(var _pi=_preStart;_pi<=pages.start;_pi++){
-      (function(_pn){
-        var _pe=view.querySelector('.mushaf-text-page[data-page="'+_pn+'"]');
-        if(!_pe||_pe.dataset.loaded)return;
-        _pe.dataset.loaded='1';
-        _mushafLazyObs&&_mushafLazyObs.unobserve(_pe);
-        if(!_pe.firstChild)_pe.appendChild(_mushafSkeleton());
-        _prePromises.push(loadMushafPageQCF(_pe,_pn).catch(function(){_mushafPageErr(_pe);}));
-      })(_pi);
+    function _preloadPage(_pn){
+      var _pe=view.querySelector('.mushaf-text-page[data-page="'+_pn+'"]');
+      if(!_pe||_pe.dataset.loaded)return;
+      _pe.dataset.loaded='1';
+      _mushafLazyObs&&_mushafLazyObs.unobserve(_pe);
+      if(!_pe.firstChild)_pe.appendChild(_mushafSkeleton());
+      _prePromises.push(loadMushafPageQCF(_pe,_pn).catch(function(){_mushafPageErr(_pe);}));
+    }
+    for(var _pi=_preStart;_pi<=pages.start;_pi++)_preloadPage(_pi);
+    // If targeting a specific ayah, also preload its surrounding pages so the
+    // verse element exists in DOM when Promise.all resolves (no retry loop needed).
+    var _tpStart=null,_tpEnd=null;
+    if(_targetPage){
+      _tpStart=Math.max(1,_targetPage-2);
+      _tpEnd=Math.min(604,_targetPage+2);
+      for(var _tpi=_tpStart;_tpi<=_tpEnd;_tpi++)_preloadPage(_tpi);
     }
     Promise.all(_prePromises).then(function(){
       // Register preloaded pages in eviction tracker now that their heights are final
       for(var _tri=_preStart;_tri<=pages.start;_tri++){if(_mqLoadedPages.indexOf(_tri)<0)_mqLoadedPages.push(_tri);}
+      if(_tpStart){for(var _tri2=_tpStart;_tri2<=_tpEnd;_tri2++){if(_mqLoadedPages.indexOf(_tri2)<0)_mqLoadedPages.push(_tri2);}}
       if(S.surah!==capturedSurah||!S.mushafMode)return;
-      var b=view.querySelector('.mushaf-surah-banner[data-surah="'+targetSurah+'"]');
-      if(b)view.scrollTop=b.offsetTop;
+
+      // If targeting a specific ayah, scroll to its verse element; fall back to banner
+      function _scrollToTargetAyah(){
+        if(targetAyah&&targetAyah>1){
+          var _key=String(capturedSurah)+':'+String(targetAyah);
+          var _els=window._mushafVerseElements&&window._mushafVerseElements[_key];
+          if(_els&&_els.length&&view.contains(_els[0])){
+            var _er=_els[0].getBoundingClientRect();
+            var _vr=view.getBoundingClientRect();
+            view.scrollTop=(_er.top-_vr.top+view.scrollTop)-_vr.height*0.38+_els[0].offsetHeight/2;
+            return true;
+          }
+        }
+        return false;
+      }
+      if(!_scrollToTargetAyah()){
+        var b=view.querySelector('.mushaf-surah-banner[data-surah="'+targetSurah+'"]');
+        if(b)view.scrollTop=b.offsetTop;
+      }
       updateMushafProgress(view);
 
-      // Re-anchor every time scrollHeight grows (IO-triggered pages below the target
-      // keep rendering after Promise.all, expanding total height and pushing the
-      // banner down). Poll every 80ms; each time height changed, correct delta.
-      // Stop after 3s (all nearby pages will have settled long before then).
-      // This replaces the single 500ms correction that was too early/too late.
+      // Re-anchor interval:
+      // • targeting a specific ayah → poll every 80ms until verse element is found,
+      //   then scroll to it and stop. Touch also stops via _mushafTouchFn.
+      // • targeting banner (ayah 1) → re-anchor only when scrollHeight grows
+      //   (IO-triggered pages below keep expanding total height).
+      // Stop after 3s in either case.
       var _aH=view.scrollHeight;
       if(view._anchorTimer){clearInterval(view._anchorTimer);view._anchorTimer=null;}
       view._anchorTimer=setInterval(function(){
         if(S.surah!==capturedSurah||!S.mushafMode){clearInterval(view._anchorTimer);view._anchorTimer=null;return;}
-        var h=view.scrollHeight;
-        if(h!==_aH){
-          _aH=h;
-          var b2=view.querySelector('.mushaf-surah-banner[data-surah="'+targetSurah+'"]');
-          if(b2){
-            var delta=b2.getBoundingClientRect().top-view.getBoundingClientRect().top;
-            if(Math.abs(delta)>2)view.scrollTop+=delta;
+        if(targetAyah&&targetAyah>1){
+          if(_scrollToTargetAyah()){clearInterval(view._anchorTimer);view._anchorTimer=null;}
+        }else{
+          var h=view.scrollHeight;
+          if(h!==_aH){
+            _aH=h;
+            var b2=view.querySelector('.mushaf-surah-banner[data-surah="'+targetSurah+'"]');
+            if(b2){
+              var delta=b2.getBoundingClientRect().top-view.getBoundingClientRect().top;
+              if(Math.abs(delta)>2)view.scrollTop+=delta;
+            }
           }
         }
       },80);
