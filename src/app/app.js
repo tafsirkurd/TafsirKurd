@@ -5833,12 +5833,15 @@ function updateProgress(list,total){
   var destroyed=false;
   var _debug=false;try{_debug=localStorage.getItem('readerProgressDebug')==='1';}catch(e){}
 
-  // Goal gate: only show the tracker bar for the current pointer surah.
-  // Hide it for completed surahs and surahs not yet reached in the sequence.
+  // Goal gate: show bar for current pointer surah + completed surahs.
+  // Hide only for future surahs not yet reached in the sequence.
   var _rg=null;try{_rg=JSON.parse(localStorage.getItem('readingGoal'));}catch(e){}
   var _rgPS=_rg?(_rg.pointerSurah||0):0;
-  if(_rg&&surahId!==_rgPS){
-    // Not the active goal surah — hide bar, skip all tracking setup
+  var _rgCS=_rg?(_rg.completedSurahs||[]):[];
+  var _rgIsCompleted=_rgCS.indexOf(surahId)>=0;
+  var _rgIsPointer=_rg&&surahId===_rgPS;
+  if(_rg&&!_rgIsPointer&&!_rgIsCompleted){
+    // Future unreached surah — hide bar, skip all tracking setup
     if(progressEl)progressEl.style.display='none';
     return;
   }
@@ -5852,9 +5855,12 @@ function updateProgress(list,total){
   }
 
   var _savedMax=0;
-  if(_rg&&surahId===_rgPS){
-    // Use goal pointer progress — not surah_read_v3_ which may have data from
-    // random visits before the goal pointer reached this surah
+  if(_rgIsCompleted){
+    // Completed surah — always show 100%
+    _savedMax=total;
+  }else if(_rgIsPointer){
+    // Current pointer surah — seed from goal pointer, not surah_read_v3_
+    // which may hold data from random visits before the goal reached here
     _savedMax=Math.max(0,(_rg.pointerAyah||1)-1);
   }else{
     try{var _sv=parseInt(localStorage.getItem('surah_read_v3_'+surahId))||0;if(_sv>=1&&_sv<=total)_savedMax=_sv;}catch(e){}
@@ -6019,11 +6025,13 @@ function updateMushafProgress(view){
   var dwellTimer=null;var dwellPage=null;
   var scrollTick=null;var initTimer=null;var periodic=null;
 
-  // Goal gate: hide tracker bar for non-pointer surahs (same rule as list mode)
+  // Goal gate: show bar for current pointer surah + completed surahs.
+  // Hide only for future surahs not yet reached in the sequence.
   var _mrg=null;try{_mrg=JSON.parse(localStorage.getItem('readingGoal'));}catch(e){}
   var _mrgPS=_mrg?(_mrg.pointerSurah||0):0;
+  var _mrgCS=_mrg?(_mrg.completedSurahs||[]):[];
   var progressEl=document.querySelector('.sticky-progress');
-  if(_mrg&&sessionSurah!==_mrgPS){
+  if(_mrg&&sessionSurah!==_mrgPS&&_mrgCS.indexOf(sessionSurah)<0){
     if(progressEl)progressEl.style.display='none';
     return;
   }
