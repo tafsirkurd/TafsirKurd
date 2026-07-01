@@ -6089,29 +6089,23 @@ function updateMushafProgress(view){
   var _currentSurah=sessionSurah;
   function _detectSurah(){
     var scrollTop=view.scrollTop;
-    // Estimate current page from scroll position — used as fallback when
-    // fast-scroll skips past unloaded pages whose banners don't exist in DOM yet.
+    // All 604 .mushaf-text-page divs always exist in the DOM (created at render time).
+    // Use their offsetTop values — reliable even for unloaded/empty pages — to find
+    // which page is at the top of the viewport, then map to surah via page ranges.
+    // This works correctly on fast-scroll where banners don't exist yet.
     var _avgPh=view.scrollHeight>0?view.scrollHeight/604:900;
     var _estPage=Math.min(604,Math.max(1,Math.round(scrollTop/_avgPh)+1));
-
-    // Find the last rendered surah banner at/above current scroll
-    var banners=view.querySelectorAll('.mushaf-surah-banner[data-surah]');
-    var best=null;var bestTop=-1;
-    for(var b=0;b<banners.length;b++){
-      var bTop=banners[b].offsetTop;
-      if(bTop<=scrollTop+80&&bTop>bestTop){bestTop=bTop;best=banners[b];}
+    // Verify/refine in a ±10 window around the estimate using real offsetTops
+    var bestPage=_estPage;
+    for(var pp=Math.max(1,_estPage-10);pp<=Math.min(604,_estPage+10);pp++){
+      var pe=view.querySelector('.mushaf-text-page[data-page="'+pp+'"]');
+      if(pe&&pe.offsetTop<=scrollTop+80){bestPage=pp;}
     }
-
-    // If no banner found, or the closest banner is more than 3 avg page-heights
-    // behind (fast-scroll jumped over unloaded pages), use page-range estimation.
-    if(!best||(scrollTop-bestTop>_avgPh*3)){
-      for(var s=_MUSHAF_PAGE_RANGES.length-1;s>=0;s--){
-        if(_estPage>=_MUSHAF_PAGE_RANGES[s][0])return s+1;
-      }
+    // Map page → surah
+    for(var s=_MUSHAF_PAGE_RANGES.length-1;s>=0;s--){
+      if(bestPage>=_MUSHAF_PAGE_RANGES[s][0])return s+1;
     }
-
-    if(!best)best=banners[0]; // all banners below fold — show first surah
-    return parseInt(best.dataset.surah)||_currentSurah;
+    return _currentSurah;
   }
 
   // â”€â”€ Update visible label + surah header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -6130,9 +6124,20 @@ function updateMushafProgress(view){
     var lbl=$('readerAyahLabel');
     if(lbl)lbl.textContent=count+'/'+total+' '+t('reader.ayah');
 
-    // Bar + % = per-surah progress (hidden for future surahs, skip write)
+    // Bar: use the higher of (dwell-counted ayahs) vs (scroll-position estimate).
+    // Dwell count is accurate for read ayahs; scroll estimate fills the bar
+    // immediately on fast-scroll without waiting for dwell to fire.
     if(!_hideBar){
-      var pct=total>0?Math.min(100,Math.round(count/total*100)):0;
+      var _seenPct=total>0?Math.min(100,Math.round(count/total*100)):0;
+      var _scrollPct=0;
+      var _pr=_MUSHAF_PAGE_RANGES[dispS-1];
+      if(_pr&&total>0){
+        var _avgPh2=view.scrollHeight>0?view.scrollHeight/604:900;
+        var _surahStartPx=(_pr[0]-1)*_avgPh2;
+        var _surahSpanPx=(_pr[1]-_pr[0]+1)*_avgPh2;
+        if(_surahSpanPx>0)_scrollPct=Math.min(100,Math.max(0,Math.round((view.scrollTop-_surahStartPx)/_surahSpanPx*100)));
+      }
+      var pct=Math.max(_seenPct,_scrollPct);
       var fill=$('readerProgressFill');if(fill)fill.style.width=pct+'%';
       var pctEl=$('readerPct');if(pctEl)pctEl.textContent=pct+'%';
     }
