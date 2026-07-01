@@ -506,16 +506,271 @@
         /* ── 3-Col Content Grid ── */
         .content-grid-3 {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 20px;
             margin-bottom: 28px;
         }
+
+        /* ── Dashboard Main + Sticky Sidebar Layout ── */
+        .db-main-layout {
+            display: grid;
+            grid-template-columns: 1fr 290px;
+            grid-template-areas: "main sidebar";
+            gap: 20px;
+            align-items: start;
+            margin-bottom: 28px;
+        }
+        .db-main-col { grid-area: main; min-width: 0; }
+        .db-sidebar-col {
+            grid-area: sidebar;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            position: sticky;
+            top: 76px;
+            max-height: calc(100vh - 90px);
+            overflow-y: auto;
+            padding-bottom: 8px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-light) transparent;
+        }
+        .db-sidebar-col::-webkit-scrollbar { width: 4px; }
+        .db-sidebar-col::-webkit-scrollbar-track { background: transparent; }
+        .db-sidebar-col::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 4px; }
+        .db-sidebar-col > .section-label { margin-top: 0; }
+        .db-sidebar-col .quick-actions { display: flex; flex-direction: column; gap: 8px; margin-bottom: 0; }
+        .db-sidebar-col .quick-action-card { padding: 10px 13px; gap: 10px; }
+        .db-sidebar-col .quick-action-icon { width: 32px; height: 32px; }
+        .db-sidebar-col .quick-action-label { font-size: 12px; }
+        .db-sidebar-col .quick-action-sub { font-size: 10px; }
+        .db-sidebar-col .ato-card { padding: 14px 16px; margin-bottom: 0; }
         @media (max-width: 1100px) {
-            .content-grid-3 { grid-template-columns: 1fr 1fr; }
+            .db-main-layout { grid-template-columns: 1fr; grid-template-areas: "sidebar" "main"; }
+            .db-sidebar-col { position: static; max-height: none; overflow-y: visible; }
+            .db-sidebar-col .quick-actions { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 10px; }
         }
         @media (max-width: 700px) {
-            .content-grid-3 { grid-template-columns: 1fr; }
+            .db-sidebar-col .quick-actions { grid-template-columns: 1fr 1fr; }
         }
+
+        /* ── Charts Secondary: Platform Donut + Heatmap side-by-side ── */
+        .charts-secondary-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 28px;
+            align-items: flex-start;
+        }
+        .charts-secondary-row #platformSplitRow { flex: 0 0 260px; min-width: 0; margin-bottom: 0 !important; }
+        .charts-secondary-row .heatmap-card { flex: 1; min-width: 280px; margin-bottom: 0; }
+        @media (max-width: 700px) {
+            .charts-secondary-row #platformSplitRow { flex: 1 1 100%; }
+        }
+
+        /* ── Unified Infrastructure Grid (System + Deployments) ── */
+        .infra-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+        @media (max-width: 700px) { .infra-grid { grid-template-columns: 1fr; } }
+
+        /* ── Activity 2-col: Admin Actions + Timeline side-by-side ── */
+        .activity-two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 28px;
+            align-items: start;
+        }
+        .activity-two-col .timeline-section { margin-bottom: 0; }
+        .activity-two-col #timelineList { max-height: 380px; overflow-y: auto; }
+        @media (max-width: 900px) { .activity-two-col { grid-template-columns: 1fr; } }
+
+        /* ── Health Monitors: 3 collapsible cards in auto-fill grid ── */
+        .health-monitors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+        .health-monitors-grid .card { margin-bottom: 0; }
+        @media (max-width: 700px) { .health-monitors-grid { grid-template-columns: 1fr; } }
+
+        /* ── Messages & Audit Logs: flex row (collapses gracefully if one is hidden) ── */
+        .messages-audit-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 28px;
+            align-items: flex-start;
+        }
+        .messages-audit-row .card {
+            flex: 1 1 400px;
+            min-width: 0;
+            margin-bottom: 0;
+        }
+        @media (max-width: 900px) { .messages-audit-row .card { flex: 1 1 100%; } }
+
+        /* ═══ Deep Fill — unified sections, equal height, gradient polish ═══ */
+
+        /* System Status Bar: gradient top bar */
+        .system-status-bar { position: relative; }
+        .system-status-bar::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, #10b981, #3b82f6, #8b5cf6);
+            pointer-events: none;
+        }
+
+        /* Heatmap card: gradient top bar */
+        .heatmap-card { position: relative; }
+        .heatmap-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, #10b981, #3b82f6);
+            border-radius: 14px 14px 0 0;
+            pointer-events: none;
+        }
+        /* Platform donut card: gradient top bar */
+        .ps-donut-card { position: relative; overflow: hidden; }
+        .ps-donut-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, #8b5cf6, #3b82f6);
+            border-radius: 16px 16px 0 0;
+            pointer-events: none;
+        }
+
+        /* User Lifecycle: pills + table in ONE unified card */
+        .ul-unified-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 28px;
+            position: relative;
+        }
+        .ul-unified-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, #3b82f6, #10b981);
+            pointer-events: none;
+        }
+        .ul-unified-card .ul-stat-strip {
+            margin-bottom: 0;
+            border-bottom: 1px solid var(--border-light);
+            padding: 14px 20px;
+            background: var(--bg-hover);
+        }
+        .ul-unified-card .ul-table-card {
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            margin-bottom: 0;
+            overflow: visible;
+        }
+        .ul-unified-card .ul-table-card::before { display: none; }
+
+        /* Content-grid-3: equal-height cards (flex column on each card) */
+        .content-grid-3 { align-items: stretch; }
+        .content-grid-3 .content-card { display: flex; flex-direction: column; }
+        .content-grid-3 .content-card .content-card-body { flex: 1; min-height: 160px; }
+
+        /* Activity two-col: equal height columns */
+        .activity-two-col { align-items: stretch; }
+
+        /* ═══ Modern Fill — visual density & empty-space fixes ═══ */
+
+        /* Metrics: tighter min so all 7 fit in one row on wide screens */
+        .metrics-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+
+        /* Metric card: subtle color-tinted backdrop from --mc-accent */
+        .metric-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--mc-accent, transparent);
+            opacity: 0.04;
+            border-radius: inherit;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+        .metric-card:hover::after { opacity: 0.09; }
+
+        /* Universal 2px gradient top bar on every major card */
+        .chart-card::before,
+        .content-card::before,
+        .timeline-section::before,
+        .infra-grid .card::before,
+        .health-monitors-grid .card::before,
+        .messages-audit-row .card::before,
+        .my-tasks-widget::before,
+        .ato-card::before,
+        .ul-table-card::before,
+        .apc-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 2px;
+            border-radius: 14px 14px 0 0;
+            pointer-events: none;
+        }
+        /* position:relative on parents that need it */
+        .chart-card, .timeline-section,
+        .infra-grid .card, .health-monitors-grid .card,
+        .messages-audit-row .card,
+        .my-tasks-widget, .ato-card, .ul-table-card, .apc-card {
+            position: relative;
+        }
+        /* overflow:hidden so gradient bar clips neatly at top corners */
+        .infra-grid .card, .health-monitors-grid .card, .messages-audit-row .card { overflow: hidden; }
+        /* Content card body min-height: loading state isn't sparse */
+        .content-card-body { min-height: 180px; }
+        /* Individual gradient colours */
+        .chart-card::before       { background: linear-gradient(90deg,#3b82f6,#10b981,#8b5cf6); }
+        .content-card::before     { background: linear-gradient(90deg,var(--primary),rgba(59,130,246,.25)); }
+        .timeline-section::before { background: linear-gradient(90deg,#10b981,#3b82f6); }
+        .infra-grid .card::before { background: linear-gradient(90deg,#ef4444,#f59e0b,#3b82f6); }
+        .health-monitors-grid .card::before { background: linear-gradient(90deg,#f59e0b,#8b5cf6,#3b82f6); }
+        .messages-audit-row .card::before   { background: linear-gradient(90deg,#10b981,#3b82f6); }
+        .my-tasks-widget::before  { background: linear-gradient(90deg,#8b5cf6,#3b82f6); }
+        .ato-card::before         { background: linear-gradient(90deg,#22c55e,#10b981); }
+        .ul-table-card::before    { background: linear-gradient(90deg,#3b82f6,#10b981); }
+        .apc-card::before         { background: linear-gradient(90deg,#6366f1,#8b5cf6); }
+
+        /* charts-secondary-row: collapse margin only when platform donut is hidden and heatmap has no data */
+        .charts-secondary-row:not(:has(> :not([style*="display: none"]))) { margin-bottom: 0; }
+
+        /* Sidebar Live Stats (App Pulse) widget */
+        .apc-card {
+            background: linear-gradient(135deg,rgba(99,102,241,.07),rgba(139,92,246,.07));
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 12px 14px;
+            overflow: hidden;
+        }
+        .apc-header {
+            font-size: 10px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: .08em; color: var(--text-tertiary);
+            display: flex; align-items: center; gap: 6px; margin-bottom: 10px;
+        }
+        .apc-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+        .apc-stat {
+            display: flex; flex-direction: column; align-items: center; gap: 2px;
+            background: var(--bg-surface); border-radius: 8px; padding: 8px 4px; min-width: 0;
+        }
+        .apc-val { font-size: 16px; font-weight: 800; color: var(--text-primary); line-height: 1; }
+        .apc-lbl {
+            font-size: 8px; font-weight: 600; text-transform: uppercase;
+            letter-spacing: .04em; color: var(--text-tertiary);
+            margin-top: 2px; text-align: center; line-height: 1.2;
+        }
+        .apc-val.apc-green { color: #22c55e; }
         .content-card {
             background: var(--bg-surface);
             border: 1px solid var(--border-light);
@@ -1046,6 +1301,14 @@
                 padding-right: max(12px, env(safe-area-inset-right));
                 padding-bottom: max(32px, env(safe-area-inset-bottom, 32px));
             }
+            /* Reset ul-table from global card-stacking (admin-styles.css applies broad table rules) */
+            .ul-table { display: table; width: 100%; min-width: 320px; }
+            .ul-table thead { display: table-header-group; }
+            .ul-table tbody { display: table-row-group; flex-direction: unset; gap: 0; }
+            .ul-table tbody tr { display: table-row; background: transparent; border: none; border-radius: 0; overflow: visible; }
+            .ul-table tbody td { display: table-cell; align-items: unset; justify-content: unset; gap: 0; border: none; border-bottom: 1px solid var(--border-light); padding: 10px 14px; font-size: 13px; vertical-align: middle; }
+            .ul-table tbody td::before { display: none; }
+            .ul-table tbody tr:last-child td { border-bottom: none; }
         }
         @media (max-width: 700px) {
             .welcome-header { padding: 16px 18px; margin-bottom: 18px; gap: 10px; }
@@ -1069,6 +1332,14 @@
             .content-card-body { padding: 10px 14px 14px; }
             .ato-card { padding: 14px 16px; }
             .ato-item { max-width: none; flex: 1 1 200px; }
+            /* User Lifecycle pills: 2 per row */
+            .ul-stat-strip { gap: 8px; }
+            .ul-stat-pill { flex: 1 1 calc(50% - 4px); min-width: 0; padding: 10px 12px; }
+            .ul-stat-val { font-size: 18px; }
+            /* User Lifecycle table header: stack filter row below title */
+            .ul-table-header { flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px 16px; }
+            .ul-table-header > div:last-child { width: 100%; }
+            .ul-filter-sel { font-size: 16px; min-height: 36px; }
         }
         @media (max-width: 540px) {
             /* Icon-only mode for welcome header buttons — hide text labels */
@@ -1099,6 +1370,17 @@
             /* Chart insights overflow scroll on tiny screens */
             .chart-insights { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
             .chart-range-tabs { flex-wrap: nowrap; overflow-x: auto; }
+            /* User Lifecycle table: hide non-critical columns on small screens */
+            .ul-table th:nth-child(2), .ul-table td:nth-child(2) { display: none; }
+            .ul-table th:nth-child(4), .ul-table td:nth-child(4) { display: none; }
+            .ul-user-name { max-width: 80px; }
+            .ul-user-email { max-width: 80px; }
+            /* User Lifecycle profile modal: bottom sheet on mobile */
+            .ul-modal-bg { align-items: flex-end; padding: 0; }
+            .ul-modal-box { border-radius: 20px 20px 0 0; max-height: 85vh; }
+            .ul-modal-grid { grid-template-columns: 1fr; gap: 8px; padding: 12px 16px; }
+            .ul-modal-head { padding: 16px 16px 0; }
+            .ul-modal-progress { padding: 0 16px 16px; }
         }
         @media (max-width: 390px) {
             .welcome-left h1 { font-size: 17px; }
@@ -1116,6 +1398,8 @@
             .my-tasks-meta { padding: 10px 14px; }
             .my-task-row { padding: 9px 14px; }
             .my-tasks-footer { padding: 10px 14px; }
+            .ul-stat-val { font-size: 16px; }
+            .ul-stat-lbl { font-size: 9px; }
         }
 
         /* ── Quick Add Task Modal ── */
@@ -1782,11 +2066,182 @@
             line-height: 1.3;
         }
         .mg-set-btn:hover { color: var(--primary); }
+
+        /* ── User Lifecycle Section ── */
+        .ul-stat-strip { display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap; }
+        .ul-stat-pill { flex:1;min-width:90px;background:var(--bg-surface);border:1px solid var(--border-light);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px; }
+        .ul-stat-val { font-size:22px;font-weight:800;color:var(--text-primary);letter-spacing:-0.5px; }
+        .ul-stat-lbl { font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-tertiary); }
+        .ul-stat-pill.pill-green .ul-stat-val { color:#10b981; }
+        .ul-stat-pill.pill-blue  .ul-stat-val { color:#3b82f6; }
+        .ul-stat-pill.pill-purple .ul-stat-val { color:#8b5cf6; }
+        .ul-stat-pill.pill-gray  .ul-stat-val { color:#64748b; }
+        .ul-table-card { background:var(--bg-surface);border:1px solid var(--border-light);border-radius:16px;overflow:hidden;margin-bottom:20px; }
+        .ul-table-header { display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border-light); }
+        .ul-table-title { display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700;color:var(--text-primary); }
+        .ul-table-icon { width:28px;height:28px;border-radius:8px;background:rgba(59,130,246,.1);color:#3b82f6;display:flex;align-items:center;justify-content:center; }
+        .ul-filter-sel { font-size:12px;padding:4px 10px;border-radius:8px;border:1px solid var(--border-light);background:var(--bg-active);color:var(--text-secondary);cursor:pointer;font-family:inherit; }
+        .ul-table { width:100%;border-collapse:collapse; }
+        .ul-table th { text-align:left;padding:9px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);background:var(--bg-active);border-bottom:1px solid var(--border-light);white-space:nowrap; }
+        .ul-table td { padding:10px 14px;border-bottom:1px solid var(--border-light);font-size:13px;vertical-align:middle; }
+        .ul-table tbody tr:last-child td { border-bottom:none; }
+        .ul-table tbody tr { cursor:pointer;transition:background .12s; }
+        .ul-table tbody tr:hover { background:var(--bg-hover); }
+        .ul-user-cell { display:flex;align-items:center;gap:9px; }
+        .ul-avatar { width:30px;height:30px;border-radius:50%;background:var(--bg-active);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--text-secondary);flex-shrink:0;overflow:hidden; }
+        .ul-avatar img { width:100%;height:100%;object-fit:cover;border-radius:50%; }
+        .ul-user-name { font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px; }
+        .ul-user-email { font-size:11px;color:var(--text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px; }
+        .ul-badge { display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:2px 8px;border-radius:10px;white-space:nowrap; }
+        .ul-badge-online  { background:rgba(16,185,129,.12);color:#10b981; }
+        .ul-badge-recent  { background:rgba(59,130,246,.1);color:#3b82f6; }
+        .ul-badge-active  { background:rgba(245,158,11,.1);color:#f59e0b; }
+        .ul-badge-dormant { background:rgba(100,116,139,.1);color:#64748b; }
+        .ul-progress-bar  { height:3px;background:var(--bg-active);border-radius:2px;overflow:hidden;width:56px;display:inline-block;vertical-align:middle;margin-left:6px; }
+        .ul-progress-fill { height:100%;background:linear-gradient(90deg,#10b981,#3b82f6);border-radius:2px; }
+        /* Profile modal */
+        .ul-modal-bg { position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px); }
+        .ul-modal-box { background:var(--bg-surface);border:1px solid var(--border-light);border-radius:20px;width:100%;max-width:500px;max-height:88vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.3); }
+        .ul-modal-head { display:flex;align-items:center;gap:14px;padding:22px 22px 0; }
+        .ul-modal-avatar { width:56px;height:56px;border-radius:50%;background:var(--bg-active);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:var(--text-secondary);flex-shrink:0;overflow:hidden; }
+        .ul-modal-avatar img { width:100%;height:100%;object-fit:cover;border-radius:50%; }
+        .ul-modal-name { font-size:17px;font-weight:800;color:var(--text-primary); }
+        .ul-modal-email { font-size:12px;color:var(--text-tertiary);margin-top:2px; }
+        .ul-modal-grid { display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:18px 22px; }
+        .ul-modal-stat { background:var(--bg-active);border-radius:10px;padding:11px 13px; }
+        .ul-modal-stat-lbl { font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-tertiary);margin-bottom:3px; }
+        .ul-modal-stat-val { font-size:13px;font-weight:600;color:var(--text-primary); }
+        .ul-modal-progress { padding:0 22px 20px; }
+        .ul-modal-close-btn { background:var(--bg-active);border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;color:var(--text-secondary);margin-left:auto; }
+        .ul-modal-close-btn:hover { background:var(--bg-hover); }
+
+        /* ═══ Batch 7 — Full Fill ═══ */
+
+        /* content-grid: 2-col enforced — eliminates 3+1 orphaned card on wide screens */
+        .content-grid-3 { grid-template-columns: 1fr 1fr; }
+        @media (max-width: 600px) { .content-grid-3 { grid-template-columns: 1fr; } }
+
+        /* chart-insights: collapse padding when empty; shimmer placeholders while loading */
+        .chart-insights:empty { padding: 0; }
+        .ci-skel-v {
+            display: inline-block; width: 44px; height: 15px;
+            background: linear-gradient(90deg, var(--bg-hover) 25%, var(--bg-active) 50%, var(--bg-hover) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s ease-in-out infinite;
+            border-radius: 4px; vertical-align: middle;
+        }
+        .ci-skel-l {
+            display: block; width: 36px; height: 9px; margin-top: 4px;
+            background: linear-gradient(90deg, var(--bg-hover) 25%, var(--bg-active) 50%, var(--bg-hover) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s ease-in-out infinite;
+            border-radius: 3px;
+        }
+
+        /* Sidebar Daily Brief widget (4 mini stats in 2x2 grid) */
+        .db-brief {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 10px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            position: relative;
+            overflow: hidden;
+        }
+        .db-brief::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, #8b5cf6, #3b82f6, #10b981, #f59e0b);
+            pointer-events: none;
+        }
+        .db-brief-stat {
+            display: flex; flex-direction: column; gap: 2px;
+            background: var(--bg-active);
+            border-radius: 8px;
+            padding: 9px 10px;
+            min-width: 0;
+        }
+        .db-brief-val { font-size: 14px; font-weight: 800; color: var(--text-primary); line-height: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .db-brief-val.vg { color: #22c55e; }
+        .db-brief-val.vb { color: #3b82f6; }
+        .db-brief-val.vp { color: #8b5cf6; }
+        .db-brief-val.va { color: #f59e0b; }
+        .db-brief-lbl { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--text-tertiary); margin-top: 2px; line-height: 1.2; }
+
+        /* ═══ Batch 8 — Quick Jump Bar + Loading Skeletons ═══ */
+
+        /* Quick Jump Bar: always-visible shortcut row between status bar and metrics */
+        .qjb {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        @media (max-width: 1100px) { .qjb { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 600px)  { .qjb { grid-template-columns: repeat(2, 1fr); } }
+        .qjb-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 7px;
+            padding: 13px 10px 11px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 11px;
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.18s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .qjb-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 2px;
+            background: var(--qjb-c, var(--primary));
+            opacity: 0.8;
+            pointer-events: none;
+        }
+        .qjb-card:hover {
+            border-color: var(--qjb-c, var(--primary));
+            background: var(--bg-active);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+        .qjb-icon {
+            width: 34px; height: 34px;
+            border-radius: 9px;
+            background: var(--qjb-bg, var(--bg-active));
+            color: var(--qjb-c, var(--primary));
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .qjb-icon i { width: 15px; height: 15px; display: block; }
+        .qjb-label { line-height: 1.2; color: var(--text-secondary); }
+
+        /* deployStatus inside status bar */
+        #deployStatus { margin-left: auto; margin-right: 0; }
+
+        /* heatmap skeleton cells */
+        .hm-cell-skel {
+            background: linear-gradient(90deg, var(--bg-hover) 25%, var(--bg-active) 50%, var(--bg-hover) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s ease-in-out infinite;
+        }
+
     </style>
     <style id="early-sidebar-hide">
         .sidebar-nav { visibility: visible; }
         #recent-messages-card { display: none; }
         #audit-logs-card { display: none; }
+        #messages-audit-label { display: none; }
     </style>
     <script>
         (function() {
@@ -1794,11 +2249,11 @@
             var style = document.getElementById('early-sidebar-hide');
             var css = '.sidebar-nav{visibility:visible}';
             if (role === 'super_admin') {
-                css = '.sidebar-nav{visibility:visible}#recent-messages-card{display:block}#audit-logs-card{display:block}';
+                css = '.sidebar-nav{visibility:visible}#recent-messages-card{display:block}#audit-logs-card{display:block}#messages-audit-label{display:flex;}';
             } else if (role === 'analyst') {
                 css = '.sidebar-nav{visibility:visible}.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="islamvoice-management"],.nav-item[href*="admin-gencine"],.nav-item[href*="notifications"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="auth-monitor"],.nav-item[href*="header-animation"],.nav-item[href*="admin-website"],.nav-item[href*="images"],.nav-item[href*="translations"],.nav-item[href*="admin-links"],#recent-messages-card{display:none!important}';
             } else if (role === 'editor') {
-                css = '.sidebar-nav{visibility:visible}#recent-messages-card{display:block}.nav-item[href*="analytics"],.nav-item[href*="users"],.nav-item[href*="social-stats"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="auth-monitor"],.nav-item[href*="audit"]{display:none!important}';
+                css = '.sidebar-nav{visibility:visible}#recent-messages-card{display:block}#messages-audit-label{display:flex;}.nav-item[href*="analytics"],.nav-item[href*="users"],.nav-item[href*="social-stats"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="auth-monitor"],.nav-item[href*="audit"]{display:none!important}';
             } else if (role === 'custom') {
                 css = '.sidebar-nav{visibility:visible}.nav-item{display:none!important}';
             }
@@ -2058,6 +2513,52 @@
                     <a class="ob-link" href="/admin-tasks.html">View tasks →</a>
                 </div>
 
+                <!-- ══ System Status Bar ══ -->
+                <div class="system-status-bar" id="systemStatusBar">
+                    <div class="status-item">
+                        <span class="status-dot green" id="statusDotSystem"></span>
+                        <span>System: Online</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-dot green" id="statusDotDb"></span>
+                        <span>Database: Connected</span>
+                    </div>
+                    <div class="status-item" id="statusSync">
+                        <span>Last sync: --</span>
+                    </div>
+                    <div id="healthScoreBadge" style="display:none;" class="health-score-badge green" title="System health score based on errors, DB and sync status"></div>
+                    <div id="deployStatus"></div>
+                    <div class="role-badge" id="roleBadge">admin</div>
+                </div>
+
+                <!-- ══ Quick Jump Bar ══ -->
+                <div class="qjb">
+                    <a href="/admin-islamvoice-management.html" class="qjb-card" style="--qjb-c:#ef4444;--qjb-bg:rgba(239,68,68,.1);">
+                        <div class="qjb-icon"><i data-lucide="video"></i></div>
+                        <span class="qjb-label">Add Content</span>
+                    </a>
+                    <a href="/admin-users.html" class="qjb-card" style="--qjb-c:#8b5cf6;--qjb-bg:rgba(139,92,246,.1);">
+                        <div class="qjb-icon"><i data-lucide="users"></i></div>
+                        <span class="qjb-label">View Users</span>
+                    </a>
+                    <a href="/admin-analytics.html" class="qjb-card" style="--qjb-c:#10b981;--qjb-bg:rgba(16,185,129,.1);">
+                        <div class="qjb-icon"><i data-lucide="trending-up"></i></div>
+                        <span class="qjb-label">Analytics</span>
+                    </a>
+                    <a href="/admin-reading-stats.html" class="qjb-card" style="--qjb-c:#14b8a6;--qjb-bg:rgba(20,184,166,.1);">
+                        <div class="qjb-icon"><i data-lucide="book-open"></i></div>
+                        <span class="qjb-label">Reading Stats</span>
+                    </a>
+                    <a href="/admin-errors.html" class="qjb-card" style="--qjb-c:#f59e0b;--qjb-bg:rgba(245,158,11,.1);">
+                        <div class="qjb-icon"><i data-lucide="alert-triangle"></i></div>
+                        <span class="qjb-label">App Errors</span>
+                    </a>
+                    <a href="/admin-release-history.html" class="qjb-card" style="--qjb-c:#6366f1;--qjb-bg:rgba(99,102,241,.1);">
+                        <div class="qjb-icon"><i data-lucide="git-branch"></i></div>
+                        <span class="qjb-label">Releases</span>
+                    </a>
+                </div>
+
                 <!-- ══ Metric Cards ══ -->
                 <div class="metrics-grid" id="metricsGrid">
                     <!-- Total Users -->
@@ -2172,7 +2673,13 @@
                         <div class="chart-container">
                             <canvas id="userGrowthChart"></canvas>
                         </div>
-                        <div class="chart-insights" id="growthInsights"></div>
+                        <div class="chart-insights" id="growthInsights">
+                            <div class="ci-stat"><div class="ci-val"><span class="ci-skel-v"></span></div><div class="ci-lbl">Total 30d</div></div>
+                            <div class="ci-divider"></div>
+                            <div class="ci-stat"><div class="ci-val"><span class="ci-skel-v"></span></div><div class="ci-lbl">Peak Day</div></div>
+                            <div class="ci-divider"></div>
+                            <div class="ci-stat"><div class="ci-val"><span class="ci-skel-v"></span></div><div class="ci-lbl">Daily Avg</div></div>
+                        </div>
                     </div>
                     <div class="chart-card card-animate" style="animation-delay:480ms">
                         <div class="chart-card-header">
@@ -2182,17 +2689,23 @@
                         <div class="chart-container">
                             <canvas id="activeUsersChart"></canvas>
                         </div>
-                        <div class="chart-insights" id="activeInsights"></div>
+                        <div class="chart-insights" id="activeInsights">
+                            <div class="ci-stat"><div class="ci-val"><span class="ci-skel-v"></span></div><div class="ci-lbl">Total 7d</div></div>
+                            <div class="ci-divider"></div>
+                            <div class="ci-stat"><div class="ci-val"><span class="ci-skel-v"></span></div><div class="ci-lbl">Peak DAU</div></div>
+                            <div class="ci-divider"></div>
+                            <div class="ci-stat"><div class="ci-val"><span class="ci-skel-v"></span></div><div class="ci-lbl">Daily Avg</div></div>
+                        </div>
                     </div>
                 </div>
-                <!-- Platform split -->
-                <div id="platformSplitRow" style="display:none;margin-bottom:28px;"></div>
-
-                <!-- ══ Activity Heatmap ══ -->
-                <div class="heatmap-card card-animate" id="activityHeatmapCard" style="display:none;animation-delay:510ms;">
+                <!-- Platform Donut + Heatmap side-by-side -->
+                <div class="charts-secondary-row">
+                <div id="platformSplitRow" style="display:none;"></div>
+                <!-- ══ Activity Heatmap (skeleton shown until data loads) ══ -->
+                <div class="heatmap-card card-animate" id="activityHeatmapCard" style="animation-delay:510ms;">
                     <div class="heatmap-header">
                         <div class="heatmap-title">
-                            <span style="width:8px;height:8px;border-radius:50%;background:#10b981;display:inline-block;"></span>
+                            <span class="chart-title-icon" style="background:rgba(16,185,129,.1);color:#10b981;"><i data-lucide="grid"></i></span>
                             New User Activity — Last 28 Days
                         </div>
                         <div class="heatmap-legend">
@@ -2215,16 +2728,73 @@
                             <div class="hm-dow"></div>
                         </div>
                         <div style="flex:1;min-width:0;">
-                            <div class="hm-month-labels" id="hmMonthLabels"></div>
-                            <div class="heatmap-grid" id="heatmapGrid"></div>
+                            <div class="hm-month-labels" id="hmMonthLabels"><div class="hm-month-lbl"><span class="metric-skel-sm" style="width:24px;height:9px;margin-top:0;display:inline-block;"></span></div></div>
+                            <div class="heatmap-grid" id="heatmapGrid">
+                                <div class="hm-col"><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div></div>
+                                <div class="hm-col"><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div></div>
+                                <div class="hm-col"><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div></div>
+                                <div class="hm-col"><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div></div>
+                                <div class="hm-col"><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div></div>
+                                <div class="hm-col"><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div></div>
+                                <div class="hm-col"><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div></div>
+                                <div class="hm-col"><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div><div class="hm-cell hm-cell-skel"></div></div>
+                            </div>
                         </div>
                     </div>
-                    <div class="heatmap-summary" id="heatmapSummary"></div>
+                    <div class="heatmap-summary" id="heatmapSummary"><span class="metric-skel-sm" style="width:180px;height:10px;margin-top:8px;display:inline-block;"></span></div>
                 </div>
+                </div><!-- /charts-secondary-row -->
 
-                <!-- ══ Quick Actions ══ -->
-                <div class="section-label"><span class="sl-icon" style="background:rgba(99,102,241,.12);color:#6366f1;"><i data-lucide="clock"></i></span>Recently Visited</div>
-                <div class="quick-actions" id="quickActionsGrid"></div>
+                <!-- ══ Dashboard Main + Sidebar ══ -->
+                <div class="db-main-layout">
+                <div class="db-main-col">
+
+                <!-- ══ User Lifecycle ══ -->
+                <div class="section-label" style="margin-top:0;"><span class="sl-icon" style="background:rgba(59,130,246,.12);color:#3b82f6;"><i data-lucide="users"></i></span>User Lifecycle</div>
+                <div class="ul-unified-card card-animate" style="animation-delay:480ms;">
+                <div class="ul-stat-strip">
+                    <div class="ul-stat-pill pill-green"><div class="ul-stat-val" id="ulNewToday">—</div><div class="ul-stat-lbl">New Today</div></div>
+                    <div class="ul-stat-pill pill-blue"><div class="ul-stat-val" id="ulNewWeek">—</div><div class="ul-stat-lbl">New This Week</div></div>
+                    <div class="ul-stat-pill pill-purple"><div class="ul-stat-val" id="ulActiveWeek">—</div><div class="ul-stat-lbl">Active 7d</div></div>
+                    <div class="ul-stat-pill pill-gray"><div class="ul-stat-val" id="ulDormant">—</div><div class="ul-stat-lbl">Dormant 30d+</div></div>
+                    <div class="ul-stat-pill"><div class="ul-stat-val" id="ulReaders">—</div><div class="ul-stat-lbl">Readers</div></div>
+                </div>
+                <div class="ul-table-card" id="ulTableCard">
+                    <div class="ul-table-header">
+                        <div class="ul-table-title">
+                            <div class="ul-table-icon"><i data-lucide="clock" style="width:14px;height:14px;"></i></div>
+                            Users by Last Activity
+                        </div>
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <select id="ulFilter" class="ul-filter-sel">
+                                <option value="all">All Users</option>
+                                <option value="online">Online Now</option>
+                                <option value="active7">Active 7d</option>
+                                <option value="active30">Active 30d</option>
+                                <option value="dormant">Dormant 30d+</option>
+                                <option value="new7">New (7d)</option>
+                            </select>
+                            <a href="/admin-users.html" style="font-size:12px;color:var(--primary);text-decoration:none;font-weight:600;">All users →</a>
+                        </div>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table class="ul-table">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Joined</th>
+                                    <th>Last Seen</th>
+                                    <th>Quran</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ulTableBody">
+                                <tr><td colspan="5" style="text-align:center;color:var(--text-tertiary);padding:24px;">Loading…</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                </div><!-- /ul-unified-card -->
 
                 <!-- ══ 3-Col Content Grid ══ -->
                 <div class="section-label"><span class="sl-icon" style="background:rgba(16,185,129,.12);color:#10b981;"><i data-lucide="radio"></i></span>Live Data</div>
@@ -2341,18 +2911,81 @@
                         <a href="/admin-tasks.html" class="my-tasks-view-all">View all →</a>
                     </div>
                 </div>
+                </div><!-- /db-main-col -->
 
-                <!-- ══ System Widgets Row ══ -->
-                <div class="system-widgets-row" id="systemWidgetsRow">
+                <!-- ══ Sticky Sidebar ══ -->
+                <div class="db-sidebar-col">
+                    <!-- Live Stats pulse widget (always visible) -->
+                    <div class="section-label" style="margin-top:0;"><span class="sl-icon" style="background:rgba(34,197,94,.12);color:#22c55e;"><i data-lucide="zap"></i></span>Live Stats</div>
+                    <div class="apc-card card-animate" style="animation-delay:30ms;">
+                        <div class="apc-header"><span class="online-pulse" style="width:7px;height:7px;"></span>App Pulse</div>
+                        <div class="apc-stats">
+                            <div class="apc-stat">
+                                <span class="apc-val" id="apcUsers">—</span>
+                                <span class="apc-lbl">Total Users</span>
+                            </div>
+                            <div class="apc-stat">
+                                <span class="apc-val" id="apcActive">—</span>
+                                <span class="apc-lbl">Active Today</span>
+                            </div>
+                            <div class="apc-stat">
+                                <span class="apc-val apc-green" id="apcOnline">—</span>
+                                <span class="apc-lbl">Online Now</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Daily Brief: 4 mini stats in 2x2 grid -->
+                    <div class="db-brief card-animate" style="animation-delay:60ms;">
+                        <div class="db-brief-stat">
+                            <span class="db-brief-val vp" id="dbActive7d">—</span>
+                            <span class="db-brief-lbl">Active 7d</span>
+                        </div>
+                        <div class="db-brief-stat">
+                            <span class="db-brief-val vg" id="dbNewWeek">—</span>
+                            <span class="db-brief-lbl">New This Week</span>
+                        </div>
+                        <div class="db-brief-stat">
+                            <span class="db-brief-val va" id="dbMessages">—</span>
+                            <span class="db-brief-lbl">Unread Msgs</span>
+                        </div>
+                        <div class="db-brief-stat">
+                            <span class="db-brief-val vb" id="dbReaders">—</span>
+                            <span class="db-brief-lbl">Readers</span>
+                        </div>
+                    </div>
+                    <div class="section-label"><span class="sl-icon" style="background:rgba(99,102,241,.12);color:#6366f1;"><i data-lucide="clock"></i></span>Recently Visited</div>
+                    <div class="quick-actions" id="quickActionsGrid"></div>
+                    <!-- Who's Online -->
+                    <div class="chart-card card-animate" id="whoOnlinePanel" style="display:none;animation-delay:390ms;padding:14px 16px;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                            <div style="font-size:13px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:7px;"><span class="online-pulse"></span>Who's Online</div>
+                            <span style="font-size:11px;color:var(--text-tertiary);" id="whoOnlineCount"></span>
+                        </div>
+                        <div id="whoOnlineList" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;"></div>
+                    </div>
+                    <!-- Admin Team Online -->
+                    <div class="ato-card card-animate" id="adminTeamOnlinePanel" style="display:none;">
+                        <div class="ato-header">
+                            <div class="ato-title"><span class="online-pulse"></span>Admin Team<span class="ato-badge" id="atoCount">0</span></div>
+                            <a href="/admin-account-management.html" class="ato-link">Manage →</a>
+                        </div>
+                        <div class="ato-list" id="atoList"></div>
+                    </div>
+                </div><!-- /db-sidebar-col -->
+                </div><!-- /db-main-layout -->
+
+                <!-- ══ System & Deployments ══ -->
+                <div class="section-label"><span class="sl-icon" style="background:rgba(239,68,68,.12);color:#ef4444;"><i data-lucide="server"></i></span>System & Deployments</div>
+                <div class="infra-grid" id="systemWidgetsRow">
 
                     <!-- App Errors Widget -->
                     <div class="card card-animate" style="animation-delay:430ms">
-                        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
-                            <h3 class="card-title" style="display:flex;align-items:center;gap:8px;min-width:0">
-                                <span style="flex-shrink:0;width:8px;height:8px;background:#ef4444;border-radius:50%"></span>
-                                <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">App Errors</span>
-                            </h3>
-                            <a href="/admin-errors.html" style="flex-shrink:0;font-size:12px;color:var(--primary);text-decoration:none;padding:4px 10px;background:var(--bg-active);border-radius:12px;font-weight:600;margin-left:8px">View all</a>
+                        <div class="content-card-header">
+                            <div class="content-card-title">
+                                <div class="cct-icon" style="background:rgba(239,68,68,.1);color:#ef4444;"><i data-lucide="alert-triangle"></i></div>
+                                App Errors
+                            </div>
+                            <a href="/admin-errors.html" class="content-card-link">View all</a>
                         </div>
                         <div style="padding:12px 16px 16px">
                             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
@@ -2377,12 +3010,12 @@
 
                     <!-- Notification Analytics Widget -->
                     <div class="card card-animate" style="animation-delay:435ms">
-                        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
-                            <h3 class="card-title" style="display:flex;align-items:center;gap:8px;min-width:0">
-                                <span style="flex-shrink:0;width:8px;height:8px;background:#3b82f6;border-radius:50%"></span>
-                                <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Notification Analytics</span>
-                            </h3>
-                            <a href="/admin-notification-analytics.html" style="flex-shrink:0;font-size:12px;color:var(--primary);text-decoration:none;padding:4px 10px;background:var(--bg-active);border-radius:12px;font-weight:600;margin-left:8px">Full report</a>
+                        <div class="content-card-header">
+                            <div class="content-card-title">
+                                <div class="cct-icon" style="background:rgba(59,130,246,.1);color:#3b82f6;"><i data-lucide="bell"></i></div>
+                                Notification Analytics
+                            </div>
+                            <a href="/admin-notification-analytics.html" class="content-card-link">Full report</a>
                         </div>
                         <div style="padding:12px 16px 16px">
                             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
@@ -2407,12 +3040,12 @@
 
                     <!-- App Versions Widget -->
                     <div class="card card-animate" style="animation-delay:440ms">
-                        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
-                            <h3 class="card-title" style="display:flex;align-items:center;gap:8px;min-width:0">
-                                <span style="flex-shrink:0;width:8px;height:8px;background:#10b981;border-radius:50%"></span>
-                                <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">App Versions</span>
-                            </h3>
-                            <a href="/admin-app-versions.html" style="flex-shrink:0;font-size:12px;color:var(--primary);text-decoration:none;padding:4px 10px;background:var(--bg-active);border-radius:12px;font-weight:600;margin-left:8px">View all</a>
+                        <div class="content-card-header">
+                            <div class="content-card-title">
+                                <div class="cct-icon" style="background:rgba(16,185,129,.1);color:#10b981;"><i data-lucide="smartphone"></i></div>
+                                App Versions
+                            </div>
+                            <a href="/admin-app-versions.html" class="content-card-link">View all</a>
                         </div>
                         <div style="padding:12px 16px 16px">
                             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
@@ -2431,72 +3064,53 @@
                         </div>
                     </div>
 
-                </div>
-
-                <!-- ══ Deployments widgets row ══ -->
-                <div class="section-label"><span class="sl-icon" style="background:rgba(249,115,22,.12);color:#f97316;"><i data-lucide="rocket"></i></span>Deployments</div>
-                <div class="system-widgets-row" style="margin-bottom:28px">
-
                     <!-- iOS Builds widget -->
                     <div class="card card-animate" style="animation-delay:450ms">
-                        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
-                            <h3 class="card-title" style="display:flex;align-items:center;gap:8px;min-width:0">
-                                <span style="flex-shrink:0;width:8px;height:8px;background:#f97316;border-radius:50%"></span>
-                                <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">iOS Builds</span>
-                            </h3>
-                            <a href="/admin-codemagic.html" style="flex-shrink:0;font-size:12px;color:var(--primary);text-decoration:none;padding:4px 10px;background:var(--bg-active);border-radius:12px;font-weight:600;margin-left:8px">View all</a>
+                        <div class="content-card-header">
+                            <div class="content-card-title">
+                                <div class="cct-icon" style="background:rgba(249,115,22,.1);color:#f97316;"><i data-lucide="zap"></i></div>
+                                iOS Builds
+                            </div>
+                            <a href="/admin-codemagic.html" class="content-card-link">View all</a>
                         </div>
                         <div style="padding:12px 16px 16px" id="cmWidgetBody">
-                            <div style="color:var(--text-tertiary);font-size:13px">Loading…</div>
+                            <div class="card-skel-list" style="padding:4px 0 0;">
+                                <div class="card-skel-item"><div class="card-skel-avatar" style="border-radius:6px;width:28px;height:28px;"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:65%"></div><div class="card-skel-line" style="width:38%"></div></div></div>
+                                <div class="card-skel-item"><div class="card-skel-avatar" style="border-radius:6px;width:28px;height:28px;"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:55%"></div><div class="card-skel-line" style="width:30%"></div></div></div>
+                                <div class="card-skel-item"><div class="card-skel-avatar" style="border-radius:6px;width:28px;height:28px;"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:70%"></div><div class="card-skel-line" style="width:35%"></div></div></div>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Release History widget -->
                     <div class="card card-animate" style="animation-delay:460ms">
-                        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
-                            <h3 class="card-title" style="display:flex;align-items:center;gap:8px;min-width:0">
-                                <span style="flex-shrink:0;width:8px;height:8px;background:#6366f1;border-radius:50%"></span>
-                                <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Release History</span>
-                            </h3>
-                            <a href="/admin-release-history.html" style="flex-shrink:0;font-size:12px;color:var(--primary);text-decoration:none;padding:4px 10px;background:var(--bg-active);border-radius:12px;font-weight:600;margin-left:8px">View all</a>
+                        <div class="content-card-header">
+                            <div class="content-card-title">
+                                <div class="cct-icon" style="background:rgba(99,102,241,.1);color:#6366f1;"><i data-lucide="git-branch"></i></div>
+                                Release History
+                            </div>
+                            <a href="/admin-release-history.html" class="content-card-link">View all</a>
                         </div>
                         <div style="padding:12px 16px 16px" id="rhWidgetBody">
-                            <div style="color:var(--text-tertiary);font-size:13px">Loading…</div>
+                            <div class="card-skel-list" style="padding:4px 0 0;">
+                                <div class="card-skel-item"><div class="card-skel-avatar" style="border-radius:6px;width:32px;height:20px;"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:72%"></div><div class="card-skel-line" style="width:40%"></div></div></div>
+                                <div class="card-skel-item"><div class="card-skel-avatar" style="border-radius:6px;width:32px;height:20px;"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:60%"></div><div class="card-skel-line" style="width:34%"></div></div></div>
+                                <div class="card-skel-item"><div class="card-skel-avatar" style="border-radius:6px;width:32px;height:20px;"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:68%"></div><div class="card-skel-line" style="width:42%"></div></div></div>
+                                <div class="card-skel-item"><div class="card-skel-avatar" style="border-radius:6px;width:32px;height:20px;"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:55%"></div><div class="card-skel-line" style="width:30%"></div></div></div>
+                            </div>
                         </div>
                     </div>
 
                 </div>
 
-                <!-- ══ Who's Online ══ -->
-                <div class="chart-card card-animate" id="whoOnlinePanel" style="display:none;animation-delay:390ms;margin-bottom:28px;padding:16px 20px;">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-                        <div style="font-size:14px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:8px;">
-                            <span class="online-pulse"></span>
-                            Who's Online
-                        </div>
-                        <span style="font-size:12px;color:var(--text-tertiary);" id="whoOnlineCount"></span>
-                    </div>
-                    <div id="whoOnlineList" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;"></div>
-                </div>
-
-                <!-- ══ Admin Team Online ══ -->
-                <div class="ato-card card-animate" id="adminTeamOnlinePanel" style="display:none;">
-                    <div class="ato-header">
-                        <div class="ato-title">
-                            <span class="online-pulse"></span>
-                            Admin Team Online
-                            <span class="ato-badge" id="atoCount">0</span>
-                        </div>
-                        <a href="/admin-account-management.html" class="ato-link">Manage →</a>
-                    </div>
-                    <div class="ato-list" id="atoList"></div>
-                </div>
-
+                <!-- ══ Activity ══ -->
+                <div class="section-label"><span class="sl-icon" style="background:rgba(16,185,129,.12);color:#10b981;"><i data-lucide="activity"></i></span>Activity</div>
+                <div class="activity-two-col">
                 <!-- ══ Admin Actions Log ══ -->
-                <div class="timeline-section card-animate" style="animation-delay:360ms">
+                <div class="timeline-section card-animate" style="animation-delay:360ms;margin-bottom:0;">
                     <div class="timeline-header" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
                         <div style="display:flex;align-items:center;gap:8px;">
-                            <div class="timeline-title">⚙️ Recent Admin Actions</div>
+                            <div class="timeline-title" style="display:flex;align-items:center;gap:8px;"><div class="chart-title-icon" style="background:rgba(99,102,241,.1);color:#6366f1;"><i data-lucide="settings"></i></div>Admin Actions</div>
                             <span id="alCountBadge" style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--bg-hover);color:var(--text-tertiary);display:none;">0</span>
                         </div>
                         <div style="display:flex;align-items:center;gap:6px;">
@@ -2518,14 +3132,19 @@
                         <button class="al-filter-btn"        data-cat="system"  onclick="setActionsFilter('system')">System</button>
                     </div>
                     <div class="timeline-list" id="adminActionsLog" style="max-height:420px;overflow-y:auto;">
-                        <div style="text-align:center;padding:30px;color:var(--text-tertiary);font-size:13px;">Loading...</div>
+                        <div class="card-skel-list">
+                            <div class="card-skel-item"><div class="card-skel-avatar" style="width:30px;height:30px;border-radius:50%;flex-shrink:0;"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:70%"></div><div class="card-skel-line" style="width:40%"></div></div></div>
+                            <div class="card-skel-item"><div class="card-skel-avatar" style="width:30px;height:30px;border-radius:50%;flex-shrink:0;"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:55%"></div><div class="card-skel-line" style="width:35%"></div></div></div>
+                            <div class="card-skel-item"><div class="card-skel-avatar" style="width:30px;height:30px;border-radius:50%;flex-shrink:0;"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:65%"></div><div class="card-skel-line" style="width:45%"></div></div></div>
+                            <div class="card-skel-item"><div class="card-skel-avatar" style="width:30px;height:30px;border-radius:50%;flex-shrink:0;"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:60%"></div><div class="card-skel-line" style="width:30%"></div></div></div>
+                        </div>
                     </div>
                 </div>
 
                 <!-- ══ Activity Timeline ══ -->
-                <div class="timeline-section card-animate" style="animation-delay:620ms">
+                <div class="timeline-section card-animate" style="animation-delay:620ms;margin-bottom:0;">
                     <div class="timeline-header">
-                        <div class="timeline-title">Recent Activity</div>
+                        <div class="timeline-title" style="display:flex;align-items:center;gap:8px;"><div class="chart-title-icon" style="background:rgba(16,185,129,.1);color:#10b981;"><i data-lucide="clock"></i></div>Recent Activity</div>
                     </div>
                     <div class="tl-filter-row" id="tlFilterRow">
                         <button class="tl-filter-btn active" data-tlcat="all"     onclick="setTimelineFilter('all')">All</button>
@@ -2534,19 +3153,29 @@
                         <button class="tl-filter-btn"        data-tlcat="video"   onclick="setTimelineFilter('video')">▶ Videos</button>
                     </div>
                     <div class="timeline-list" id="timelineList">
-                        <div style="text-align:center;padding:30px;color:var(--text-tertiary);font-size:13px;">Loading activity...</div>
+                        <div class="card-skel-list">
+                            <div class="card-skel-item"><div class="card-skel-avatar" style="width:30px;height:30px;border-radius:50%;flex-shrink:0;"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:68%"></div><div class="card-skel-line" style="width:42%"></div></div></div>
+                            <div class="card-skel-item"><div class="card-skel-avatar" style="width:30px;height:30px;border-radius:50%;flex-shrink:0;"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:75%"></div><div class="card-skel-line" style="width:38%"></div></div></div>
+                            <div class="card-skel-item"><div class="card-skel-avatar" style="width:30px;height:30px;border-radius:50%;flex-shrink:0;"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:58%"></div><div class="card-skel-line" style="width:32%"></div></div></div>
+                            <div class="card-skel-item"><div class="card-skel-avatar" style="width:30px;height:30px;border-radius:50%;flex-shrink:0;"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:63%"></div><div class="card-skel-line" style="width:44%"></div></div></div>
+                        </div>
                     </div>
                 </div>
+                </div><!-- /activity-two-col -->
 
                 <!-- Release History full page → /admin-release-history.html -->
 
+                <!-- ══ Health Monitors ══ -->
+                <div class="section-label"><span class="sl-icon" style="background:rgba(245,158,11,.12);color:#f59e0b;"><i data-lucide="shield-check"></i></span>Health Monitors</div>
+                <div class="health-monitors-grid">
+
                 <!-- ══ Prayer Times Health ══ -->
-                <div class="card card-animate collapsible-card" id="prayerHealthCard" style="animation-delay:400ms;margin-bottom:20px;">
+                <div class="card card-animate collapsible-card" id="prayerHealthCard" style="animation-delay:400ms;">
                     <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-light);padding-bottom:14px;margin-bottom:4px;flex-wrap:wrap;gap:8px;cursor:pointer;" onclick="toggleCollapse('prayer')">
-                        <h3 class="card-title" style="display:flex;align-items:center;gap:8px;">
-                            <span style="width:8px;height:8px;background:#f59e0b;border-radius:50%;"></span>
+                        <div class="content-card-title" style="font-size:14px;font-weight:700;color:var(--text-primary);">
+                            <div class="cct-icon" style="background:rgba(245,158,11,.1);color:#f59e0b;"><i data-lucide="clock"></i></div>
                             Prayer Times Health
-                        </h3>
+                        </div>
                         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;" onclick="event.stopPropagation()">
                             <span id="prayerHealthUpdated" style="font-size:11px;color:var(--text-tertiary);"></span>
                             <button onclick="forcePrayerCacheRefresh(this)" style="font-size:12px;color:#fff;background:#ef4444;border:none;padding:5px 14px;border-radius:8px;cursor:pointer;font-weight:600;transition:opacity .2s;" title="Bumps prayer_cache_version — all phones purge cache on next open">
@@ -2639,12 +3268,12 @@
                 </div>
 
                 <!-- ══ Translation Cache Health ══ -->
-                <div class="card card-animate collapsible-card" id="i18nHealthCard" style="animation-delay:420ms;margin-bottom:20px;">
+                <div class="card card-animate collapsible-card" id="i18nHealthCard" style="animation-delay:420ms;">
                     <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-light);padding-bottom:14px;margin-bottom:4px;flex-wrap:wrap;gap:8px;cursor:pointer;" onclick="toggleCollapse('i18n')">
-                        <h3 class="card-title" style="display:flex;align-items:center;gap:8px;">
-                            <span style="width:8px;height:8px;background:#8b5cf6;border-radius:50%;"></span>
+                        <div class="content-card-title" style="font-size:14px;font-weight:700;color:var(--text-primary);">
+                            <div class="cct-icon" style="background:rgba(139,92,246,.1);color:#8b5cf6;"><i data-lucide="globe"></i></div>
                             Translation Cache Health
-                        </h3>
+                        </div>
                         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;" onclick="event.stopPropagation()">
                             <span id="i18nVersionBadge" style="font-size:11px;color:var(--text-tertiary);padding:3px 10px;background:var(--bg-hover);border-radius:12px;font-weight:600;">version —</span>
                             <span id="i18nPublishedBadge" style="font-size:11px;color:var(--text-tertiary);">last published —</span>
@@ -2691,12 +3320,12 @@
                 </div>
 
                 <!-- ══ Widget Health ══ -->
-                <div class="card card-animate collapsible-card" id="widgetHealthCard" style="animation-delay:440ms;margin-bottom:20px;">
+                <div class="card card-animate collapsible-card" id="widgetHealthCard" style="animation-delay:440ms;">
                     <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-light);padding-bottom:14px;margin-bottom:4px;flex-wrap:wrap;gap:8px;cursor:pointer;" onclick="toggleCollapse('widget')">
-                        <h3 class="card-title" style="display:flex;align-items:center;gap:8px;">
-                            <span style="width:8px;height:8px;background:#3b82f6;border-radius:50%;"></span>
+                        <div class="content-card-title" style="font-size:14px;font-weight:700;color:var(--text-primary);">
+                            <div class="cct-icon" style="background:rgba(59,130,246,.1);color:#3b82f6;"><i data-lucide="monitor"></i></div>
                             Widget Health
-                        </h3>
+                        </div>
                         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;" onclick="event.stopPropagation()">
                             <span id="widgetHealthUpdated" style="font-size:11px;color:var(--text-tertiary);"></span>
                             <button onclick="forceWidgetRefreshAdmin(this)" style="font-size:12px;color:#fff;background:#3b82f6;border:none;padding:5px 14px;border-radius:8px;cursor:pointer;font-weight:600;transition:opacity .2s;" title="Bumps widget_refresh_nonce — all iOS devices force-refresh on next open">
@@ -2739,14 +3368,20 @@
                     </div><!-- /collapsible-body widget -->
                 </div>
 
+                </div><!-- /health-monitors-grid -->
+
+                <!-- ══ Security & Communication ══ -->
+                <div id="messages-audit-label" class="section-label" style="display:none;"><span class="sl-icon" style="background:rgba(16,185,129,.12);color:#10b981;"><i data-lucide="inbox"></i></span>Security & Communication</div>
+                <div class="messages-audit-row">
+
                 <!-- ══ Recent Messages (super_admin only) ══ -->
                 <div class="card messages-section" id="recent-messages-card">
-                    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-light);padding-bottom:14px;margin-bottom:4px;">
-                        <h3 class="card-title" style="display:flex;align-items:center;gap:8px;">
-                            <span style="width:8px;height:8px;background:#10b981;border-radius:50%;"></span>
+                    <div class="content-card-header">
+                        <div class="content-card-title">
+                            <div class="cct-icon" style="background:rgba(16,185,129,.1);color:#10b981;"><i data-lucide="mail"></i></div>
                             Recent Messages
-                        </h3>
-                        <a href="/admin-messages.html" style="font-size:12px;color:var(--primary);text-decoration:none;padding:4px 10px;background:var(--bg-active);border-radius:12px;transition:all 0.2s;font-weight:600;">View all</a>
+                        </div>
+                        <a href="/admin-messages.html" class="content-card-link">View all</a>
                     </div>
                     <div class="table-container">
                         <table>
@@ -2773,12 +3408,12 @@
 
                 <!-- ══ Recent Audit Logs (super_admin only) ══ -->
                 <div class="card audit-logs-section" id="audit-logs-card">
-                    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-light);padding-bottom:14px;margin-bottom:4px;">
-                        <h3 class="card-title" style="display:flex;align-items:center;gap:8px;">
-                            <span style="width:8px;height:8px;background:#8b5cf6;border-radius:50%;"></span>
+                    <div class="content-card-header">
+                        <div class="content-card-title">
+                            <div class="cct-icon" style="background:rgba(139,92,246,.1);color:#8b5cf6;"><i data-lucide="shield"></i></div>
                             Recent Audit Logs
-                        </h3>
-                        <a href="/admin-audit.html" style="font-size:12px;color:var(--primary);text-decoration:none;padding:4px 10px;background:var(--bg-active);border-radius:12px;transition:all 0.2s;font-weight:600;">View all</a>
+                        </div>
+                        <a href="/admin-audit.html" class="content-card-link">View all</a>
                     </div>
                     <div class="table-container">
                         <table>
@@ -2802,22 +3437,7 @@
                     </div>
                 </div>
 
-                <!-- ══ System Status Bar ══ -->
-                <div class="system-status-bar" id="systemStatusBar">
-                    <div class="status-item">
-                        <span class="status-dot green" id="statusDotSystem"></span>
-                        <span>System: Online</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="status-dot green" id="statusDotDb"></span>
-                        <span>Database: Connected</span>
-                    </div>
-                    <div class="status-item" id="statusSync">
-                        <span>Last sync: --</span>
-                    </div>
-                    <div id="healthScoreBadge" style="display:none;" class="health-score-badge green" title="System health score based on errors, DB and sync status"></div>
-                    <div class="role-badge" id="roleBadge">admin</div>
-                </div>
+                </div><!-- /messages-audit-row -->
             </div>
         </main>
     </div>
@@ -2915,6 +3535,32 @@
     <script src="/utils/admin-sidebar.js?v=8"></script>
     <script src="/utils/admin-health-widget.js?v=6" defer data-cfasync="false"></script>
 <script src="/utils/admin-session-timer-ui.js?v=10"></script>
+<script>
+// Sidebar Live Stats + Daily Brief: mirror metric values every 3 s
+(function() {
+    var map = [
+        ['apcUsers','metricUsers'],
+        ['apcActive','metricActiveToday'],
+        ['apcOnline','metricOnline'],
+        ['dbActive7d','metricActive7d'],
+        ['dbNewWeek','ulNewWeek'],
+        ['dbMessages','metricMessages'],
+        ['dbReaders','metricReaders']
+    ];
+    function sync() {
+        map.forEach(function(p) {
+            var dst = document.getElementById(p[0]);
+            var src = document.getElementById(p[1]);
+            if (!dst || !src) return;
+            if (src.querySelector('.metric-skel,.metric-skel-sm,.ci-skel-v,.ci-skel-l')) return;
+            var v = src.textContent.trim();
+            if (v && v !== '—') dst.textContent = v;
+        });
+    }
+    sync();
+    setInterval(sync, 3000);
+})();
+</script>
     <script src="/utils/admin-loading.js"></script>
     <script src="/utils/admin-auth.js?v=6"></script>
     <script src="/utils/admin-live-alerts.js?v=15"></script>
@@ -2975,6 +3621,8 @@
                 await loadDashboardData();
                 loadOnlineUsers();
                 setInterval(loadOnlineUsers, 30 * 1000);
+                loadUserLifecycle();
+                setInterval(loadUserLifecycle, 10 * 60 * 1000);
                 loadAdminTeamOnline();
                 subscribeAdminTeamOnline();
                 setInterval(loadAdminTeamOnline, 15 * 1000);
@@ -6033,6 +6681,8 @@
 
                 // Platform split widget
                 renderPlatformSplit(p, data.count || 0);
+                // Sync online IDs into lifecycle table
+                _ulSyncOnlineIds(data.userIds || []);
             } catch (e) {
                 console.error('loadOnlineUsers:', e);
             }
@@ -6331,6 +6981,213 @@
                 more.textContent = '+' + (users.length - MAX);
                 list.appendChild(more);
             }
+        }
+
+        /* ═══════════════════════════════════════════════
+           USER LIFECYCLE TABLE + PROFILE MODAL
+           ═══════════════════════════════════════════════ */
+        var _ulUsers = [];
+        var _ulOnlineIds = new Set();
+        var _ulCurrentFilter = 'all';
+
+        function _ulSetEl(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; }
+
+        function _ulTimeAgo(iso) {
+            if (!iso) return '—';
+            var ms = Date.now() - new Date(iso).getTime();
+            var s = Math.floor(ms / 1000);
+            if (s < 60) return 'just now';
+            var m = Math.floor(s / 60);
+            if (m < 60) return m + 'm ago';
+            var h = Math.floor(m / 60);
+            if (h < 24) return h + 'h ago';
+            var d = Math.floor(h / 24);
+            if (d < 30) return d + 'd ago';
+            return Math.floor(d / 30) + 'mo ago';
+        }
+
+        function _ulStatus(userId, lastActive) {
+            if (_ulOnlineIds.has(userId)) return 'online';
+            if (!lastActive) return 'dormant';
+            var ms = Date.now() - new Date(lastActive).getTime();
+            if (ms < 10 * 60 * 1000) return 'online';
+            if (ms < 7  * 24 * 60 * 60 * 1000) return 'recent';
+            if (ms < 30 * 24 * 60 * 60 * 1000) return 'active';
+            return 'dormant';
+        }
+
+        function _ulBadge(status) {
+            var m = { online:{cls:'ul-badge-online',lbl:'Online'}, recent:{cls:'ul-badge-recent',lbl:'7d'}, active:{cls:'ul-badge-active',lbl:'30d'}, dormant:{cls:'ul-badge-dormant',lbl:'Dormant'} };
+            var s = m[status] || m.dormant;
+            return '<span class="ul-badge ' + s.cls + '">● ' + s.lbl + '</span>';
+        }
+
+        function _ulSyncOnlineIds(ids) {
+            _ulOnlineIds = new Set(ids || []);
+            if (_ulUsers.length) _ulRenderTable(_ulCurrentFilter);
+        }
+
+        async function loadUserLifecycle() {
+            var tok = sessionStorage.getItem('adminToken');
+            if (!tok) return;
+            try {
+                var res = await fetch('/admin-users-data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
+                    body: JSON.stringify({ action: 'get_users', token: tok })
+                });
+                var d = await res.json();
+                if (!d.success || !d.users) return;
+                _ulUsers = d.users;
+
+                var now = Date.now();
+                var todayStart = new Date(); todayStart.setHours(0,0,0,0);
+                var week7 = now - 7  * 24 * 60 * 60 * 1000;
+                var day30 = now - 30 * 24 * 60 * 60 * 1000;
+
+                _ulSetEl('ulNewToday',  _ulUsers.filter(function(u){ return new Date(u.created_at) >= todayStart; }).length);
+                _ulSetEl('ulNewWeek',   _ulUsers.filter(function(u){ return new Date(u.created_at) >= week7; }).length);
+                _ulSetEl('ulActiveWeek',_ulUsers.filter(function(u){ return new Date(u.last_active||u.created_at) >= week7; }).length);
+                _ulSetEl('ulDormant',   _ulUsers.filter(function(u){ return new Date(u.last_active||u.created_at) < day30; }).length);
+                _ulSetEl('ulReaders',   _ulUsers.filter(function(u){ return (u.totalAyahsRead||0) > 0; }).length);
+
+                _ulRenderTable(_ulCurrentFilter);
+
+                var sel = document.getElementById('ulFilter');
+                if (sel && !sel._ulBound) {
+                    sel._ulBound = true;
+                    sel.addEventListener('change', function() {
+                        _ulCurrentFilter = this.value;
+                        _ulRenderTable(this.value);
+                    });
+                }
+            } catch(e) { console.error('loadUserLifecycle:', e); }
+        }
+
+        function _ulRenderTable(filter) {
+            var tbody = document.getElementById('ulTableBody');
+            if (!tbody || !_ulUsers.length) return;
+
+            var now = Date.now();
+            var week7 = now - 7  * 24 * 60 * 60 * 1000;
+            var day30 = now - 30 * 24 * 60 * 60 * 1000;
+            var min10 = now - 10 * 60 * 1000;
+
+            var filtered = _ulUsers.filter(function(u) {
+                var la     = new Date(u.last_active || u.created_at).getTime();
+                var joined = new Date(u.created_at).getTime();
+                var online = _ulOnlineIds.has(u.id) || la > min10;
+                if (filter === 'online')  return online;
+                if (filter === 'active7') return la >= week7;
+                if (filter === 'active30') return la >= day30 && la < week7;
+                if (filter === 'dormant') return la < day30;
+                if (filter === 'new7')    return joined >= week7;
+                return true;
+            });
+
+            var sorted = filtered.slice().sort(function(a,b){
+                return new Date(b.last_active||b.created_at) - new Date(a.last_active||a.created_at);
+            }).slice(0, 40);
+
+            if (!sorted.length) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-tertiary);padding:20px;">No users in this filter</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = sorted.map(function(u) {
+                var status   = _ulStatus(u.id, u.last_active);
+                var ayahs    = u.totalAyahsRead || 0;
+                var pct      = Math.min(100, (ayahs / 6236) * 100).toFixed(0);
+                var initials = (u.name || '?').charAt(0).toUpperCase();
+                var avatarIn = u.avatar
+                    ? '<img src="' + escHtml(u.avatar) + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.onerror=null;this.style.display=\'none\'">'
+                    : initials;
+                return '<tr onclick="ulShowProfile(\'' + escHtml(u.id) + '\')">' +
+                    '<td><div class="ul-user-cell">' +
+                        '<div class="ul-avatar">' + avatarIn + '</div>' +
+                        '<div><div class="ul-user-name" title="' + escHtml(u.name||'') + '">' + escHtml(u.name||'Unknown') + '</div>' +
+                        '<div class="ul-user-email" title="' + escHtml(u.email||'') + '">' + escHtml(u.email||'') + '</div></div>' +
+                    '</div></td>' +
+                    '<td style="color:var(--text-tertiary);font-size:12px;white-space:nowrap;">' +
+                        new Date(u.created_at).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) +
+                    '</td>' +
+                    '<td style="color:var(--text-secondary);font-size:12px;white-space:nowrap;">' + _ulTimeAgo(u.last_active) + '</td>' +
+                    '<td style="white-space:nowrap;">' +
+                        '<span style="font-weight:700;color:var(--text-primary);">' + ayahs.toLocaleString() + '</span>' +
+                        '<span class="ul-progress-bar"><span class="ul-progress-fill" style="width:' + pct + '%;"></span></span>' +
+                    '</td>' +
+                    '<td>' + _ulBadge(status) + '</td>' +
+                '</tr>';
+            }).join('');
+        }
+
+        function ulShowProfile(userId) {
+            var u = _ulUsers.find(function(x){ return x.id === userId; });
+            if (!u) return;
+            var old = document.getElementById('ulProfileModal');
+            if (old) old.remove();
+
+            var status  = _ulStatus(u.id, u.last_active);
+            var ayahs   = u.totalAyahsRead || 0;
+            var readPct = Math.min(100, (ayahs / 6236) * 100).toFixed(1);
+            var initials = (u.name || '?').charAt(0).toUpperCase();
+            var avatarHtml = u.avatar
+                ? '<img src="' + escHtml(u.avatar) + '" onerror="this.onerror=null;this.style.display=\'none\'">'
+                : initials;
+
+            var SURAH = ['','Al-Fātiḥah','Al-Baqarah','Āl ʿImrān','An-Nisāʾ','Al-Māʾidah','Al-Anʿām','Al-Aʿrāf','Al-Anfāl','At-Tawbah','Yūnus','Hūd','Yūsuf','Ar-Raʿd','Ibrāhīm','Al-Ḥijr','An-Naḥl','Al-Isrāʾ','Al-Kahf','Maryam','Ṭāhā'];
+            var posLabel = u.currentSurah
+                ? (SURAH[u.currentSurah] || 'Surah ' + u.currentSurah) + (u.currentAyah ? ' :' + u.currentAyah : '')
+                : '—';
+
+            function ms(lbl, val) {
+                return '<div class="ul-modal-stat"><div class="ul-modal-stat-lbl">' + lbl + '</div><div class="ul-modal-stat-val">' + val + '</div></div>';
+            }
+
+            var modal = document.createElement('div');
+            modal.id = 'ulProfileModal';
+            modal.className = 'ul-modal-bg';
+            modal.onclick = function(e){ if(e.target===modal) modal.remove(); };
+            modal.innerHTML =
+                '<div class="ul-modal-box">' +
+                    '<div class="ul-modal-head">' +
+                        '<div class="ul-modal-avatar">' + avatarHtml + '</div>' +
+                        '<div style="flex:1;min-width:0;">' +
+                            '<div class="ul-modal-name">' + escHtml(u.name||'Unknown') + '</div>' +
+                            '<div class="ul-modal-email">' + escHtml(u.email||'') + '</div>' +
+                            '<div style="margin-top:6px;">' + _ulBadge(status) + '</div>' +
+                        '</div>' +
+                        '<button class="ul-modal-close-btn" onclick="document.getElementById(\'ulProfileModal\').remove()">✕</button>' +
+                    '</div>' +
+                    '<div class="ul-modal-grid">' +
+                        ms('Joined',            new Date(u.created_at).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})) +
+                        ms('Last Seen',         _ulTimeAgo(u.last_active)) +
+                        ms('Reg. Source',       escHtml(u.registration_source||'—')) +
+                        ms('Theme',             escHtml(u.theme||'—')) +
+                        ms('Ayahs Read',        ayahs.toLocaleString() + ' / 6,236 (' + readPct + '%)') +
+                        ms('Best Streak',       (u.bestStreak||0) + ' days') +
+                        ms('Active Days (30d)', String(u.activeDays30||0)) +
+                        ms('Active Days (all)', String(u.activeDaysTotal||0)) +
+                        ms('Bookmarks',         String(u.bookmarksCount||0)) +
+                        ms('Surahs Started',    String(u.surahsStarted||0)) +
+                        ms('Surahs Completed',  String(u.surahsCompleted||0)) +
+                        ms('Position',          posLabel) +
+                        ms('Reading Goal',      u.readingGoal ? u.readingGoal + ' ayahs/day' : 'Not set') +
+                        ms('Reciter',           escHtml(u.reciter||'—')) +
+                        ms('Daily Reminder',    u.dailyReminder ? '✅ On' : '❌ Off') +
+                        ms('Tafsir',            u.showTafsir !== false ? '✅ On' : '❌ Off') +
+                    '</div>' +
+                    '<div class="ul-modal-progress">' +
+                        '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-tertiary);margin-bottom:6px;">Quran Progress — ' + readPct + '%</div>' +
+                        '<div style="height:6px;background:var(--bg-active);border-radius:3px;overflow:hidden;">' +
+                            '<div style="width:' + readPct + '%;height:100%;background:linear-gradient(90deg,#10b981,#3b82f6);border-radius:3px;"></div>' +
+                        '</div>' +
+                        '<div style="display:flex;justify-content:space-between;margin-top:4px;font-size:11px;color:var(--text-tertiary);">' +
+                            '<span>0</span><span>' + ayahs.toLocaleString() + ' read</span><span>6,236</span>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+            document.body.appendChild(modal);
         }
 
         /* ─── Admin Team Online ──────────────────────────────────────

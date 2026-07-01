@@ -1,36 +1,35 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="ku">
 <head>
-  <script src="/utils/console-cleaner.js?v=2"></script>`n  <script src="/utils/site-theme.js"></script>
+  <script src="/utils/console-cleaner.js?v=2"></script>
+  <script src="/utils/site-theme.js"></script>
   <link rel="preconnect" href="https://gijupzejtbpifjzwadee.supabase.co">
   <script src="/utils/translations.js?v=20260225"></script>
   <script src="/utils/scroll-position.js"></script>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="description" content="پاراستنا تایبەتمەندیێ - تەفسیر کورد">
-  <meta name="keywords" content="پاراستنا تایبەتمەندیێ، تەفسیر کورد، قورئان">
+  <meta name="description" content="سیاسەتا تایبەتمەندیێ - تەفسیر کورد: چاوانیا کوم و بکارئینانا زانیاریان.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://tafsirkurd.com/privacy-policy.html">
   <meta name="theme-color" content="#000000">
-  <title data-t="privacy-policy_title_1">پاراستنا تایبەتمەندیێ | TafsirKurd</title>
+  <title>پاراستنا تایبەتمەندیێ | TafsirKurd</title>
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="/assets/images/TafsirKurd-favicon.png">
 
-  <!-- Kurdish Number Utility - Convert all numbers to Kurdish numerals -->
+  <!-- Kurdish Number Utility -->
   <script src="utils/kurdish-numbers.js"></script>
   <script src="utils/auto-kurdish-numbers.js"></script>
 
-  <!-- Critical Font Preloading - Instant font display, zero FOIT/FOUT -->
+  <!-- Critical Font Preloading -->
   <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2?v=17" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-600.woff2?v=17" as="font" type="font/woff2" crossorigin>
 
-  <!-- Local Fonts - Zero external requests, instant loading -->
+  <!-- Local Fonts -->
   <link rel="stylesheet" href="/assets/fonts/fonts.css?v=17">
 
-  <!-- Local Font Awesome - Zero external requests -->
+  <!-- Local Font Awesome -->
   <link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=17">
-
-  <!-- Styles -->
-  <link rel="stylesheet" href="styles/Style.css?v=9">
 
   <style>
     :root {
@@ -100,11 +99,7 @@
       --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.5);
     }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       font-family: 'IBM Plex Sans Arabic', 'Inter', sans-serif;
@@ -114,14 +109,11 @@
       transition: background-color 0.3s, color 0.3s;
     }
 
-    /* Diagonal grid background pattern */
     body::before {
       content: '';
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
       opacity: 0.02;
       z-index: -1;
       background-image:
@@ -137,10 +129,7 @@
       min-height: 100vh;
     }
 
-    .legal-header {
-      text-align: center;
-      margin-bottom: 60px;
-    }
+    .legal-header { text-align: center; margin-bottom: 60px; }
 
     .legal-title {
       font-size: 2.5rem;
@@ -148,10 +137,7 @@
       margin-bottom: 15px;
     }
 
-    .legal-updated {
-      color: var(--text-muted);
-      font-size: 0.95rem;
-    }
+    .legal-updated { color: var(--text-muted); font-size: 0.95rem; }
 
     .legal-section {
       background: var(--card-bg);
@@ -170,10 +156,7 @@
       gap: 10px;
     }
 
-    .legal-section h2 i {
-      color: var(--primary);
-      font-size: 1.3rem;
-    }
+    .legal-section h2 i { color: var(--primary); font-size: 1.3rem; }
 
     .legal-section p {
       color: var(--text-muted);
@@ -182,11 +165,7 @@
       font-size: 1.05rem;
     }
 
-    .legal-section ul {
-      list-style: none;
-      padding-right: 0;
-      margin: 15px 0;
-    }
+    .legal-section ul { list-style: none; padding-right: 0; margin: 15px 0; }
 
     .legal-section li {
       color: var(--text-muted);
@@ -195,10 +174,7 @@
       line-height: 1.7;
     }
 
-    .legal-section li:before {
-      content: "";
-      display: none;
-    }
+    .legal-section li:before { content: ""; display: none; }
 
     .back-button {
       display: inline-flex;
@@ -212,12 +188,13 @@
       font-weight: 500;
       transition: all var(--transition);
       margin-bottom: 30px;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 1rem;
     }
 
-    .back-button:hover {
-      background: var(--primary-dark);
-      transform: translateX(5px);
-    }
+    .back-button:hover { background: var(--primary-dark); transform: translateX(5px); }
 
     .info-note {
       display: flex;
@@ -278,77 +255,28 @@
     }
 
     @media (max-width: 768px) {
-      .legal-title {
-        font-size: 2rem;
-      }
-
-      .legal-section {
-        padding: 20px;
-      }
-
-      .legal-section h2 {
-        font-size: 1.3rem;
-      }
-
-      .legal-container {
-        padding: 60px 15px 30px;
-      }
+      .legal-title { font-size: 2rem; }
+      .legal-section { padding: 20px; }
+      .legal-section h2 { font-size: 1.3rem; }
+      .legal-container { padding: 60px 15px 30px; }
     }
 
     @media (max-width: 480px) {
-      .legal-title {
-        font-size: 1.6rem;
-        line-height: 1.3;
-      }
-
-      .legal-section {
-        padding: 16px;
-        margin-bottom: 16px;
-      }
-
-      .legal-section h2 {
-        font-size: 1.2rem;
-        margin-bottom: 12px;
-      }
-
-      .legal-section p,
-      .legal-section li {
-        font-size: 0.9rem;
-        line-height: 1.7;
-      }
-
-      .legal-container {
-        padding: 40px 10px 20px;
-      }
-
-      .info-note {
-        padding: 16px;
-        gap: 10px;
-        font-size: 0.85rem;
-      }
-
-      .back-button {
-        font-size: 0.9rem;
-        padding: 10px 16px;
-      }
+      .legal-title { font-size: 1.6rem; line-height: 1.3; }
+      .legal-section { padding: 16px; margin-bottom: 16px; }
+      .legal-section h2 { font-size: 1.2rem; margin-bottom: 12px; }
+      .legal-section p, .legal-section li { font-size: 0.9rem; line-height: 1.7; }
+      .legal-container { padding: 40px 10px 20px; }
+      .info-note { padding: 16px; gap: 10px; font-size: 0.85rem; }
+      .back-button { font-size: 0.9rem; padding: 10px 16px; }
     }
 
     @media (max-width: 360px) {
-      .legal-title {
-        font-size: 1.4rem;
-      }
-
-      .legal-section h2 {
-        font-size: 1.1rem;
-      }
-
-      .legal-section p,
-      .legal-section li {
-        font-size: 0.85rem;
-      }
+      .legal-title { font-size: 1.4rem; }
+      .legal-section h2 { font-size: 1.1rem; }
+      .legal-section p, .legal-section li { font-size: 0.85rem; }
     }
 
-    /* Footer Styles */
     footer {
       background: var(--card-bg);
       border-top: 1px solid var(--border);
@@ -357,11 +285,7 @@
       text-align: right;
     }
 
-    .footer-container {
-      max-width: 1200px;
-      margin: 0 auto;
-      direction: rtl;
-    }
+    .footer-container { max-width: 1200px; margin: 0 auto; direction: rtl; }
 
     .footer-main {
       display: grid;
@@ -370,102 +294,22 @@
       margin-bottom: 40px;
     }
 
-    .footer-brand {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-    }
-
-    .footer-brand-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .footer-logo-img {
-      width: 45px;
-      height: 45px;
-      object-fit: contain;
-      transition: transform 0.3s;
-    }
-
-    .footer-logo-img:hover {
-      transform: scale(1.1) rotate(10deg);
-    }
-
-    .footer-brand-name {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--text);
-    }
-
-    .footer-brand-tagline {
-      font-size: 0.95rem;
-      line-height: 1.6;
-      color: var(--text-muted);
-    }
-
-    .footer-social-icons {
-      display: flex;
-      gap: 15px;
-      margin-top: 15px;
-    }
-
-    .footer-social-icons a {
-      color: var(--text-muted);
-      font-size: 1.3rem;
-      transition: all 0.3s;
-    }
-
-    .footer-social-icons a:hover {
-      color: var(--primary);
-      transform: translateY(-3px);
-    }
-
-    .footer-section {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      text-align: right;
-    }
-
-    .footer-section-title {
-      font-size: 1rem;
-      font-weight: 600;
-      color: var(--text);
-      margin-bottom: 5px;
-    }
-
-    .footer-links {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      align-items: flex-start;
-    }
-
-    .footer-contact-text {
-      color: var(--text-muted);
-      font-size: 0.9rem;
-      line-height: 1.6;
-      margin-bottom: 10px;
-    }
-
-    .footer-link {
-      color: var(--text-muted);
-      text-decoration: none;
-      font-size: 0.9rem;
-      transition: all 0.3s;
-    }
-
-    .footer-link:hover {
-      color: var(--primary);
-      transform: translateX(-5px);
-    }
-
-    .footer-link i {
-      margin-left: 8px;
-    }
-
+    .footer-brand { display: flex; flex-direction: column; gap: 15px; }
+    .footer-brand-header { display: flex; align-items: center; gap: 12px; }
+    .footer-logo-img { width: 45px; height: 45px; object-fit: contain; transition: transform 0.3s; }
+    .footer-logo-img:hover { transform: scale(1.1) rotate(10deg); }
+    .footer-brand-name { font-size: 1.5rem; font-weight: 700; color: var(--text); }
+    .footer-brand-tagline { font-size: 0.95rem; line-height: 1.6; color: var(--text-muted); }
+    .footer-social-icons { display: flex; gap: 15px; margin-top: 15px; }
+    .footer-social-icons a { color: var(--text-muted); font-size: 1.3rem; transition: all 0.3s; }
+    .footer-social-icons a:hover { color: var(--primary); transform: translateY(-3px); }
+    .footer-section { display: flex; flex-direction: column; gap: 15px; text-align: right; }
+    .footer-section-title { font-size: 1rem; font-weight: 600; color: var(--text); margin-bottom: 5px; }
+    .footer-links { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+    .footer-contact-text { color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; margin-bottom: 10px; }
+    .footer-link { color: var(--text-muted); text-decoration: none; font-size: 0.9rem; transition: all 0.3s; }
+    .footer-link:hover { color: var(--primary); transform: translateX(-5px); }
+    .footer-link i { margin-left: 8px; }
     .footer-bottom {
       border-top: 1px solid var(--border);
       padding-top: 25px;
@@ -475,38 +319,14 @@
       flex-wrap: wrap;
       gap: 15px;
     }
-
-    .footer-copyright {
-      color: var(--text-muted);
-      font-size: 0.85rem;
-    }
-
-    .footer-meta-links {
-      display: flex;
-      gap: 20px;
-    }
-
-    .footer-meta-link {
-      color: var(--text-muted);
-      text-decoration: none;
-      font-size: 0.85rem;
-      transition: color 0.3s;
-    }
-
-    .footer-meta-link:hover {
-      color: var(--primary);
-    }
+    .footer-copyright { color: var(--text-muted); font-size: 0.85rem; }
+    .footer-meta-links { display: flex; gap: 20px; }
+    .footer-meta-link { color: var(--text-muted); text-decoration: none; font-size: 0.85rem; transition: color 0.3s; }
+    .footer-meta-link:hover { color: var(--primary); }
 
     @media (max-width: 768px) {
-      .footer-main {
-        grid-template-columns: 1fr;
-        gap: 30px;
-      }
-
-      .footer-bottom {
-        flex-direction: column;
-        text-align: center;
-      }
+      .footer-main { grid-template-columns: 1fr; gap: 30px; }
+      .footer-bottom { flex-direction: column; text-align: center; }
     }
   </style>
 </head>
@@ -521,104 +341,112 @@
 
   <div class="legal-header">
     <h1 class="legal-title" data-t="privacy_title">پاراستنا تایبەتمەندیێ</h1>
-    <p class="legal-updated"><span data-t="privacy_updated_label">نووترین نووکرن:</span> <span id="lastUpdate"></span></p>
+    <p class="legal-updated"><span data-t="privacy_updated_label">نووترین نووکرن:</span> 25ی حوزەیران 2026</p>
   </div>
 
   <div class="info-note" style="margin-top: 20px; border-right-color: #28a745;">
     <i class="fas fa-book-quran"></i>
-    <p data-t="privacy_intro">ئەم ل تەفسیر کورد، ب ئەمانەت و پابەندبوونا ئیسلامی، کار دکەین بۆ پاراستنا تایبەتمەندی و ئاسایشا هەمی بکارئینەرێن مە. ئارمانجا مە پێشکێشکرنا قورئانا پیرۆز و تەفسیرێن وێ یە ب شێوەیەکێ پاراستی و ب رێز ل سەر بنەمایێ پرەنسیپێن ئیسلامی.</p>
+    <p>ئەم ل تەفسیر کورد، ب ئەمانەت و پابەندبوونا ئیسلامی، کار دکەین بۆ پاراستنا تایبەتمەندی و ئاسایشا هەمی بکارئینەرێن مە. ئارمانجا مە پێشکێشکرنا قورئانا پیرۆز و تەفسیرێن وێ یە ب شێوەیەکێ پاراستی. ئەڤ سیاسەتە بۆ هەمی پلاتفۆرمێن مە جی دکەیت: ئەپا Android، iOS، Huawei AppGallery، و مالپەڕ.</p>
   </div>
 
+  <!-- Section 1 -->
   <div class="legal-section">
     <h2 data-t="privacy_section1_title"><i class="fas fa-shield-alt"></i> پابەندبوونا مە بۆ پاراستنا تایبەتمەندیا تە</h2>
-    <p data-t="privacy_collect_intro">ل تەفسیر کورد، پاراستنا تایبەتمەندی و ئاسایشا زانیاریێن بکارئینەرێن مە گرنگترین ئەولەویا مە یە. ب گۆرەی پرەنسیپێن ئەمانەت و دروستیێ د ئیسلامێ دا، ئەم ب بەرپرسیارانە مامەلە دگەل زانیاریێن تە دکەین. ئەڤ سیاسەتە روهن دکەت کا چاوا ئەم زانیاریان کوم دکەین، بکار دئینین، و پارێزگاریێ لێ دکەین دەما تو خزمەتگوزاریێن مە بکار دئینی بۆ خواندن و لێکۆلین ڤە ل کەلامێ خودایێ مەزن.</p>
+    <p data-t="privacy_collect_intro">ل تەفسیر کورد، پاراستنا تایبەتمەندی و ئاسایشا زانیاریێن بکارئینەرێن مە گرنگترین ئەولەویا مە یە. ئەڤ سیاسەتە روهن دکەت کا چاوا ئەم زانیاریان کوم دکەین، بکار دئینین، و پارێزگاریێ لێ دکەین دەما تو خزمەتگوزاریێن مە بکار دئینی بۆ خواندن و لێکۆلین ڤە ل کەلامێ خودایێ مەزن.</p>
   </div>
 
+  <!-- Section 2 -->
   <div class="legal-section">
     <h2 data-t="privacy_section2_title"><i class="fas fa-info-circle"></i> زانیاریێن کومکری</h2>
-    <p data-t="privacy_collect_types">ئەم جۆرێن خوارێ ژ زانیاریان کوم دکەین:</p>
+    <p>ئەم تەنها زانیاریێن پێتڤی کوم دکەین. ئەمانەی ئەم کوم دکەین:</p>
 
-    <h3 data-t="privacy_personal_heading" style="color: var(--text); font-size: 1.2rem; margin: 20px 0 10px;">زانیاریێن تایبەت:</h3>
+    <h3 style="color: var(--text); font-size: 1.2rem; margin: 20px 0 10px;">١. زانیاریێن تایبەت (ئیختیاری):</h3>
     <ul>
-      <li data-t="privacy_personal_li1">ناڤ و ناڤنیشانێ ئیمەیلێ (دەما تو ئەکاونتێ دروست دکەی یان پەیوەندیێ ب مە دکەی)</li>
-      <li data-t="privacy_personal_li2">زانیاریێن پرۆفایلی (ئەگەر ئەکاونتێ دروست بکەی)</li>
-      <li data-t="privacy_personal_li3">هەلبژارتنێن رێکخستن و تێبینیێن کەسی</li>
+      <li>ناڤنیشانێ ئیمەیلێ — <strong>تەنها ئەگەر تو ئەکاونتێکی دروست بکەی</strong>. دروستکرنا ئەکاونت ئیختیاریێ.</li>
     </ul>
 
-    <h3 data-t="privacy_usage_heading" style="color: var(--text); font-size: 1.2rem; margin: 20px 0 10px;">زانیاریێن بکارئینانێ:</h3>
+    <h3 style="color: var(--text); font-size: 1.2rem; margin: 20px 0 10px;">٢. زانیاریێن ئاگاهداریا دەستگەهێ:</h3>
     <ul>
-      <li data-t="privacy_usage_li1">سوورەت و ئایەتێن هاتینە خواندن</li>
-      <li data-t="privacy_usage_li2">شوێنکەفتنا خواندنێ و نیشانەکری</li>
-      <li data-t="privacy_usage_li3">هەلبژارتنێن رێکخستنێ (مودا تاریک، قەبارەیا فۆنتێ، و هتد)</li>
-      <li data-t="privacy_usage_li4">زانیاریێن پارچە و کوکی بۆ تێبینیێن کەسیکرنێ</li>
+      <li>تۆکنێ ئاگاهداریا دەستگەهێ (FCM بۆ Android، APNs بۆ iOS) — بۆ ناردنا ئاگاهداریێن ئیسلامی</li>
+      <li>شێوازێ ئامیرێ (Android یان iOS)</li>
+      <li>ناسنامەیەکا ئامیرێ (install_id UUID) — بۆ دیارکرنا دەستگەهێ تەنها</li>
     </ul>
 
-    <h3 data-t="privacy_tech_heading" style="color: var(--text); font-size: 1.2rem; margin: 20px 0 10px;">زانیاریێن تەکنیکی:</h3>
+    <h3 style="color: var(--text); font-size: 1.2rem; margin: 20px 0 10px;">٣. لۆگێن تەکنیکی (تەنها دەما خەلەتییەک روودەت):</h3>
     <ul>
-      <li data-t="privacy_tech_li1">ناڤنیشانێ IP و جهێ جوگرافی (بۆ دابینکرنا ئاسایشێ)</li>
-      <li data-t="privacy_tech_li2">جۆرێ وێبگەڕ و ئامیر</li>
-      <li data-t="privacy_tech_li3">سەحکرنا لاپەڕان و دەمێ دەربازکری</li>
-      <li data-t="privacy_tech_li4">لۆگێن تەکنیکی بۆ خەلەتی و ئاریشەیێن ئامیران</li>
+      <li>ناڤنیشانێ لاپەڕا خەلەتیێ د ئەپایێ دا</li>
+      <li>شێوازێ ئامیرێ و وێبگەڕ (user agent)</li>
+      <li>جۆرێ پەیوەندیێ (WiFi، شەبەکەی مۆبایل، هتد)</li>
     </ul>
-  </div>
 
-  <div class="legal-section">
-    <h2 data-t="privacy_section3_title"><i class="fas fa-cogs"></i> چاوانیا بکارئینانا زانیاریان</h2>
-    <p data-t="privacy_use_intro">ئەم زانیاریێن تە بکار دئینین بۆ:</p>
+    <h3 style="color: var(--text); font-size: 1.2rem; margin: 20px 0 10px;">٤. داتایا سەر ئامیرێ تەنها — <strong>چ جاران ب سێرڤەرێن مە نا هێتە ناردن:</strong></h3>
     <ul>
-      <li data-t="privacy_use_li1">دابینکرن و باشترکرنا خزمەتگوزاریێن مە</li>
-      <li data-t="privacy_use_li2">پاراستنا شوێنکەفتنا خواندنێ و رێکخستنێن تە</li>
-      <li data-t="privacy_use_li3">تایبەتمەندکرنا ئەزموونا بکارئینەری</li>
-      <li data-t="privacy_use_li4">بەرسڤدانەڤەیا پرسیار و پشتگیریێ</li>
-      <li data-t="privacy_use_li5">فرێکرنا نووکرنان دەربارەی تایبەتمەندیێن نوو (ئەگەر بەشدارێ نامەیێ بوی)</li>
-      <li data-t="privacy_use_li6">شیکارکرنا بکارئینانێ بۆ باشترکرنا خزمەتگوزاریێ</li>
-      <li data-t="privacy_use_li7">پاراستنا ئاسایشێ و رێگریکرن ژ خرابکاریێ</li>
-      <li data-t="privacy_use_li8">پابەندبوون ب پێتڤیێن یاسایی</li>
-    </ul>
-  </div>
-
-  <div class="legal-section">
-    <h2 data-t="privacy_section4_title"><i class="fas fa-database"></i> پاراستن و هەلگرتنا زانیاریان</h2>
-    <p data-t="privacy_security_intro">ئەم رێکارێن تەکنیکی و رێکخراوییێن گونجای ب جه دئینین بۆ پاراستنا زانیاریێن تە ژ دەستددان، بکارئینانا نەیاسایی، یان ئاشکراکرنا نە مۆلەتکری:</p>
-    <ul>
-      <li data-t="privacy_security_li1">شفرەکرنا SSL/TLS بۆ هەمی ڤەگوهێزتنێن داتا</li>
-      <li data-t="privacy_security_li2">بنکەداتایەکا پاراستی دگەل پشتگیریکرنا ئۆتۆماتیکی</li>
-      <li data-t="privacy_security_li3">سنووردارکرنا دەستگەهشتنێ بۆ کارمەندێن مۆلەتکری تەنها</li>
-      <li data-t="privacy_security_li4">چاڤدێریا ئاسایشێ و ڤەکوژتنەکا بەردەوام</li>
-      <li data-t="privacy_security_li5">ناسناما بکارئینەری و کۆنترۆلا دەسەڵاتێ</li>
+      <li>شوێنکەفتنا خواندنێ و نیشانەکریێن تە (localStorage)</li>
+      <li>رێکخستنێن ئامیرێ تە (مودا رووناکی/تاریکی، قەبارەیا فۆنتێ، زمان)</li>
+      <li>شاری هەلبژارتی بۆ وەختێن نوستێ (localStorage)</li>
     </ul>
 
     <div class="info-note">
-      <i class="fas fa-lock"></i>
-      <p data-t="privacy_password_note">پەیڤا نهێنیا تە چ جاران ب شێوەیەکێ تێکستێ نەپاراستی نا هێتە هەلگرتن - هەردەم هاش د هێنە کرن ب ئەلگۆریتمێن پیشەسازی.</p>
+      <i class="fas fa-ban"></i>
+      <p>ئەم <strong>موقعێ جوگرافی</strong>، <strong>تەماشەکرنا لاپەڕان</strong>، <strong>Google Analytics</strong>، یان <strong>ناسنامەیا تایبەت</strong> کوم <strong>ناکەین</strong>. ئەم داتا نا فرۆشین و بۆ ئاژانسێن ئامارییێ ب کار ناینین.</p>
     </div>
   </div>
 
+  <!-- Section 3 -->
   <div class="legal-section">
-    <h2 data-t="privacy_section5_title"><i class="fas fa-cookie-bite"></i> کوکی و تەکنۆلۆژیا شوێنکەفتنێ</h2>
-    <p data-t="privacy_cookies_intro">مالپەڕا مە کوکی و تەکنۆلۆژیا هەڤشێوە بکار دئینیت:</p>
+    <h2 data-t="privacy_section3_title"><i class="fas fa-cogs"></i> چاوانیا بکارئینانا زانیاریان</h2>
+    <p data-t="privacy_use_intro">ئەم زانیاریێن کومکری بکار دئینین بۆ:</p>
     <ul>
-      <li data-t="privacy_cookie_li1"><strong data-t="privacy-policy_strong_2">کوکیێن پێتڤی:</strong> بۆ کارکرنا بنەڕەتی یا مالپەڕێ (چوونە ژوورڤە، رێکخستن)</li>
-      <li data-t="privacy_cookie_li2"><strong data-t="privacy-policy_strong_3">کوکیێن کارکرنێ:</strong> بۆ بیرهینانا هەلبژارتنێن تە (مودا تاریک، زمان)</li>
-      <li data-t="privacy_cookie_li3"><strong data-t="privacy-policy_strong_4">کوکیێن شیکاری:</strong> بۆ تێگەهشتن ژ بکارئینانا مالپەڕێ (Google Analytics)</li>
+      <li>ناردنا ئاگاهداریێن ئیسلامی و نووکرنان (ئەگەر مۆلەت دایت)</li>
+      <li>تشخیصکرن و راستکرنا ئاریشەیێن تەکنیکی ئامیران</li>
+      <li>دابینکرن و باشترکرنا خزمەتگوزاریێن مە</li>
+      <li>بەرسڤدانەڤەیا پرسیار و پشتگیریێ</li>
+      <li>پابەندبوون ب پێتڤیێن یاسایی</li>
     </ul>
-    <p data-t="privacy_cookies_control">تو دشێی کۆنترۆلا کوکیان بکەی ب رێیا رێکخستنێن وێبگەڕا تە. ئاگەهدار بە کو نەچالاککرنا هندەک کوکیان دشێت کارتێکرنێ ل سەر کارکرنا مالپەڕێ هەبیت.</p>
+    <p><strong>ئەم زانیاریێن تە بۆ ئامارییێ نا فرۆشین و ب هیچ لایەنێ سێیەم بۆ مەبەستێن بازرگانی نا دەین.</strong></p>
   </div>
 
+  <!-- Section 4 -->
+  <div class="legal-section">
+    <h2 data-t="privacy_section4_title"><i class="fas fa-database"></i> پاراستن و هەلگرتنا زانیاریان</h2>
+    <p>زانیاریێن سێرڤەری (تۆکنێن ئاگاهداری، ئەکاونت، لۆگێن خەلەتیێ) ل بنکەداتایێ Supabase (ل AWS us-east-1، ئەمریکا) هاتینە هەلگرتن. ئەم رێکارێن ئاسایشێ ب جه دئینین:</p>
+    <ul>
+      <li data-t="privacy_security_li1">شفرەکرنا SSL/TLS بۆ هەمی ڤەگوهێزتنێن داتا</li>
+      <li>مۆلەتیێن کنترولکری بۆ دەستگەهشتنا بنکەداتا</li>
+      <li data-t="privacy_security_li4">چاڤدێریا ئاسایشێ و ڤەکوژتنەکا بەردەوام</li>
+      <li>پاک-کرنا ئۆتۆماتیکی بۆ لۆگێن کون (30 رۆژ)</li>
+    </ul>
+    <p>زانیاریێن خەزنکری سەر ئامیرا تە (شوێنکەفتنا خواندنێ، نیشانەکری، رێکخستن) ل ئامیرا تە تەنها دمێنن — ئەم دەستگەهشتنێ بێ ب مە نینە.</p>
+  </div>
+
+  <!-- Section 5 -->
+  <div class="legal-section">
+    <h2><i class="fas fa-hdd"></i> هەلگرتنا سەر ئامیر (localStorage)</h2>
+    <p>ئەپا مە localStorage بکار دئینیت بۆ خزاندنا هەلبژارتنێن تە سەر ئامیرا تە تەنها:</p>
+    <ul>
+      <li><strong>پێتڤی:</strong> شوێنکەفتنا خواندنێ، نیشانەکریێن تە، رێکخستنا ئامیرێ</li>
+      <li><strong>ئاگاهداری:</strong> داتایا نوستێ بۆ شارێ هەلبژارتی</li>
+    </ul>
+    <p>ئەڤ داتایە <strong>چ جاران ب سێرڤەرێن مە نا هێتە ناردن</strong>. تو دشێی ل هەر کاتەکی وێ پاک بکەی ب رێیا رێکخستنێن وێبگەڕ یان ئامیرێ تە.</p>
+    <p>ئەم <strong>کوکیێن شوێنکەفتنێ</strong> یان <strong>ئامرازێن شیکاری</strong> بکار <strong>ناینین</strong>.</p>
+  </div>
+
+  <!-- Section 6 -->
   <div class="legal-section">
     <h2 data-t="privacy_section6_title"><i class="fas fa-share-alt"></i> هەڤبەشکرنا زانیاریان</h2>
-    <p data-t="privacy_sharing_intro">ئەم زانیاریێن کەسی یێن تە نا فرۆشین، کرێ نا دەین، یان ب لایەنێ سێیەم نا دەین، بەلێ دشێت هەڤبەشیێ بکەین دگەل:</p>
+    <p>ئەم زانیاریێن کەسی یێن تە <strong>نا فرۆشین</strong>، <strong>کرێ نا دەین</strong>، یان ب لایەنێ سێیەم بۆ مەبەستێن بازرگانی <strong>نا دەین</strong>. بۆ کارکرنا خزمەتگوزاریێن مە، ئەم دگەل دابینکەرێن خوارێ کار دکەین:</p>
 
-    <h3 data-t="privacy_providers_heading" style="color: var(--text); font-size: 1.2rem; margin: 20px 0 10px;">دابینکەرێن خزمەتگوزاریێ:</h3>
+    <h3 style="color: var(--text); font-size: 1.2rem; margin: 20px 0 10px;">دابینکەرێن خزمەتگوزاریێ:</h3>
     <ul>
-      <li data-t="privacy_provider_li1">مێڤانخانا وێبێ (Cloudflare Pages) و هەلگرتنا بنکەداتا (Supabase)</li>
-      <li data-t="privacy_provider_li2">خزمەتگوزاریا ئیمەیلێ بۆ پەیوەندیکرنێ</li>
-      <li data-t="privacy_provider_li3">ئامرازێ شیکاری (Google Analytics)</li>
-      <li data-t="privacy_provider_li4">CDN و خزمەتگوزاریێن ئاسایشێ</li>
+      <li><strong>Supabase</strong> (AWS us-east-1، ئەمریکا) — بنکەداتا بۆ ئەکاونت، تۆکنێن ئاگاهداری، لۆگێن تەکنیکی</li>
+      <li><strong>Firebase FCM</strong> (Google) — ناردنا ئاگاهداریێن دەستگەهێن Android</li>
+      <li><strong>Apple APNs</strong> — ناردنا ئاگاهداریێن دەستگەهێن iOS</li>
+      <li><strong>Cloudflare</strong> — میزوانی مالپەڕ، CDN، و پاراستنا ئاسایشێ</li>
+      <li><strong>Brevo</strong> — خزمەتگوزاریا ئیمەیلێ بۆ پەیوەندیکرنێ</li>
     </ul>
-    <p data-t="privacy_third_party_note">هەمی دابینکەرێن لایەنێ سێیەم پێتڤییە رێککەفتنا تایبەتمەندیێ پابەند بکەن.</p>
+    <p data-t="privacy_third_party_note">هەمی دابینکەرێن لایەنێ سێیەم پێتڤییە رێككەفتنا تایبەتمەندیێ پابەند بکەن.</p>
 
-    <h3 data-t="privacy_legal_heading" style="color: var(--text); font-size: 1.2rem; margin: 20px 0 10px;">پێتڤیێن یاسایی:</h3>
+    <h3 style="color: var(--text); font-size: 1.2rem; margin: 20px 0 10px;">پێتڤیێن یاسایی:</h3>
     <ul>
       <li data-t="privacy_legal_li1">دەما پێتڤی بیت ب یاسایێ (فەرمانا دادگەهێ، داخوازیا حکومەتێ)</li>
       <li data-t="privacy_legal_li2">بۆ پاراستنا ماف و تایبەتمەندیێن مە</li>
@@ -626,41 +454,45 @@
     </ul>
   </div>
 
+  <!-- Section 7 -->
   <div class="legal-section">
     <h2 data-t="privacy_section7_title"><i class="fas fa-user-cog"></i> مافێن بکارئینەری</h2>
-    <p data-t="privacy_rights_intro">تو مافێن خوارێ یێن تە هەنە سەبارەت ب زانیاریێن کەسی یێن تە:</p>
+    <p>تو مافێن خوارێ هەنی سەبارەت ب زانیاریێن تە:</p>
     <ul>
-      <li data-t="privacy_right_li1"><strong data-t="privacy-policy_strong_5">دەستگەهشتن:</strong> داخوازا کۆپییەکێ ژ زانیاریێن کەسی یێن تە بکە</li>
-      <li data-t="privacy_right_li2"><strong data-t="privacy-policy_strong_6">راستکرن:</strong> نووکرن یان راستکرنا زانیاریێن خەلەت</li>
-      <li data-t="privacy_right_li3"><strong data-t="privacy-policy_strong_7">سڕینەڤە:</strong> داخوازا سڕینەڤەیا زانیاریێن تە بکە</li>
-      <li data-t="privacy_right_li4"><strong data-t="privacy-policy_strong_8">نەرازیبوون:</strong> نەرازیبوونێ د پرۆسێسکرنێن دیارکری دا بکە</li>
-      <li data-t="privacy_right_li5"><strong data-t="privacy-policy_strong_9">ڤەگوهێزتن:</strong> وەرگرتنا زانیاریێن تە ب فۆرماتەکێ گونجای</li>
-      <li data-t="privacy_right_li6"><strong data-t="privacy-policy_strong_10">پاشگەزبوون:</strong> پاشگەزبوون ژ پەیوەندیێن بازرگانی</li>
+      <li><strong>دەستگەهشتن:</strong> داخوازا کۆپییەکێ ژ زانیاریێن کەسی یێن تە بکە</li>
+      <li><strong>سڕینەڤە:</strong> داخوازا سڕینەڤەیا ئەکاونتێ و زانیاریێن تە بکە</li>
+      <li><strong>نەرازیبوون ژ ئاگاهداریان:</strong> ئاگاهداری چالاک نەکە ژ رێکخستنێن ئامیرێ تە</li>
+      <li><strong>داتایا سەر ئامیر:</strong> localStorage پاک بکە ژ رێیا رێکخستنێن وێبگەڕ/ئامیرێ</li>
+      <li><strong>راستکرن:</strong> ئیمەیلا ئەکاونتا تە نووکرن</li>
     </ul>
-    <p data-t="privacy_rights_contact">بۆ ب جهئینانا هەر مافەکی، تکایە پەیوەندیێ ب مە بکە ل tefsirkurd@gmail.com</p>
+    <p>بۆ ب جهئینانا هەر مافەکی، تکایە پەیوەندیێ ب مە بکە ل <a href="mailto:saman26d@gmail.com" style="color: var(--primary);">saman26d@gmail.com</a>. ئەم بەرسڤا هەمی داخوازان دەین د ماوێ 30 رۆژان دا.</p>
   </div>
 
+  <!-- Section 8 -->
   <div class="legal-section">
     <h2 data-t="privacy_section8_title"><i class="fas fa-clock"></i> پاراستنا زانیاریان</h2>
-    <p data-t="privacy_retention_intro">ئەم زانیاریێن کەسی یێن تە پارێزگاری دکەین هەتا:</p>
     <ul>
-      <li data-t="privacy_retention_li1">ئەکاونتا تە چالاک بیت و بکار بینێ</li>
-      <li data-t="privacy_retention_li2">پێتڤی بیت بۆ دابینکرنا خزمەتگوزاریێن مە</li>
-      <li data-t="privacy_retention_li3">پێتڤیێن یاسایی و رێکخستنان پێتڤی بکەن</li>
+      <li><strong>تۆکنێن ئاگاهداری:</strong> هەتا ئەپا هاتە سڕینەڤە یان مۆلەت هاتە ڤەگرتن</li>
+      <li><strong>ئەکاونتا بکارئینەری:</strong> هەتا ئەکاونت هاتە بسڕین، پاشی 30 رۆژ ژ سیستەمێ تەواوی دێ بهێتە سڕینەڤە</li>
+      <li><strong>لۆگێن تەکنیکی:</strong> 30 رۆژ، پاشی ئۆتۆماتیکی دێ بهێنە سڕین</li>
+      <li><strong>داتایا localStorage:</strong> هەتا تو پاک بکەی یان ئەپا هاتە سڕینەڤە</li>
     </ul>
-    <p data-t="privacy_deletion_note">ئەگەر ئەکاونتا تە بسڕی، زانیاریێن کەسی یێن تە د ناڤ ٣٠ رۆژان دا دێ هێنە سڕینەڤە، بێجگە ژ وان کو بۆ مەبەستێن یاسایی یان رێکخستنان پێتڤییە پارێزگاری لێ بهێتە کرن.</p>
   </div>
 
+  <!-- Section 9 -->
   <div class="legal-section">
-    <h2 data-t="privacy_section9_title"><i class="fas fa-child"></i> تەمەن و بالغبوون</h2>
-    <p data-t="privacy_children_note">خزمەتگوزاریێن مە بەردەستن بۆ هەمی تەمەنان بۆ خواندنا قورئانا پیرۆز. بەلێ بۆ دروستکرنا ئەکاونت و هەلگرتنا زانیاریان، ئەم پێتڤییە تەمەنێ بکارئینەری کێمترین ١٣ سال بیت (تەمەنێ بالغبوونێ د ئیسلامێدا). ئەم ب زانین زانیاریێن کەسی ژ زارۆکێن ژ وێ تەمەنێ کێمتر کوم ناکەین. ئەگەر زانیاریێن تە هەبن کو زارۆکەکێ ژ تەمەنێ ١٣ سالیێ کێمتر زانیاریێن کەسی ب مە دایە، تکایە پەیوەندیێ ب مە بکە بۆ هندێ کو رێکارێن گونجای بگرینەبەر.</p>
+    <h2 data-t="privacy_section9_title"><i class="fas fa-child"></i> زارۆک و تەمەن</h2>
+    <p data-t="privacy_children_note">خزمەتگوزاریێن مە — خواندنا قورئانا پیرۆز و لێکۆلینا تەفسیرێ — بەردەستن بۆ هەمی تەمەنان. بەلێ <strong>دروستکرنا ئەکاونت</strong> تەنها بۆ بکارئینەرێن 13 سال û زێدەتر (تەمەنێ بالغبوونێ د ئیسلامێدا). ئەم ب زانین زانیاریێن کەسی ژ زارۆکێن ژ وێ تەمەنێ کێمتر کوم ناکەین. ئەگەر ئاگاداریا تە هەبیت بۆ هندێ کو زارۆکەکێ زانیاریێن کەسی ب مە دایە، تکایە پەیوەندیێ ب مە بکە.</p>
   </div>
 
+  <!-- Section 10 -->
   <div class="legal-section">
     <h2 data-t="privacy_section10_title"><i class="fas fa-globe"></i> ڤەگوهێزتنا ناڤدەولەتی</h2>
-    <p data-t="privacy_international_note">زانیاریێن تە دشێت پرۆسێس بهێنە کرن و بهێنە هەلگرتن د سێرڤەران دا کو ل دەرڤەی وەلاتێ تە نە. ئەم پێنگاڤان دگرین بۆ دلنیابوون ژ وێ چەندێ کو زانیاریێن تە ب پاراستنەکا گونجای مامەلە دگەل بهێتە کرن د گونجاندنێ دگەل ڤێ سیاسەتا تایبەتمەندیێ.</p>
+    <p>زانیاریێن سێرڤەری (تۆکنێن ئاگاهداری، ئەکاونت، لۆگ) ل سێرڤەرێن <strong>Supabase ل AWS us-east-1 (ئەمریکا)</strong> هاتینە هەلگرتن. ئاگاهداریێن پۆش ل سێرڤەرێن Cloudflare (ناڤدنیایی) هاتینە پرۆسێسکرن.</p>
+    <p>ئەم پێنگاڤان دگرین بۆ دلنیابوون ژ وێ چەندێ کو زانیاریێن تە ب پاراستنەکا گونجای مامەلە دگەل بهێتە کرن د گونجاندنێ دگەل ڤێ سیاسەتا تایبەتمەندیێ.</p>
   </div>
 
+  <!-- Section 11 -->
   <div class="legal-section">
     <h2 data-t="privacy_section11_title"><i class="fas fa-exclamation-circle"></i> پێشێلکرنا ئاسایشێ</h2>
     <p data-t="privacy_breach_intro">د بارودۆخەکا نەخوش دا کو پێشێلکرنەکا ئاسایشێ روودەت کو کارتێکرنێ ل سەر زانیاریێن کەسی یێن تە هەبیت، ئەم:</p>
@@ -672,36 +504,39 @@
     </ul>
   </div>
 
+  <!-- Section 12 -->
   <div class="legal-section">
     <h2 data-t="privacy_section12_title"><i class="fas fa-edit"></i> گوهۆڕین د سیاسەتا تایبەتمەندیێ دا</h2>
-    <p data-t="privacy_changes_note1">ئەم دشێت ڤێ سیاسەتا تایبەتمەندیێ نوو بکەین دەما پێتڤی بیت. گوهۆڕینێن گرنگ دێ ب ئیمەیلی ئاگەهدارا تە کەین (ئەگەر ناڤنیشانێ ئیمەیلا تە ب مە دابیت) یان ب رێیا ئاگەهدارکرنەکا بەرچاڤ ل سەر مالپەڕا مە.</p>
+    <p data-t="privacy_changes_note1">ئەم دشێت ڤێ سیاسەتا تایبەتمەندیێ نوو بکەین دەما پێتڤی بیت. گوهۆڕینێن گرنگ دێ ئاگاهداریا تە کریت ب رێیا ئاگاهداریا ئامیرێ یان ب رێیا ئاگاهدارکرنەکا بەرچاڤ ل سەر مالپەڕا مە.</p>
     <p data-t="privacy_changes_note2">بەردەوامبوونا بکارئینانا خزمەتگوزاریێن مە پشتی گوهۆڕینێ واتە رازیبوونا تە یە دگەل سیاسەتا نووکرێ.</p>
   </div>
 
+  <!-- Section 13 -->
   <div class="legal-section">
     <h2 data-t="privacy_section13_title"><i class="fas fa-balance-scale"></i> مافێن تە یێن یاسایی</h2>
-    <p data-t="privacy_regional_intro">ب گۆرەی جهێ تە، دشێت مافێن تایبەتمەندیێ یێن زێدەتر هەبن ژێر یاسایێن خۆجهی یان هەرێمی:</p>
+    <p>ب گۆرەی جهێ تە، دشێت مافێن تایبەتمەندیێ یێن زێدەتر هەبن ژێر یاسایێن خۆجهی یان هەرێمی:</p>
     <ul>
-      <li data-t="privacy_regional_li1">GDPR (ئێکەتیا ئەوروپا)</li>
-      <li data-t="privacy_regional_li2">CCPA (کالیفۆرنیا، ئەمریکا)</li>
-      <li data-t="privacy_regional_li3">یاسایێن تایبەتمەندیێ یێن یاسایی یێن دی</li>
+      <li data-t="privacy_regional_li1">GDPR (ئێکەتیا ئەوروپا) — مافێ دەستگەهشتن، سڕینەڤە، ڤەگوهێزتن</li>
+      <li data-t="privacy_regional_li2">CCPA (کالیفۆرنیا، ئەمریکا) — مافێ زانینا بکارئینانا داتا</li>
+      <li>PIPL (چین) — مافێن تایبەتمەندیێ ل بکارئینەرێن Huawei AppGallery</li>
     </ul>
     <p data-t="privacy_regional_contact">بۆ جێبەجێکرنا مافێن تە یێن یاسایی، تکایە پەیوەندیێ ب مە بکە ب وردەکاریێن کار و شوێنێ تە.</p>
   </div>
 
+  <!-- Section 14 -->
   <div class="legal-section">
     <h2 data-t="privacy_section14_title"><i class="fas fa-phone"></i> پەیوەندیێ پێڤە بکە</h2>
-    <p data-t="privacy_contact_intro">ئەگەر پرسیار، نیگەرانی، یان داخوازیت هەیە دەربارەی ئەڤ سیاسەتا تایبەتمەندییێ یان چاوانیا بکارئینانا زانیاریێن تە، تکایە پەیوەندیێ ب مە بکە:</p>
+    <p data-t="privacy_contact_intro">ئەگەر پرسیار، نیگەرانی، یان داخوازیت هەیە دەربارەی ئەڤ سیاسەتا تایبەتمەندییێ، تکایە پەیوەندیێ ب مە بکە:</p>
     <ul>
-      <li data-t="privacy_contact_email"><strong data-t="privacy-policy_strong_11">ئیمەیل:</strong> tefsirkurd@gmail.com</li>
-      <li><strong data-t="privacy-policy_strong_12">مالپەڕ:</strong> <a href="https://tafsirkurd.com" style="color: var(--primary);">tafsirkurd.com</a></li>
+      <li><strong>ئیمەیل:</strong> <a href="mailto:saman26d@gmail.com" style="color: var(--primary);">saman26d@gmail.com</a></li>
+      <li><strong>مالپەڕ:</strong> <a href="https://tafsirkurd.com" style="color: var(--primary);">tafsirkurd.com</a></li>
     </ul>
-    <p data-t="privacy_response_time">ئەم هەول ددەین بەرسڤا هەمی داخوازان بدەین د ماوێ ٣٠ رۆژان دا.</p>
+    <p data-t="privacy_response_time">ئەم هەول ددەین بەرسڤا هەمی داخوازان بدەین د ماوێ 30 رۆژان دا.</p>
   </div>
 
   <div class="closing-message">
     <i class="fas fa-shield-alt"></i>
-    <p><strong data-t="privacy_closing">تایبەتمەندی و ئاسایشا تە ئەمانەتەکە ل دەف مە</strong><br>
+    <p><strong>تایبەتمەندی و ئاسایشا تە ئەمانەتەکە ل دەف مە</strong><br>
     ئەم بەردەوام دێ بین د پێشکێشکرنا خزمەتگوزاریا قورئانا پیرۆز ب شێوەیەکێ پاراستی و باوەرپێکری ب گۆرەی بنەمایێ ئەخلاقی یێ ئیسلامێ. سوپاس بۆ باوەرکرنا تە ب تەفسیر کورد.</p>
   </div>
 
@@ -710,24 +545,6 @@
     <span data-t="privacy_back">گەڕیان ڤە</span>
   </button>
 </div>
-
-<script>
-  // Set current year and last update date
-  document.addEventListener('DOMContentLoaded', function() {
-    const yearSpans = document.querySelectorAll('#year');
-    yearSpans.forEach(span => {
-      span.textContent = new Date().getFullYear();
-    });
-
-    // Set last update date to today
-    const lastUpdateSpan = document.getElementById('lastUpdate');
-    if (lastUpdateSpan) {
-      const today = new Date();
-      const options = { year: 'numeric', month: 'long', day: 'numeric' };
-      lastUpdateSpan.textContent = today.toLocaleDateString('ar', options);
-    }
-  });
-</script>
 
     <!-- Footer Placeholder -->
     <div id="footer-placeholder"></div>

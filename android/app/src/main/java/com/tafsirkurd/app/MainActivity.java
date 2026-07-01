@@ -10,6 +10,7 @@ import android.provider.Settings;
 import android.util.Log;
 import android.webkit.CookieManager;
 import android.webkit.PermissionRequest;
+import android.webkit.RenderProcessGoneDetail;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import androidx.work.ExistingPeriodicWorkPolicy;
@@ -17,15 +18,93 @@ import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 import com.getcapacitor.BridgeActivity;
 import com.getcapacitor.BridgeWebChromeClient;
+import com.getcapacitor.WebViewListener;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.FirebaseOptions;
 import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends BridgeActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        // Ensure Firebase is initialized before Capacitor activates push-notification plugin.
+        // google-services.json is gitignored; without it the google-services plugin is skipped
+        // and Firebase never auto-initializes, causing a FATAL crash on CapacitorPlugins thread.
+        // Stub options allow the SDK to boot; FCM token registration will fail silently in debug.
+        try {
+            if (FirebaseApp.getApps(this).isEmpty()) {
+                FirebaseOptions options = new FirebaseOptions.Builder()
+                    .setApplicationId("1:000000000000:android:0000000000000000000000")
+                    .setApiKey("debug-placeholder-key")
+                    .setProjectId("tafsirkurd-debug-placeholder")
+                    .build();
+                FirebaseApp.initializeApp(this, options);
+                Log.i("Firebase", "Stub Firebase init — push notifications disabled in debug build");
+            }
+        } catch (Exception e) {
+            Log.w("Firebase", "Firebase stub init failed: " + e.getMessage());
+        }
+
+        // Enable WebView remote debugging in debug builds only (chrome://inspect).
+        // Must be set BEFORE super.onCreate so the flag is active when Capacitor creates the WebView.
+        if (0 != (getApplicationInfo().flags & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE)) {
+            android.webkit.WebView.setWebContentsDebuggingEnabled(true);
+        }
+
         registerPlugin(AudioPermissionPlugin.class);
         registerPlugin(AthanAlarmPlugin.class);
         super.onCreate(savedInstanceState);
+
+        // ── WebView renderer death recovery ──────────────────────────────────
+        // When the renderer dies (OOM, GPU driver crash, OEM kill):
+        //   1. Log the event.
+        //   2. Save a recovery marker to SharedPreferences.
+        //   3. Call Activity.recreate() for a clean restart — fresh WebView + bridge.
+        //      LocalStorage is preserved across recreate(), so the app restores its last state.
+        //   4. Loop-guard: if two deaths occur within 10 s, do not recurse into recreate().
+        getBridge().addWebViewListener(new WebViewListener() {
+            @Override
+            public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
+                boolean crashed  = detail.didCrash();
+                int     priority = detail.rendererPriorityAtExit();
+                String  reason   = crashed ? "crash" : "oom";
+                Log.e("WebView", "Renderer died — " + reason
+                    + " priority=" + priority
+                    + " pkg=" + getPackageName());
+
+                SharedPreferences prefs =
+                    getSharedPreferences("CapacitorStorage", MODE_PRIVATE);
+
+                // Loop guard: two deaths within 10 s → do not recurse
+                long lastDiedAt = prefs.getLong("renderer_died_at", 0L);
+                long now        = System.currentTimeMillis();
+                if (now - lastDiedAt < 10_000L) {
+                    Log.e("WebView", "Renderer died twice in 10 s — skipping recreate");
+                    prefs.edit().remove("rendererRecovery").remove("renderer_died_at").apply();
+                    return true; // prevent crash, do not recurse
+                }
+
+                // Save recovery marker — app.js reads this on next startup via Preferences
+                prefs.edit()
+                    .putString("rendererRecovery", reason)
+                    .putLong("renderer_died_at", now)
+                    .apply();
+
+                // Restart the Activity cleanly on the UI thread
+                runOnUiThread(new Runnable() {
+                    @Override public void run() {
+                        try {
+                            recreate();
+                        } catch (Exception e) {
+                            Log.e("WebView", "recreate() failed: " + e.getMessage());
+                            finish(); // last resort
+                        }
+                    }
+                });
+
+                return true; // prevent Activity crash
+            }
+        });
 
         // Set WebView and window background to match the user's saved theme immediately
         // after the bridge initialises — eliminates the color flash between splash and app.
@@ -42,6 +121,28 @@ public class MainActivity extends BridgeActivity {
             }
             getBridge().getWebView().setBackgroundColor(themeColor);
             getWindow().getDecorView().setBackgroundColor(themeColor);
+            // Capacitor 8 Android runs in overlay mode (overlaysWebView=true by default) —
+            // the WebView extends behind the status bar. The native status bar must be
+            // transparent so the WebView CSS header is the only background visible there.
+            // A solid themeColor here would composite on top of the glass header and cause
+            // a tint mismatch between the status bar area and the visible header surface.
+            getWindow().setStatusBarColor(Color.TRANSPARENT);
+            // Android 10+ (API 29) defaults to enforcing status bar contrast by adding a
+            // semi-transparent scrim for icon readability. Disable it — our WebView header
+            // provides the background and handles icon contrast via StatusBar.setStyle().
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                getWindow().setStatusBarContrastEnforced(false);
+            }
+            // Status bar icon style: dark icons on light themes, light icons on dark themes
+            boolean isLightTheme = "light".equals(savedTheme) || "noor".equals(savedTheme);
+            android.view.View dv = getWindow().getDecorView();
+            int sysUi = dv.getSystemUiVisibility();
+            if (isLightTheme) {
+                sysUi |= android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+            } else {
+                sysUi &= ~android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+            }
+            dv.setSystemUiVisibility(sysUi);
         } catch (Exception e) {
             Log.w("ThemeInit", "Could not apply saved theme color: " + e.getMessage());
         }

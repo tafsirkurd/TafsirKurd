@@ -1240,7 +1240,7 @@
 
     // ===== Quick Settings Panel =====
     { key_id: "qs.screen_lock",   kurdish_text: "ڕووماندنی شاشە",         category: "settings", page: "android" },
-    { key_id: "qs.text_size",     kurdish_text: "قەبارەی نووسین",         category: "settings", page: "android" },
+    { key_id: "qs.text_size",     kurdish_text: "قەبارێ نڤیسینێ",         category: "settings", page: "android" },
     { key_id: "qs.line_spacing",  kurdish_text: "مەودای ڕیزەکان",         category: "settings", page: "android" },
     { key_id: "qs.actions",       kurdish_text: "چالاکییەکان",             category: "settings", page: "android" },
     { key_id: "qs.jump_to",       kurdish_text: "دەربازببە بۆ ئایەتێ.",          category: "settings", page: "android" },
@@ -1514,8 +1514,8 @@
     // Quick settings (mushaf)
     { key_id: "qs.mushaf_settings_title", kurdish_text: "ڕێکخستنا مصحف",       category: "settings", page: "android" },
     { key_id: "qs.quran_font_section",    kurdish_text: "خەتی قورئانی",          category: "settings", page: "android" },
-    { key_id: "qs.font_size_label",       kurdish_text: "قەبارەی نووسین",        category: "settings", page: "android" },
-    { key_id: "qs.line_spacing_label",    kurdish_text: "قەراغا ریزان",          category: "settings", page: "android" },
+    { key_id: "qs.font_size_label",       kurdish_text: "قەبارێ نڤیسینێ",        category: "settings", page: "android" },
+    { key_id: "qs.line_spacing_label",    kurdish_text: "فەراغا ریزان",          category: "settings", page: "android" },
 
     // Settings — font style
     { key_id: "settings.font_style",         kurdish_text: "ستایلی فونت",        category: "settings", page: "android" },

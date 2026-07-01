@@ -8,8 +8,9 @@ const path = require('path');
 const root = path.join(__dirname, '..');
 
 const jobs = [
-  { src: 'src/app/app.js',   out: 'src/app/app.min.js'   },
-  { src: 'src/i18n/i18n.js', out: 'src/i18n/i18n.min.js' },
+  { src: 'src/app/app-runtime.js', out: 'src/app/app-runtime.min.js' },
+  { src: 'src/app/app.js',         out: 'src/app/app.min.js'         },
+  { src: 'src/i18n/i18n.js',       out: 'src/i18n/i18n.min.js'      },
 ];
 
 jobs.forEach(({ src, out }) => {
@@ -23,7 +24,7 @@ jobs.forEach(({ src, out }) => {
     '--mangle',
     '--ecma', '2020',
     '--output', outPath,
-  ], { cwd: root, stdio: 'inherit', shell: false });
+  ], { cwd: root, stdio: 'inherit', shell: true });
 
   if (result.status !== 0) {
     console.error(`✗ Failed to minify ${src}`);

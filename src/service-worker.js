@@ -1,14 +1,15 @@
-const CACHE_NAME = 'tafsir-kurd-v1264';
+﻿const CACHE_NAME = 'tafsir-kurd-v1281';
 
 // All files required to run the app fully offline.
 // IMPORTANT: version strings here must match the ?v= params in index.html exactly.
-// Mismatches cause cache misses — browser fetches from network instead of SW cache.
+// Mismatches cause cache misses â€” browser fetches from network instead of SW cache.
 const PRECACHE = [
-  // Core app shell — index.html intentionally excluded: always served fresh from APK
+  // Core app shell â€” index.html intentionally excluded: always served fresh from APK
   '/utils/app-hardening.js?v=2',
-  '/app/app.min.js?v=1211',
+  '/app/app-runtime.js?v=1',
+  '/app/app.min.js?v=1221',
   '/utils/book-spotlight.js?v=12',
-  '/app/app-styles.min.css?v=8',
+  '/app/app-styles.min.css?v=18',
   // Prayer module
   '/prayer/prayer.cache.js?v=20260526',
   '/prayer/prayer.api.js?v=20260604',
@@ -16,10 +17,10 @@ const PRECACHE = [
   '/prayer/prayer.notifications.android.js?v=20260602b',
   '/prayer/prayer.ui.js?v=20260616d',
   // Gencine / books module (lazily loaded but pre-cached for offline)
-  '/dhikr/dhikr.js?v=20260620b',
+  '/dhikr/dhikr.js?v=20260622',
   '/dhikr/pdf-store.js?v=20260612a',
   '/dhikr/dua-data.js?v=20260326b',
-  '/dhikr/smart-dhikr.js?v=88',
+  '/dhikr/smart-dhikr.js?v=89',
   // i18n
   '/i18n/i18n.min.js?v=20260619a',
   '/i18n/kmr-bundled.js?v=20260620b',
@@ -28,7 +29,9 @@ const PRECACHE = [
   '/data/quran.json',
   '/data/kurdish_tafsir.json',
   '/data/mushaf-v4-pages.json?v=2',
-  // Prayer static annual JSON â€” all 20 cities Ã— 2 years bundled for offline
+  '/data/mushaf-v2-pages.json',
+  '/data/mushaf-v1-pages.json',
+  // Prayer static annual JSON Ã¢â‚¬â€ all 20 cities Ãƒâ€” 2 years bundled for offline
   // Covers fresh-install offline and 30-day offline month-boundary on web
   '/prayer-data/2026/Akre.json',
   '/prayer-data/2026/Bardarash.json',
@@ -102,6 +105,7 @@ const PRECACHE = [
   // Font manager
   '/app/quran-font-manager.js?v=20260506',
   // Images
+  '/assets/images/favicon-96x96.png',
   '/assets/images/logo.png',
   '/assets/images/TafsirKurd.png?v=3',
   '/assets/images/TafsirKurd-green.png',
@@ -119,9 +123,11 @@ const SWR_PATTERNS = [
   '/config'
 ];
 
-// â”€â”€ Install: pre-cache everything needed to run offline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Install: pre-cache everything needed to run offline Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 self.addEventListener('install', event => {
-  self.skipWaiting();
+  // No skipWaiting() here â€” new SW waits until no old clients are running.
+  // The page sends SKIP_WAITING when the user confirms the update banner.
+  // On first install (no old SW), the browser activates immediately without waiting.
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
       return Promise.all(
@@ -133,7 +139,7 @@ self.addEventListener('install', event => {
   );
 });
 
-// â”€â”€ Activate: clean up old caches immediately â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Activate: clean up old caches immediately Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
@@ -142,7 +148,7 @@ self.addEventListener('activate', event => {
   );
 });
 
-// â”€â”€ Fetch: smart caching strategies â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Fetch: smart caching strategies Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 self.addEventListener('fetch', event => {
   const req = event.request;
   const url = req.url;
@@ -156,10 +162,10 @@ self.addEventListener('fetch', event => {
   const reqUrl = new URL(url);
   const isOwnOrigin = reqUrl.origin === self.location.origin;
 
-  // â”€â”€ Remote QCF mushaf fonts: cache-first (immutable per page number) â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Remote mushaf fonts (V1/V2/QCF): cache-first (immutable per page number) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   // iOS strips local .bin files; iOS/web both fall back to this Cloudflare Worker.
-  // Once cached the font loads instantly â€” Mushaf feels native-fast offline.
-  if (url.includes('qpc-v4-fonts.tefsirkurd.workers.dev')) {
+  // Once cached the font loads instantly Ã¢â‚¬â€ Mushaf feels native-fast offline.
+  if (url.includes('static-cdn.tarteel.ai/qul/fonts')) {
     event.respondWith(
       caches.match(req).then(cached => {
         if (cached) return cached;
@@ -174,12 +180,13 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // â”€â”€ External domains: pass through (Supabase, YouTube, CDNs, analytics) â”€â”€
+
+  // Ã¢â€â‚¬Ã¢â€â‚¬ External domains: pass through (Supabase, YouTube, CDNs, analytics) Ã¢â€â‚¬Ã¢â€â‚¬
   if (!isOwnOrigin) return;
 
-  // â”€â”€ Prayer static JSON: stale-while-revalidate â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Prayer static JSON: stale-while-revalidate Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   // Serve cached copy instantly when available so Prayer tab works offline.
-  // Always revalidate in background â€” corrections deployed via fetch-prayer-year.js
+  // Always revalidate in background Ã¢â‚¬â€ corrections deployed via fetch-prayer-year.js
   // propagate on the very next online visit (same session), not only after a cache
   // expiry. First visit (online) populates the cache; subsequent offline visits use it.
   if (reqUrl.pathname.startsWith('/prayer-data/')) {
@@ -197,7 +204,7 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // â”€â”€ Same-origin API calls: stale-while-revalidate â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Same-origin API calls: stale-while-revalidate Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   // Returns cached response instantly, updates cache in background
   const isSWR = SWR_PATTERNS.some(p => reqUrl.pathname.startsWith(p));
   if (isSWR) {
@@ -218,24 +225,24 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // â”€â”€ Large proxied content: network passthrough â€” never cache â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Large proxied content: network passthrough Ã¢â‚¬â€ never cache Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   // /pdf-proxy streams multi-MB book PDFs. Caching them here would duplicate
   // pdf-store.js's IndexedDB copy and bloat origin storage until the browser
   // quota-evicts everything (including IDB-cached quran/tafsir data).
   if (reqUrl.pathname.startsWith('/pdf-proxy')) return;
 
-  // â”€â”€ HTML pages: always fetch fresh â€” never serve stale cached HTML â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ HTML pages: always fetch fresh Ã¢â‚¬â€ never serve stale cached HTML Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   // index.html references versioned JS/CSS; serving a cached old index.html would
   // load old JS for 0.5s until the new SW activates. Since APK assets are local
   // (no real network latency), fetch() is instant and always returns the current build.
   if (req.mode === 'navigate' || req.destination === 'document' || url.endsWith('.html')) {
     event.respondWith(
-      fetch(req).catch(() => caches.match(req))
+      fetch(req).catch(() => caches.match(req).then(r => r || new Response('Offline', { status: 503 })))
     );
     return;
   }
 
-  // â”€â”€ Everything else (JS, CSS, fonts, images): cache first â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Everything else (JS, CSS, fonts, images): cache first Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   event.respondWith(
     caches.match(req).then(cached => {
       if (cached) return cached;
@@ -249,7 +256,7 @@ self.addEventListener('fetch', event => {
   );
 });
 
-// â”€â”€ Background push notifications â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Background push notifications Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 self.addEventListener('push', event => {
   let data = {};
   try { data = event.data ? event.data.json() : {}; } catch(e) {}
@@ -284,7 +291,7 @@ self.addEventListener('notificationclick', event => {
   );
 });
 
-// â”€â”€ Message: force update â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Message: force update Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 self.addEventListener('message', event => {
   if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });

@@ -3,6 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <!-- NATIVE FAST-PATH: redirect to app shell before any website scripts or preconnects.
+       window.Capacitor is injected by the iOS/Android bridge before any JS executes,
+       so this fires synchronously as the very first thing on native platforms.
+       Prevents the website page (7000+ lines, remote SDKs) from loading on device. -->
+  <script>try{if(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform()&&window.location.pathname.indexOf('/app/')===-1){window.location.replace('/app/index.html');}}catch(e){}</script>
   <!-- Silence Instagram IAB false positive: its WebView references this before our page defines it -->
   <script>window._AutofillCallbackHandler = window._AutofillCallbackHandler || {};</script>
   <!-- Theme loader inline to prevent flash - no network request -->
@@ -26,8 +31,8 @@
   <link rel="preconnect" href="https://gijupzejtbpifjzwadee.supabase.co">
   <script src="/utils/translations.js?v=20260601" defer></script>
   <script src="/utils/scroll-position.js" defer></script>
-  <meta name="description" content="TafsirKurd (تەفسیر کورد) - پلاتفۆرمەکا کوردی بۆ خویندن و تەفسیرا قورئانا پیرۆز ب زمانی کوردی. Kurdish Quran Tafsir platform with translation and Islamic video content.">
-  <meta name="keywords" content="TafsirKurd, tafsirkurd, Tafsir Kurd, تەفسیر کورد, تەفسیرا قورئانا پیرۆز, تەفسیرا کوردی, تەفسیر بادینی, قورئان ب کوردی, Kurdish Quran, Quran Kurdish translation, tafsir kurdish">
+  <meta name="description" content="TafsirKurd — Tefsir Kurd (تەفسیر کورد · تفسیرکورد) — پلاتفۆرمەکا کوردی بۆ خویندن و تەفسیرا قورئانا پیرۆز ب زمانی کوردی. Kurdish Quran Tafsir platform with translation and Islamic content.">
+  <meta name="keywords" content="TafsirKurd, Tafsir Kurd, Tefsirkurd, Tefsir Kurd, tafsirkurd, tafsir kurd, tefsirkurd, tefsir kurd, tafseer kurd, تەفسیر کورد, تەفسیرکورد, تفسیرکورد, تەفسیرا قورئانا پیرۆز, تەفسیرا کوردی, تەفسیر بادینی, قورئان ب کوردی, Kurdish Quran, Quran Kurdish, Kurdish Tafsir, quran kurdish translation, tafsir kurdish">
 
   <!-- Google Search Console Verification -->
   <meta name="google-site-verification" content="z1WTlO70-JtDrNqUyLVWsmCFnqSIls0gLgt286YWg8g" />
@@ -41,8 +46,8 @@
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://tafsirkurd.com/">
-  <meta property="og:title" content="TafsirKurd | تەفسیر کورد">
-  <meta property="og:description" content="TafsirKurd (تەفسیر کورد) - پلاتفۆرمەکا کوردی بۆ خویندن و تەفسیرا قورئانا پیرۆز ب زمانی کوردی. Kurdish Quran Tafsir platform.">
+  <meta property="og:title" content="TafsirKurd | Tefsir Kurd | تەفسیر کورد">
+  <meta property="og:description" content="TafsirKurd — Tefsir Kurd (تەفسیر کورد) — پلاتفۆرمەکا کوردی بۆ خویندن و تەفسیرا قورئانا پیرۆز ب زمانی کوردی. Kurdish Quran Tafsir platform.">
   <meta property="og:image" content="https://tafsirkurd.com/assets/images/homepage-social.jpg">
   <meta property="og:image:type" content="image/jpeg">
   <meta property="og:image:alt" content="Tafsir Kurd - Kurdish Quran Tafsir Platform">
@@ -56,8 +61,8 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:site" content="@tafsirkurd">
   <meta name="twitter:creator" content="@tafsirkurd">
-  <meta name="twitter:title" content="TafsirKurd | تەفسیر کورد">
-  <meta name="twitter:description" content="TafsirKurd (تەفسیر کورد) - پلاتفۆرمەکا کوردی بۆ خویندن و تەفسیرا قورئانا پیرۆز ب زمانی کوردی.">
+  <meta name="twitter:title" content="TafsirKurd | Tefsir Kurd | تەفسیر کورد">
+  <meta name="twitter:description" content="TafsirKurd — Tefsir Kurd (تەفسیر کورد) — پلاتفۆرمەکا کوردی بۆ خویندن و تەفسیرا قورئانا پیرۆز ب زمانی کوردی.">
   <meta name="twitter:image" content="https://tafsirkurd.com/assets/images/homepage-social.jpg">
   <meta name="twitter:image:src" content="https://tafsirkurd.com/assets/images/homepage-social.jpg">
   <meta name="twitter:image:alt" content="Tafsir Kurd Platform">
@@ -80,7 +85,7 @@
     "@context": "https://schema.org",
     "@type": "WebSite",
     "name": "TafsirKurd - تەفسیر کورد",
-    "alternateName": ["TafsirKurd", "Tafsir Kurd", "tafsirkurd", "تەفسیر کورد", "Kurdish Quran Tafsir"],
+    "alternateName": ["TafsirKurd", "Tafsir Kurd", "tafsirkurd", "tafsir kurd", "Tefsirkurd", "Tefsir Kurd", "tefsirkurd", "tefsir kurd", "Tafseer Kurd", "تەفسیر کورد", "تەفسیرکورد", "تفسیرکورد", "Kurdish Quran Tafsir", "Kurdish Tafsir"],
     "url": "https://tafsirkurd.com",
     "description": "Online platform for reading the Holy Quran with authentic Kurdish (Badini) Tafsir and translation. قورئانا پیرۆز ب تەفسیرا کوردی",
     "inLanguage": ["ku", "ar", "en"],
@@ -5898,7 +5903,7 @@ class FloatingActionButtons {
         this.setupEventListeners();
         this.setupScrollVisibility();
         // Mark active theme dot
-        SiteTheme.set(SiteTheme.current());
+        if (window.SiteTheme) SiteTheme.set(SiteTheme.current());
     }
 
     setupEventListeners() {
@@ -6980,7 +6985,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Global theme picker — used by FAB dot onclick attributes
     window.pickTheme = function(id) {
-        SiteTheme.set(id);
+        if (window.SiteTheme) SiteTheme.set(id);
         var fg = document.getElementById('fabGroup');
         if (fg) fg.classList.remove('active');
     };

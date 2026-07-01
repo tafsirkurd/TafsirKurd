@@ -1,3 +1,6 @@
+// DEPRECATED: This Cloudflare function used the old flat-column sync schema.
+// The live app now syncs via Supabase user_data.app_data (JSONB blob) in app.js.
+// This file is kept only as a historical reference and is no longer called.
 // Cloudflare Pages Function - User Reading Data Sync
 // Saves and loads Quran reading progress to/from database
 

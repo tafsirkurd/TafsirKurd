@@ -10,6 +10,15 @@ const CORS = {
     'Content-Type': 'application/json',
 };
 
+// Human-readable labels for GitHub API error codes.
+const GH_STATUS_LABELS = {
+    401: 'GitHub token is invalid or has expired. Regenerate the GITHUB_TOKEN secret in Cloudflare Pages.',
+    403: 'GitHub token lacks permission to read this repository. Verify the fine-grained PAT has Contents: Read.',
+    404: 'Repository not found. Confirm the repo name and that the token owner has access.',
+    429: 'GitHub API rate limit exceeded. Wait a minute and retry.',
+    422: 'GitHub API rejected the request parameters.',
+};
+
 export async function onRequest(context) {
     const { request, env } = context;
     if (request.method === 'OPTIONS') return new Response(null, { status: 200, headers: CORS });
@@ -34,14 +43,15 @@ export async function onRequest(context) {
 
     if (!session?.admin_users?.is_active) return json({ error: 'Unauthorized' }, 403);
 
-    if (!env.GITHUB_TOKEN) return json({ error: 'GITHUB_TOKEN not configured' }, 500);
+    if (!env.GITHUB_TOKEN) return json({ error: 'GITHUB_TOKEN not configured in Cloudflare Pages environment secrets.' }, 500);
 
     const perPage = Math.min(parseInt(body.per_page) || 20, 50);
     const ref     = 'main';
     const ghUrl   = `https://api.github.com/repos/tafsirkurd/TafsirKurd/commits?per_page=${perPage}&sha=${ref}`;
 
+    let ghRes;
     try {
-        const ghRes = await fetch(ghUrl, {
+        ghRes = await fetch(ghUrl, {
             headers: {
                 'Accept':               'application/vnd.github.v3+json',
                 'Authorization':        `Bearer ${env.GITHUB_TOKEN}`,
@@ -49,17 +59,25 @@ export async function onRequest(context) {
                 'X-GitHub-Api-Version': '2022-11-28',
             }
         });
-
-        if (!ghRes.ok) {
-            const err = await ghRes.text().catch(() => '');
-            return json({ error: 'GitHub API error', status: ghRes.status, detail: err }, 502);
-        }
-
-        const commits = await ghRes.json();
-        return json({ success: true, commits });
     } catch (e) {
-        return json({ error: 'Fetch failed', detail: String(e) }, 502);
+        return json({ error: 'Network error reaching GitHub API.', detail: String(e) }, 502);
     }
+
+    if (!ghRes.ok) {
+        const ghBody = await ghRes.text().catch(() => '');
+        let ghMsg;
+        try { ghMsg = JSON.parse(ghBody).message || ghBody; } catch { ghMsg = ghBody; }
+
+        const label = GH_STATUS_LABELS[ghRes.status] || `GitHub API returned ${ghRes.status}.`;
+        return json({
+            error: label,
+            github_status: ghRes.status,
+            github_message: ghMsg.slice(0, 300),
+        }, ghRes.status === 401 || ghRes.status === 403 ? ghRes.status : 502);
+    }
+
+    const commits = await ghRes.json();
+    return json({ success: true, commits });
 }
 
 function json(data, status = 200) {

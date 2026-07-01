@@ -330,8 +330,14 @@
                 headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+adminToken },
                 body: JSON.stringify({ per_page: 50 })
             });
-            if (!res.ok) throw new Error('API returned '+res.status);
-            var data = await res.json();
+            // Always parse JSON — error responses now include actionable messages.
+            var data;
+            try { data = await res.json(); } catch { data = {}; }
+            if (!res.ok) {
+                var msg = data.error || ('API returned ' + res.status);
+                if (data.github_message) msg += ' — ' + data.github_message;
+                throw new Error(msg);
+            }
             if (!data.success) throw new Error(data.error||'Unknown error');
             _allCommits = data.commits || [];
             if (tsEl) tsEl.textContent = 'Updated '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
@@ -372,7 +378,7 @@
 
             rhFilter(_currentFilter);
         } catch(e) {
-            bodyEl.innerHTML = '<div class="rh-empty" style="color:#ef4444">Could not load: '+rhEsc(e.message)+'</div>';
+            bodyEl.innerHTML = '<div class="rh-empty" style="color:#ef4444;line-height:1.6"><strong>Could not load commits</strong><br><span style="font-size:12px;opacity:.85">'+rhEsc(e.message)+'</span></div>';
         }
         if (btn) btn.disabled = false;
     }

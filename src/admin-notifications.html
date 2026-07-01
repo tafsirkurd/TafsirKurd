@@ -145,8 +145,9 @@
         .nc-date-icon { width:13px; height:13px; opacity:.5; }
         .nc-target { font-size:11px; color:var(--n-text3); }
         .nc-delivery { margin-left:auto; font-family:var(--n-mono); font-size:12px; }
-        .nc-delivery--ok  { color:var(--n-green); }
-        .nc-delivery--bad { color:var(--n-red); }
+        .nc-delivery--ok         { color:var(--n-green); }
+        .nc-delivery--bad        { color:var(--n-red); }
+        .nc-delivery--impossible { color:#fff; background:#e53e3e; border-radius:4px; padding:1px 6px; font-weight:600; cursor:help; }
         .nc-loading { text-align:center; padding:48px 20px; color:var(--n-text3); font-size:14px; }
         .nc-empty  { text-align:center; padding:60px 20px; color:var(--n-text3); font-size:14px; }
 
@@ -296,6 +297,24 @@
         .btn-danger-sm { color:var(--n-red)!important; }
         #save-btn { display:flex; align-items:center; justify-content:center; }
         .status-badge { display:inline-block; padding:2px 10px; border-radius:12px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; }
+
+        /* ─── Delivery log UI ──────────────────────────────────── */
+        .dl-platform-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
+        .dl-platform-card { background:var(--n-surface); border:1px solid var(--n-border); border-radius:10px; padding:10px 12px; }
+        .dl-platform-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--n-text2); margin-bottom:6px; }
+        .dl-platform-row { display:flex; justify-content:space-between; font-size:12px; margin-top:3px; }
+        .dl-sent  { color:var(--n-green); font-weight:700; }
+        .dl-fail  { color:var(--n-red); font-weight:700; }
+        .dl-retry-banner { background:rgba(244,63,94,.08); border:1px solid rgba(244,63,94,.2); border-radius:10px; padding:10px 14px; margin-top:10px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
+        .dl-retry-banner-text { font-size:13px; color:var(--n-red); font-weight:600; }
+        .dl-retry-banner-sub  { font-size:11px; color:var(--n-text2); margin-top:2px; }
+        .btn-retry { background:var(--n-red); color:#fff; border:none; border-radius:8px; padding:7px 14px; font-size:12px; font-weight:700; cursor:pointer; font-family:var(--n-font); white-space:nowrap; }
+        .btn-retry:hover { background:#e11d48; }
+        /* RETRY confirmation modal */
+        .retry-modal-confirm { background:var(--n-surface2); border:1px solid var(--n-border2); border-radius:10px; padding:14px; margin:12px 0; font-size:13px; color:var(--n-text2); }
+        .retry-modal-confirm b { color:var(--n-text); }
+        .retry-confirm-input { width:100%; box-sizing:border-box; margin-top:10px; padding:9px 12px; border-radius:8px; border:1px solid var(--n-border2); background:var(--n-surface); color:var(--n-text); font-size:14px; font-weight:700; letter-spacing:.08em; font-family:var(--n-mono); }
+        .retry-confirm-input:focus { outline:none; border-color:var(--n-red); }
         .status-template  { background:var(--n-purple-bg); color:var(--n-purple); }
         .status-draft     { background:rgba(126,127,154,.12); color:var(--n-text2); }
         .status-scheduled { background:var(--n-amber-bg); color:var(--n-amber); }
@@ -1008,6 +1027,13 @@
                             <label class="form-label">Internal Notes <span style="font-size:10px;color:var(--n-text3);font-weight:400;text-transform:none;letter-spacing:0">(not sent to users)</span></label>
                             <textarea id="f-notes" class="form-input" rows="2" placeholder="Campaign notes, target audience, goals…"></textarea>
                         </div>
+                        <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:12px 14px;background:var(--n-surface2);border:1px solid var(--n-border);border-radius:10px;transition:border-color .15s" onmouseenter="this.style.borderColor='var(--n-green)'" onmouseleave="this.style.borderColor='var(--n-border)'">
+                            <input type="checkbox" id="f-show-in-app" style="width:16px;height:16px;accent-color:var(--n-green);cursor:pointer;flex-shrink:0">
+                            <div>
+                                <div style="font-size:13px;font-weight:600;color:var(--n-text)">🔔 Show in App Inbox</div>
+                                <div style="font-size:11px;color:var(--n-text2);margin-top:2px">Displays this notification inside the app's bell inbox. Off = push-only (not visible in inbox).</div>
+                            </div>
+                        </label>
                         <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:12px 14px;background:var(--n-surface2);border:1px solid var(--n-border);border-radius:10px;transition:border-color .15s" onmouseenter="this.style.borderColor='var(--n-purple)'" onmouseleave="this.style.borderColor='var(--n-border)'">
                             <input type="checkbox" id="f-is-template" style="width:16px;height:16px;accent-color:var(--n-purple);cursor:pointer;flex-shrink:0">
                             <div>
@@ -1083,12 +1109,63 @@
                         <div class="progress-bar-fill" id="detail-progress" style="width:0%"></div>
                     </div>
                     <div id="detail-rate" style="font-size:12px;color:var(--text-tertiary);text-align:right"></div>
+
+                    <!-- Per-platform breakdown (loaded async from delivery log) -->
+                    <div id="detail-delivery-log" style="display:none;margin-top:4px">
+                        <div class="dl-platform-grid">
+                            <div class="dl-platform-card">
+                                <div class="dl-platform-label">Android</div>
+                                <div class="dl-platform-row"><span>Sent</span><span class="dl-sent" id="dl-android-sent">—</span></div>
+                                <div class="dl-platform-row"><span>Failed</span><span class="dl-fail" id="dl-android-failed">—</span></div>
+                            </div>
+                            <div class="dl-platform-card">
+                                <div class="dl-platform-label">iOS</div>
+                                <div class="dl-platform-row"><span>Sent</span><span class="dl-sent" id="dl-ios-sent">—</span></div>
+                                <div class="dl-platform-row"><span>Failed</span><span class="dl-fail" id="dl-ios-failed">—</span></div>
+                            </div>
+                        </div>
+                        <div id="dl-retry-banner" style="display:none" class="dl-retry-banner">
+                            <div>
+                                <div class="dl-retry-banner-text"><span id="dl-retry-count">0</span> devices didn't receive it</div>
+                                <div class="dl-retry-banner-sub">Retry sends only to those devices — not to users who already received it</div>
+                            </div>
+                            <button class="btn-retry" id="dl-retry-btn">Retry Failed</button>
+                        </div>
+                    </div>
+                    <div id="detail-delivery-log-loading" style="display:none;font-size:12px;color:var(--n-text3);margin-top:8px;text-align:center">Loading delivery details…</div>
                 </div>
 
                 <div id="detail-error" style="display:none;background:var(--bg-active);border:1px solid var(--border-medium);border-radius:6px;padding:8px 12px;font-size:13px;color:#e53e3e;margin-top:8px"></div>
                 <div id="detail-notes" style="display:none;background:var(--bg-active);border-radius:6px;padding:8px 12px;font-size:13px;color:var(--text-secondary);margin-top:8px"></div>
             </div>
             <div class="modal-footer" id="detail-footer"></div>
+        </div>
+    </div>
+
+    <!-- ── Retry Confirmation Modal ──────────────────────────── -->
+    <div id="retry-modal" class="modal" onclick="if(event.target===this)closeRetryModal()">
+        <div class="modal-content" style="max-width:420px">
+            <div class="modal-header">
+                <h2 class="modal-title" style="color:var(--n-red)">Retry Failed Delivery</h2>
+                <button class="modal-close" onclick="closeRetryModal()"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="retry-modal-confirm">
+                    <div style="margin-bottom:8px;font-size:14px;font-weight:600;color:var(--n-text)">Delivery Summary</div>
+                    <div style="display:flex;flex-direction:column;gap:5px">
+                        <div style="display:flex;justify-content:space-between"><span>Already received</span><b id="rm-sent" style="color:var(--n-green)">—</b></div>
+                        <div style="display:flex;justify-content:space-between"><span>Will retry</span><b id="rm-retry" style="color:var(--n-amber)">—</b></div>
+                        <div style="display:flex;justify-content:space-between"><span>Stale removed</span><b id="rm-stale" style="color:var(--n-text3)">—</b></div>
+                    </div>
+                </div>
+                <p style="font-size:13px;color:var(--n-text2);margin:10px 0">Type <b style="color:var(--n-text);font-family:var(--n-mono)">RETRY</b> to confirm. Only the <span id="rm-retry2" style="color:var(--n-amber);font-weight:700">—</span> devices that didn't receive it will be contacted.</p>
+                <input class="retry-confirm-input" id="retry-confirm-input" type="text" placeholder="Type RETRY to confirm" oninput="checkRetryInput()">
+                <div id="retry-result" style="display:none;margin-top:10px;font-size:13px;padding:8px 12px;border-radius:8px"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeRetryModal()">Cancel</button>
+                <button class="btn" id="retry-confirm-btn" disabled onclick="executeRetry()" style="background:var(--n-red);color:#fff;border-color:var(--n-red);opacity:.5;cursor:not-allowed">Retry Failed</button>
+            </div>
         </div>
     </div>
 
@@ -2101,9 +2178,12 @@
                 var _stale = n.stale_removed || 0;
                 var _live = (n.tokens_targeted || 0) - _stale;
                 var _rate = _live > 0 ? Math.round(((n.tokens_sent || 0) / _live) * 100) : 100;
+                // Impossible state: SENT but 0 tokens delivered with non-zero audience
+                var _isImpossible = (n.tokens_sent || 0) === 0 && (n.tokens_targeted || 0) > 0;
                 var delivEl = document.createElement('div');
-                delivEl.className = 'nc-delivery ' + (_rate >= 80 ? 'nc-delivery--ok' : 'nc-delivery--bad');
+                delivEl.className = 'nc-delivery ' + (_isImpossible ? 'nc-delivery--impossible' : _rate >= 80 ? 'nc-delivery--ok' : 'nc-delivery--bad');
                 delivEl.textContent = (n.tokens_sent || 0) + ' / ' + (n.tokens_targeted || 0) + ' (' + _rate + '%)';
+                if (_isImpossible) delivEl.title = 'Impossible state: notification marked SENT but 0 tokens were delivered. Check error log.';
                 foot.appendChild(delivEl);
             }
 
@@ -2352,6 +2432,7 @@
             }
             schedInitPicker(n.scheduled_at || null);
             document.getElementById('f-is-template').checked = !!n.is_template;
+            document.getElementById('f-show-in-app').checked = !!n.show_in_app;
             onDeepLinkChange();
             updateTokenPreview();
             updatePreview();
@@ -2384,6 +2465,7 @@
                 if (r) chip.classList.toggle('active', r.checked);
             });
             document.getElementById('f-is-template').checked = false;
+            document.getElementById('f-show-in-app').checked = false;
             document.getElementById('title-count').textContent = '0/100';
             document.getElementById('body-count').textContent = '0/300';
             document.getElementById('modal-error').style.display = 'none';
@@ -2593,7 +2675,8 @@
                 recurrence: recurrence,
                 recurrence_day: recurrenceDay,
                 notes: document.getElementById('f-notes').value.trim(),
-                is_template: document.getElementById('f-is-template').checked
+                is_template: document.getElementById('f-is-template').checked,
+                show_in_app: document.getElementById('f-show-in-app').checked
             };
         }
 
@@ -2823,7 +2906,11 @@
             try {
                 var result = await notifAPI('send', { id: id });
                 loadPage();
-                showToast('Sent to ' + result.sent + ' of ' + result.total + ' devices');
+                if (result.started) {
+                    showToast('Sending started — check delivery log for progress');
+                } else {
+                    showToast('Sent to ' + result.sent + ' of ' + result.total + ' devices');
+                }
             } catch(e) { showToast('Send failed: ' + e.message, true); }
         }
 
@@ -2912,8 +2999,14 @@
                 }
                 document.getElementById('detail-progress').style.width = rate + '%';
                 document.getElementById('detail-rate').textContent = rate + '% delivery rate';
+                // Load per-platform breakdown from delivery log
+                document.getElementById('detail-delivery-log').style.display = 'none';
+                document.getElementById('detail-delivery-log-loading').style.display = 'block';
+                loadDeliveryStats(n.id);
             } else {
                 statsSection.style.display = 'none';
+                document.getElementById('detail-delivery-log').style.display = 'none';
+                document.getElementById('detail-delivery-log-loading').style.display = 'none';
             }
 
             var errEl = document.getElementById('detail-error');
@@ -2948,6 +3041,11 @@
                 if (n.status === 'sent') {
                     (function(_id) {
                         footer.appendChild(makeBtn('Edit (Copy)', '', function() { closeDetailModal(); duplicateNotif(_id); }));
+                        // Retry Failed button — shown only after delivery stats confirm there are failures
+                        var retryBtn = makeBtn('Retry Failed', 'btn-retry', function() { closeDetailModal(); openRetryModal(_id); });
+                        retryBtn.id = 'detail-footer-retry-btn';
+                        retryBtn.style.display = 'none';
+                        footer.appendChild(retryBtn);
                     })(n.id);
                 }
             }
@@ -2958,6 +3056,112 @@
 
         function closeDetailModal() {
             document.getElementById('detail-modal').classList.remove('active');
+        }
+
+        // ── Delivery stats (loaded async when detail modal opens for a sent notif) ──
+        async function loadDeliveryStats(notifId) {
+            try {
+                var s = await notifAPI('delivery_stats', { notif_id: notifId });
+                document.getElementById('detail-delivery-log-loading').style.display = 'none';
+                if (!s.has_log) return; // notification predates delivery logging
+                document.getElementById('dl-android-sent').textContent   = s.android_sent;
+                document.getElementById('dl-android-failed').textContent = s.android_failed;
+                document.getElementById('dl-ios-sent').textContent       = s.ios_sent;
+                document.getElementById('dl-ios-failed').textContent     = s.ios_failed;
+                document.getElementById('detail-delivery-log').style.display = 'block';
+                // Update main stats with more accurate log-based numbers
+                document.getElementById('detail-delivered').textContent = s.sent.toLocaleString();
+                document.getElementById('detail-stale').textContent = s.stale.toLocaleString();
+                var liveTargeted = s.total - s.stale;
+                var logRate = liveTargeted > 0 ? Math.round(s.sent / liveTargeted * 100) : 0;
+                document.getElementById('detail-progress').style.width = logRate + '%';
+                document.getElementById('detail-rate').textContent = logRate + '% delivery rate (from delivery log)';
+                if (s.failed > 0) {
+                    document.getElementById('detail-failed').textContent = s.failed;
+                    document.getElementById('detail-failed-wrap').style.display = '';
+                }
+                // Show retry banner + footer retry button if there are retryable tokens
+                if (s.retry_count > 0) {
+                    document.getElementById('dl-retry-count').textContent = s.retry_count;
+                    document.getElementById('dl-retry-banner').style.display = 'flex';
+                    document.getElementById('dl-retry-btn').onclick = function() { closeDetailModal(); openRetryModal(notifId); };
+                    var footerRetry = document.getElementById('detail-footer-retry-btn');
+                    if (footerRetry) footerRetry.style.display = '';
+                }
+            } catch(e) {
+                document.getElementById('detail-delivery-log-loading').style.display = 'none';
+            }
+        }
+
+        // ── Retry modal ───────────────────────────────────────────
+        var _retryNotifId = null, _retrySummary = null;
+
+        async function openRetryModal(notifId) {
+            _retryNotifId = notifId;
+            _retrySummary = null;
+            document.getElementById('rm-sent').textContent = '…';
+            document.getElementById('rm-retry').textContent = '…';
+            document.getElementById('rm-stale').textContent = '…';
+            document.getElementById('rm-retry2').textContent = '…';
+            document.getElementById('retry-confirm-input').value = '';
+            document.getElementById('retry-result').style.display = 'none';
+            var btn = document.getElementById('retry-confirm-btn');
+            btn.disabled = true; btn.style.opacity = '.5'; btn.style.cursor = 'not-allowed';
+            document.getElementById('retry-modal').classList.add('active');
+            lucide.createIcons();
+            try {
+                var s = await notifAPI('retry_failed', { notif_id: notifId });
+                _retrySummary = s.summary;
+                document.getElementById('rm-sent').textContent  = s.summary.sent;
+                document.getElementById('rm-retry').textContent = s.summary.retry_count;
+                document.getElementById('rm-stale').textContent = s.summary.stale;
+                document.getElementById('rm-retry2').textContent = s.summary.retry_count;
+            } catch(e) {
+                document.getElementById('rm-sent').textContent = 'Error: ' + e.message;
+            }
+        }
+
+        function closeRetryModal() {
+            document.getElementById('retry-modal').classList.remove('active');
+            _retryNotifId = null;
+        }
+
+        function checkRetryInput() {
+            var val = document.getElementById('retry-confirm-input').value.trim().toUpperCase();
+            var btn = document.getElementById('retry-confirm-btn');
+            var ok = val === 'RETRY' && _retrySummary && _retrySummary.retry_count > 0;
+            btn.disabled = !ok;
+            btn.style.opacity = ok ? '1' : '.5';
+            btn.style.cursor  = ok ? 'pointer' : 'not-allowed';
+        }
+
+        async function executeRetry() {
+            if (!_retryNotifId) return;
+            var btn = document.getElementById('retry-confirm-btn');
+            btn.disabled = true; btn.textContent = 'Retrying…';
+            var resultEl = document.getElementById('retry-result');
+            resultEl.style.display = 'none';
+            try {
+                var r = await notifAPI('retry_failed', { notif_id: _retryNotifId, confirm: true });
+                resultEl.style.display = 'block';
+                resultEl.style.background = 'rgba(16,185,129,.1)';
+                resultEl.style.color = 'var(--n-green)';
+                resultEl.style.border = '1px solid rgba(16,185,129,.2)';
+                var msg = 'Sent to ' + r.sent + ' of ' + r.retried + ' devices.';
+                if (r.stale > 0) msg += ' ' + r.stale + ' stale removed.';
+                if (r.remaining_failed > 0) msg += ' ' + r.remaining_failed + ' still failed — click Retry again.';
+                resultEl.textContent = msg;
+                btn.textContent = 'Done';
+                loadPage();
+            } catch(e) {
+                resultEl.style.display = 'block';
+                resultEl.style.background = 'rgba(244,63,94,.1)';
+                resultEl.style.color = 'var(--n-red)';
+                resultEl.style.border = '1px solid rgba(244,63,94,.2)';
+                resultEl.textContent = 'Error: ' + e.message;
+                btn.disabled = false; btn.textContent = 'Retry Failed';
+                btn.style.opacity = '1'; btn.style.cursor = 'pointer';
+            }
         }
 
         function showToast(msg, isError) {

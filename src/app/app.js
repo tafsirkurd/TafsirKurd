@@ -189,7 +189,8 @@ window.ForceUpdate = (function(){
         var verRow = overlay.querySelector('.fu-ver-row');
         if (verRow) verRow.style.display = lock.minVersion ? '' : 'none';
         _showEarlyOverlay(overlay, lock.minVersion);
-        console.log('[Update] Early enforce lock active — blocking app immediately');
+        var _ec1plat = (window.Capacitor && Capacitor.getPlatform ? Capacitor.getPlatform() : 'web');
+        console.log('[Update] fuOverlay shown — reason:early-lock platform:' + _ec1plat + ' min:' + (lock.minVersion||'?'));
         return;
       }
 
@@ -229,7 +230,7 @@ window.ForceUpdate = (function(){
       var verRow2 = overlay2.querySelector('.fu-ver-row');
       if (verRow2) verRow2.style.display = minVer2 ? '' : 'none';
       _showEarlyOverlay(overlay2, minVer2);
-      console.log('[Update] Early cached-config enforce — blocking app immediately');
+      console.log('[Update] fuOverlay shown — reason:early-cached-config platform:' + platform2 + ' v:' + cachedVer + ' min:' + minVer2);
     } catch(e) {}
   })();
 
@@ -346,6 +347,8 @@ window.ForceUpdate = (function(){
   }
 
   function showHard(version, minVersion, cfg) {
+    var _sh_plat = (window.Capacitor && Capacitor.getPlatform ? Capacitor.getPlatform() : 'web');
+    console.log('[Update] fuOverlay shown — reason:hard-enforce platform:' + _sh_plat + ' v:' + version + ' min:' + minVersion);
     var o = document.getElementById('fuOverlay');
     if (!o) return;
     var alreadyOn = o.classList.contains('on');
@@ -414,9 +417,15 @@ window.ForceUpdate = (function(){
   }
 
   // ── Soft update banner ────────────────────────────────────────────────────
-  // whatsNew: optional string from cfg.update_whats_new (admin-set release notes)
+  // Web/PWA only — native apps receive OS-level update notifications via the store.
+  // The hard overlay (showHard) still applies on native for forced-update enforcement.
   function showSoftBanner(whatsNew, minVersion) {
+    if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+      console.log('[Update] fuBanner suppressed — reason:native-platform platform:' + (Capacitor.getPlatform ? Capacitor.getPlatform() : 'native'));
+      return;
+    }
     if (document.getElementById('fuBanner')) return;
+    console.log('[Update] fuBanner shown — reason:soft-update platform:web min:' + minVersion);
 
     var banner = document.createElement('div');
     banner.id = 'fuBanner';
@@ -989,10 +998,10 @@ var S={
   readSession:null,
   todayVerses:null,
   supabase:null,user:null,syncInterval:null,isSyncing:false,syncFailed:false,syncErrorDetail:null,lastSyncTime:0,realtimeChannel:null,
-  readerFont:localStorage.getItem('readerFont')||'hafs',
+  readerFont:localStorage.getItem('readerFont')||'qpcv2',
   glyphVerses:{},
-  mushafFont:'qcf4', // QCF4: fully bundled (fonts + page data) — Mushaf works offline. qcf1/qcf2 need network (GitHub fonts + quran.com API).
-  mushafFontSize:(function(){var ip=document.documentElement.classList.contains('is-ipad');var raw=parseInt(localStorage.getItem(ip?'mushafFontSize_ipad_qcf4':'mushafFontSize_qcf4'))||0;return ip?Math.min(34,Math.max(22,raw||28)):Math.min(24,Math.max(16,raw||22));})(),
+  mushafFont:(function(){try{localStorage.setItem('mushafFont','qpcv1');}catch(e){}return'qpcv1';})(),
+  mushafFontSize:(function(){var ip=document.documentElement.classList.contains('is-ipad');var raw=parseInt(localStorage.getItem(ip?'mushafFontSize_ipad_qpcv1':'mushafFontSize_qpcv1'))||0;return ip?Math.min(34,Math.max(22,raw||28)):Math.min(24,Math.max(16,raw||22));})(),
   mushafLineH:(function(){var ip=document.documentElement.classList.contains('is-ipad');var raw=parseFloat(localStorage.getItem(ip?'mushafLineH_ipad':'mushafLineH'))||0;return ip?Math.min(2.4,Math.max(1.8,raw||2.0)):Math.min(2.3,Math.max(1.8,raw||1.8));})(),
   copy:{surah:0,ayah:0,rangeFmt:'both'}
 };
@@ -1107,6 +1116,7 @@ function init(){
     applyKeepAwake();
     initTodayVerses();
     if(window.AppRating)AppRating.init(); // track launch count + first-launch date
+    console.log('[GOAL_OBJECT] on init:',localStorage.getItem('readingGoal'));
     renderSurahGrid();
     renderContinue();
 
@@ -1117,11 +1127,11 @@ function init(){
     setupPullToRefresh('panelBookmarks',function(_,done){_renderHash.bm=null;renderBookmarks();_renderHash.bm=_tabHash('bookmarks');done();});
     setupPullToRefresh('panelGoals',function(_,done){_renderHash.goals=null;renderGoals();_renderHash.goals=_tabHash('goals');done();});
     // IslamVoice: sync branch (isRecent/local render) calls done(); async fetch lets hard cap handle it
-    setupPullToRefresh('panelIslamvoice',function(isRecent,done){_renderHash.iv=null;if(!isRecent&&typeof App.ivRefresh==='function'){App.ivRefresh();}else{renderIslamVoice();done();}});
+    setupPullToRefresh('panelIslamvoice',function(isRecent,done){_renderHash.iv=null;if(!isRecent&&typeof App.ivRefresh==='function'){App.ivRefresh();setTimeout(done,900);}else{renderIslamVoice();done();}});
     setupPullToRefresh('panelSettings',function(_,done){_renderHash.settings=null;renderSettings();_renderHash.settings=_tabHash('settings');done();});
-    // Prayer/Gencine: sync render paths call done(); async refresh() lets hard cap handle it
-    setupPullToRefresh('panelPrayer',function(isRecent,done){if(window.PrayerUI){if(isRecent){PrayerUI.render();_renderHash.prayer=_tabHash('prayer');done();}else{PrayerUI.refresh();}}});
-    setupPullToRefresh('panelGencine',function(isRecent,done){if(window.GencineUI){if(isRecent){GencineUI._draw();done();}else{GencineUI.refresh();}}});
+    // Prayer/Gencine: sync render paths call done() immediately; async refresh() shows spinner for 900ms
+    setupPullToRefresh('panelPrayer',function(isRecent,done){if(window.PrayerUI){if(isRecent){PrayerUI.render();_renderHash.prayer=_tabHash('prayer');done();}else{PrayerUI.refresh();setTimeout(done,900);}}else{done();}});
+    setupPullToRefresh('panelGencine',function(isRecent,done){if(window.GencineUI){if(isRecent){GencineUI._draw();done();}else{GencineUI.refresh();setTimeout(done,900);}}else{done();}});
 
     // Fast-scroll pill for long lists
     if(window._initFastScroll) _initFastScroll();
@@ -1145,133 +1155,139 @@ function init(){
     // Init shared Supabase client and check auth
     initSupabase(function(){ loadReciterPhotos(); });
 
-    // Belt-and-suspenders: write tk_last_bg on visibilitychange too.
-    // appStateChange is the primary writer but may not fire under extreme memory pressure
-    // before the OS kills the process. visibilitychange + pagehide are more reliable.
-    document.addEventListener('visibilitychange',function(){
-      if(document.hidden) localStorage.setItem('tk_last_bg',String(Date.now()));
+    // ── Lifecycle: owned by AppRuntime — one listener per event type ────────────
+    // AppRuntime installs visibilitychange + pagehide + Capacitor appStateChange.
+    // A 600ms dedup window collapses the native double-fire (visibilitychange
+    // fires first, appStateChange ~100ms later) into a single 'background'/'resume'
+    // event, eliminating the previous double audio-pause and double hlRestoreAll.
+    AppRuntime.on('background',function(){
+      localStorage.setItem('tk_last_bg',String(Date.now()));
+      console.log('[APP_LIFECYCLE] background');
+      if(!S.bgAudio&&S.audio.playing){
+        S.audio.el.pause();S.audio.playing=false;
+        document.body.classList.remove('mushaf-audio-playing');
+        var ic=$('audioPlayIcon');if(ic)ic.className='fas fa-play';
+      }
+      var _skyEl=document.getElementById('prayerSkyScene');
+      if(_skyEl)_skyEl.classList.add('sky-paused');
+      if(S.user)syncToCloud();
     });
-    window.addEventListener('pagehide',function(){
+    AppRuntime.on('pagehide',function(){
+      // Belt-and-suspenders write before page unload (may fire after 'background' ran)
       localStorage.setItem('tk_last_bg',String(Date.now()));
     });
-
-    // Pause audio and sky animations when app goes to background
-    document.addEventListener('visibilitychange',function(){
-      if(document.hidden){
-        if(!S.bgAudio&&S.audio.playing){
-          S.audio.el.pause();S.audio.playing=false;
-          document.body.classList.remove('mushaf-audio-playing');
-          var ic=$('audioPlayIcon');if(ic)ic.className='fas fa-play';
-        }
-        // Pause GPU-expensive sky animations when screen off/background
+    AppRuntime.on('resume',function(){
+      // Sky: unpause only on prayer tab
+      if(S.tab==='prayer'){
         var _skyEl=document.getElementById('prayerSkyScene');
-        if(_skyEl)_skyEl.classList.add('sky-paused');
-      } else {
-        // Resume sky only if prayer tab is active
-        if(S.tab==='prayer'){
-          var _skyEl=document.getElementById('prayerSkyScene');
-          if(_skyEl)_skyEl.classList.remove('sky-paused');
-          // Re-render prayer panel on foreground — handles overnight stale date for web users.
-          // Capacitor users get this via appStateChange below; this covers desktop/PWA.
-          // Skipped on Capacitor (appStateChange fires there instead — avoids double render).
-          if(!window.Capacitor&&window.PrayerUI){
-            requestAnimationFrame(function(){PrayerUI.render();_renderHash.prayer=_tabHash('prayer');});
-          }
+        if(_skyEl)_skyEl.classList.remove('sky-paused');
+        // Web/PWA: re-render prayer on foreground (native handled in block below)
+        if(!window.Capacitor&&window.PrayerUI){
+          requestAnimationFrame(function(){PrayerUI.render();_renderHash.prayer=_tabHash('prayer');});
         }
-        // Restore playback highlight state if Quran tab is visible (handles browser bg/fg)
-        if(S.tab==='quran')requestAnimationFrame(_hlRestoreAll);
+      }
+      // Restore Quran playback highlight after background
+      if(S.tab==='quran')requestAnimationFrame(_hlRestoreAll);
+      // Native resume: full refresh sequence (runs once per foreground — dedup prevents double)
+      if(window.Capacitor){
+        console.log('[APP_LIFECYCLE] resume_refresh_start');
+        // Re-apply native status bar color — OS can reset it after background/resume
+        _applyStatusBar(S.theme);
+        ForceUpdate.check();
+        initTodayVerses();
+        (function(){
+          var _AA=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.AthanAlarm;
+          if(_AA&&window.PrayerUI&&window.S&&window.S.prayerAthanEnabled){
+            _AA.canScheduleExact().then(function(r){
+              if(r&&r.canSchedule===false){
+                if(window._showAthanAlarmPermWarning)window._showAthanAlarmPermWarning();
+              } else if(r&&r.canSchedule===true&&localStorage.getItem('athanExactAlarmWarned')){
+                localStorage.removeItem('athanExactAlarmWarned');
+                localStorage.removeItem('prayerLastScheduleTs');
+                PrayerUI.initScheduleOnStart();
+              }
+            }).catch(function(){});
+            var _bwAge=parseInt(localStorage.getItem('batteryOptWarnedAt')||'0');
+            if(Date.now()-_bwAge>7*24*60*60*1000){
+              _AA.isIgnoringBatteryOpts&&_AA.isIgnoringBatteryOpts().then(function(r){
+                if(r&&r.ignoring===false&&window._showBatteryOptWarning)window._showBatteryOptWarning();
+              }).catch(function(){});
+            }
+          }
+        })();
+        if(window.PrayerUI)PrayerUI.initScheduleOnStart();
+        var _fgPlatform=window.Capacitor&&Capacitor.getPlatform?Capacitor.getPlatform():'';
+        if(window.PrayerUI&&S.tab==='prayer'&&_fgPlatform!=='mac'){
+          requestAnimationFrame(function(){PrayerUI.render();_renderHash.prayer=_tabHash('prayer');});
+        } else if(window.PrayerUI&&_fgPlatform!=='mac'){
+          _renderHash.prayer=null;
+        }
+        if(window.PrayerUI)PrayerUI.pushWidgetIfStale();
+        pushGoalDataToWidget();
+        pushAutoAyahSchedule();
+        syncWidgetTranslations();
+        initDailyVerse();
+        scheduleStreakReminder();
+        (function(){
+          var _now=Date.now(),_lp=parseInt(localStorage.getItem('tk_prefetch_ts')||'0');
+          if(_now-_lp>600000){
+            localStorage.setItem('tk_prefetch_ts',String(_now));
+            if(window.PrayerUI&&PrayerUI.prefetchAllCities)PrayerUI.prefetchAllCities();
+          }
+        })();
+        console.log('[APP_LIFECYCLE] resume_refresh_done');
       }
     });
+
+    // ── Global error handlers ────────────────────────────────────────────────
+    // Catch uncaught JS exceptions and unhandled Promise rejections.
+    // Log to HealthLog (persists to sessionStorage for post-mortem) and console.
+    // Never crash the app — just capture.
+    window.onerror=function(msg,src,line,col,err){
+      var detail=(src?src.split('/').pop():'')+':'+(line||0)+(col?':'+col:'');
+      var message=String((err&&err.message)||msg||'unknown').slice(0,300);
+      if(window.HealthLog)HealthLog.add('js_error',message+' @ '+detail);
+      console.error('[UNCAUGHT]',message,'at',detail,err||'');
+      return false; // let the browser also log it
+    };
+    window.onunhandledrejection=function(ev){
+      var reason=ev&&ev.reason;
+      var message=String((reason&&reason.message)||reason||'unhandled rejection').slice(0,300);
+      if(window.HealthLog)HealthLog.add('promise_rejection',message);
+      console.error('[UNHANDLED REJECTION]',reason||ev);
+    };
+
+    // ── Low-memory response ──────────────────────────────────────────────────
+    // When the OS sends a memory warning: flush caches, cancel heavy work.
+    AppRuntime.on('lowMemory',function(){
+      if(window.HealthLog)HealthLog.add('low_memory','OS low-memory signal — flushing caches');
+      // Clear large in-memory caches
+      try{if(typeof _ssMemory!=='undefined'){_ssMemory=null;_ssMemTs=0;}}catch(e){}
+      // Free ~6 MB mushaf page bundles — they are re-fetched on demand from cache
+      try{window._mushafV1Pages=null;window._mushafV4Pages=null;_mushafV1DataP=null;_mushafV4DataP=null;}catch(e){}
+      // Free audio prefetch blobs — saves ~2–5 MB of blob URLs; audio re-fetches on demand
+      try{if(typeof clearPrefetch==='function'&&!S.audio.playing)clearPrefetch();}catch(e){}
+      // Force sync to cloud then pause sync interval to reduce background pressure
+      try{if(S.user&&typeof syncToCloud==='function')syncToCloud();}catch(e){}
+    });
+
+    // ── Renderer recovery check ──────────────────────────────────────────────
+    // If the WebView renderer died on a previous run, Java set rendererRecovery
+    // in CapacitorStorage SharedPreferences before calling Activity.recreate().
+    // Check for the flag here and show a brief recovery notice.
     try{
-      if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.App){
-        window.Capacitor.Plugins.App.addListener('appStateChange',function(state){
-          if(!state.isActive){
-            // Save background timestamp — used by startApp() warm-resume detection
-            // when iOS/Android kills the WebView under memory pressure and reloads it.
-            localStorage.setItem('tk_last_bg', String(Date.now()));
-            console.log('[APP_LIFECYCLE] background');
-            if(!S.bgAudio&&S.audio.playing){
-              S.audio.el.pause();S.audio.playing=false;
-              var ic=$('audioPlayIcon');
-              if(ic)ic.className='fas fa-play';
-            }
-            // Sync data when app goes to background
-            if(S.user)syncToCloud();
-          } else {
-            console.log('[APP_LIFECYCLE] warm_resume — appStateChange foreground');
-            console.log('[APP_LIFECYCLE] resume_refresh_start');
-            // Check immediately on resume — enforce lock blocks UI synchronously
-            ForceUpdate.check();
-            // Refresh today's verse set so the date is correct after overnight open.
-            // Without this, S.todayVerses stays as yesterday's Set and re-read ayahs
-            // are skipped for today's goal count.
-            initTodayVerses();
-            // On every foreground resume: check exact alarm permission via native bridge.
-            // If it was revoked → show warning; if it was just granted → clear rate-limit
-            // and reschedule immediately (covers the case where user came back from Settings).
-            (function(){
-              var _AA=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.AthanAlarm;
-              if(_AA&&window.PrayerUI&&window.S&&window.S.prayerAthanEnabled){
-                _AA.canScheduleExact().then(function(r){
-                  if(r&&r.canSchedule===false){
-                    if(window._showAthanAlarmPermWarning)window._showAthanAlarmPermWarning();
-                  } else if(r&&r.canSchedule===true&&localStorage.getItem('athanExactAlarmWarned')){
-                    // Just got permission back — reschedule right now
-                    localStorage.removeItem('athanExactAlarmWarned');
-                    localStorage.removeItem('prayerLastScheduleTs');
-                    PrayerUI.initScheduleOnStart();
-                  }
-                }).catch(function(){});
-                // Check battery optimization on resume — re-check every 7 days in case user
-                // reverted the exemption (Samsung OEM can reset it after OS updates).
-                // Re-check battery opt every 7 days — Samsung OEM can silently revoke exemption
-                var _bwAge=parseInt(localStorage.getItem('batteryOptWarnedAt')||'0');
-                if(Date.now()-_bwAge>7*24*60*60*1000){
-                  _AA.isIgnoringBatteryOpts&&_AA.isIgnoringBatteryOpts().then(function(r){
-                    if(r&&r.ignoring===false&&window._showBatteryOptWarning)window._showBatteryOptWarning();
-                  }).catch(function(){});
-                }
-              }
-            })();
-            // Reschedule athan + daily verse if new day
-            if(window.PrayerUI)PrayerUI.initScheduleOnStart();
-            // Rebuild prayer panel if active — handles overnight stale date.
-            // Skipped on macOS: athan notifications bring app to foreground automatically;
-            // re-rendering would cause a visible "refresh" the user didn't ask for.
-            var _fgPlatform=window.Capacitor&&Capacitor.getPlatform?Capacitor.getPlatform():'';
-            if(window.PrayerUI&&S.tab==='prayer'&&_fgPlatform!=='mac'){
-              requestAnimationFrame(function(){PrayerUI.render();_renderHash.prayer=_tabHash('prayer');});
-            } else if(window.PrayerUI&&_fgPlatform!=='mac'){
-              // Not on prayer tab — just invalidate hash so it rebuilds fresh on next visit
-              _renderHash.prayer=null;
-            }
-            // Push fresh widget data if date or city changed since last push
-            if(window.PrayerUI)PrayerUI.pushWidgetIfStale();
-            pushGoalDataToWidget();
-            pushAutoAyahSchedule();
-            syncWidgetTranslations();
-            initDailyVerse();
-            scheduleStreakReminder();
-            // checkNewVideoNotif removed (2026-06-12): it duplicated the server
-            // FCM push — users got the real push in background, then a second
-            // local "ڤیدیۆیەکی نوی 🎬" on app open whenever the push had been
-            // dismissed (the lastVideoNotifId dedup only saw tapped/in-tray pushes).
-            // Re-run prefetch — capped to once per 10 min to avoid spawning 20 city
-            // fetches on every single foreground event (rapid background/foreground cycles).
-            (function(){
-              var _now=Date.now(),_lp=parseInt(localStorage.getItem('tk_prefetch_ts')||'0');
-              if(_now-_lp>600000){
-                localStorage.setItem('tk_prefetch_ts',String(_now));
-                if(window.PrayerUI&&PrayerUI.prefetchAllCities)PrayerUI.prefetchAllCities();
-              }
-            })();
-            console.log('[APP_LIFECYCLE] resume_refresh_done');
-            // Restore playback highlight state if Quran tab is active
-            if(S.tab==='quran')requestAnimationFrame(_hlRestoreAll);
-          }
-        });
+      if(window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.Preferences){
+        Capacitor.Plugins.Preferences.get({key:'rendererRecovery'}).then(function(r){
+          if(!r||!r.value)return;
+          Capacitor.Plugins.Preferences.remove({key:'rendererRecovery'});
+          if(window.HealthLog)HealthLog.add('renderer_recovery','Recovered from renderer death: '+r.value);
+          // Brief toast so the user knows the app self-healed
+          setTimeout(function(){
+            if(typeof toast==='function')toast('ئاپ ژنووکرا ✓');
+          },1200);
+        }).catch(function(){});
       }
-    }catch(e){console.warn('App state listener not available',e)}
+    }catch(e){}
 
     // Handle iOS widget tap → deep link to prayer tab (tafsirkurd://prayer)
     try{
@@ -1295,7 +1311,7 @@ function init(){
         if(_isMac&&!_isUserTap)return;
         if(extra.type==='verse'&&extra.s&&extra.a){
           App.tab('quran');
-          setTimeout(function(){App.openSurah(extra.s,extra.a);},300);
+          setTimeout(function(){App.openSurah(extra.s,extra.a,{source:'notification',canTrackGoal:false});},300);
         }
         if(extra.type==='video'&&extra.id){
           App.tab('islamvoice');
@@ -1390,6 +1406,7 @@ function init(){
     // doBack: performs the back action. opts.allowExit controls whether to exit the app.
     App.doBack=function(opts){
       var allowExit=opts&&opts.allowExit;
+      if(window.HeaderOverlayManager&&HeaderOverlayManager.getActive()){HeaderOverlayManager.close();return;}
       if($('fuOverlay')&&$('fuOverlay').classList.contains('on'))return; // hard block
       var _nmOv=document.querySelector('.note-modal-ov.on');if(_nmOv){_nmOv.classList.remove('on');return;}
       if($('khatmCelebOverlay')){App.closeGoalCelebration();return;}
@@ -1491,17 +1508,7 @@ function init(){
       }
     });
 
-    // Scroll-pause: add tk-scrolling class during active scroll so CSS can
-    // pause heavy GPU animations (sky, audio wave, etc.) — reduces compositor
-    // work that causes scroll jank on mid-range Android devices.
-    (function(){
-      var _st=null;
-      document.addEventListener('scroll',function(){
-        document.body.classList.add('tk-scrolling');
-        if(_st)clearTimeout(_st);
-        _st=setTimeout(function(){_st=null;document.body.classList.remove('tk-scrolling');},120);
-      },{passive:true,capture:true});
-    })();
+    // Scroll-pause: owned by AppRuntime (scroll listener installed in app-runtime.js)
   }catch(e){
     console.error('App init error:',e);
   }
@@ -1533,7 +1540,7 @@ function init(){
   setTimeout(function(){_warmAboutCache();},2000);
   _initPushTapListener(); // register tap listener immediately — never miss cold-start events
   setTimeout(function(){initPushToken();},3000);
-  setTimeout(function(){_reportAppVersion();},5000);
+  AppRuntime.Scheduler.timeout(function(){_reportAppVersion();},5000,'reportVersion');
   // Load Gencine scripts immediately — all three are SW-precached so this is near-instant.
   // Pre-render runs as soon as scripts are ready so buttons are always there on first tap.
   _loadGencineScripts(function(){
@@ -1562,15 +1569,15 @@ function init(){
     }
   }
 
-  // Mushaf font warm-up — prefetch current page Â±4 fonts/data so Mushaf tab opens fast
-  setTimeout(function(){
+  // Mushaf font warm-up — only when user is in mushaf mode (avoids injecting font tags on startup otherwise)
+  if(S.mushafMode){setTimeout(function(){
     getMushafPageRange(S.surah||1).then(function(pages){
       var cur=pages.start;
       for(var _wp=-2;_wp<=4;_wp++){
         if(cur+_wp>=1&&cur+_wp<=604)_prefetchMushafPage(cur+_wp);
       }
     }).catch(function(){});
-  },500);
+  },500);}
 
   // IV pre-warm: read series/episodes from localStorage into S at startup so the
   // IslamVoice tab opens with zero spinner even on medium devices (pre-render skipped there).
@@ -1636,32 +1643,31 @@ function init(){
     var sp=$('splash');
     var app=$('app');
     if(app)app.style.display='flex';
-    requestAnimationFrame(function(){
-      requestAnimationFrame(function(){
-        console.log('[Startup] Transitioning into app at',Date.now()-_splashStart,'ms');
-        // Dismiss themed native overlay (iOS MainViewController) — runs in parallel with HTML exit
-        try{if(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.splashDismiss)
-          window.webkit.messageHandlers.splashDismiss.postMessage(null);}catch(e){}
-        // Logo exit animation — skipped on warm resume (instant restore)
-        var logo=document.getElementById('splashLogo');
-        if(logo&&!window._splashFastExit)logo.classList.add('exit');
-        // Refresh current tab with latest translations just before fade-in.
-        // Ensures user always sees live text, never stale bundled fallback.
-        try{_rerenderCurrentTab();}catch(e){}
-        // App fades in at the same time as logo exits
-        if(app)app.classList.add('visible');
-        if(_pendingPushDeepLink){
-          var _pl=_pendingPushDeepLink;_pendingPushDeepLink=null;
-          setTimeout(function(){_handlePushDeepLink(_pl.type,_pl.id);},300);
-        }
-        // Splash bg fades out after logo animation finishes (~260ms)
-        setTimeout(function(){
-          if(sp){sp.style.transition='opacity .15s ease';sp.classList.add('hide');}
-          setTimeout(function(){if(sp&&sp.parentNode)sp.parentNode.removeChild(sp);},200);
-        },220);
-        console.log('[Startup] App visible at',Date.now()-_splashStart,'ms');
-      });
-    });
+    var _visibleApplied=false;
+    function _applyVisible(){
+      if(_visibleApplied)return;
+      _visibleApplied=true;
+      console.log('[Startup] Transitioning into app at',Date.now()-_splashStart,'ms');
+      try{if(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.splashDismiss)
+        window.webkit.messageHandlers.splashDismiss.postMessage(null);}catch(e){}
+      var logo=document.getElementById('splashLogo');
+      if(logo&&!window._splashFastExit)logo.classList.add('exit');
+      try{_rerenderCurrentTab();}catch(e){}
+      if(app)app.classList.add('visible');
+      if(_pendingPushDeepLink){
+        var _pl=_pendingPushDeepLink;_pendingPushDeepLink=null;
+        setTimeout(function(){_handlePushDeepLink(_pl.type,_pl.id);},300);
+      }
+      setTimeout(function(){
+        if(sp){sp.style.transition='opacity .15s ease';sp.classList.add('hide');}
+        setTimeout(function(){if(sp&&sp.parentNode)sp.parentNode.removeChild(sp);},200);
+      },220);
+      console.log('[Startup] App visible at',Date.now()-_splashStart,'ms');
+    }
+    requestAnimationFrame(function(){requestAnimationFrame(_applyVisible);});
+    // Fallback: if rAF is suspended during Android cold-start WebView init, use timeout.
+    // 200ms is long enough for double-rAF to complete at 60fps; short enough to be invisible.
+    setTimeout(_applyVisible, 200);
   }
 
   function _checkSplashReady(){
@@ -1774,6 +1780,8 @@ function _checkDataReady(){
   setTimeout(_startTabPrerender,50);
   // Notify SmartDhikr that quranData is ready so the ayah card rebuilds with real text
   if(S.quranData&&window.SmartDhikr)SmartDhikr.onQuranReady();
+  // Pre-warm V2 bundle so it's ready before user taps a surah (APK-local / SW-cached)
+  if(S.readerFont==='qpcv2'||!localStorage.getItem('readerFont'))_loadMushafBundledData();
   if(!_dataReady.tafsir)return;
   console.log('[Startup] quran+tafsir ready',Date.now()-_startupT0,'ms');
   if(S.surah)renderAyahs(S.surah);
@@ -1809,7 +1817,7 @@ function _startTabPrerender(){
   var jobs=[
     _shieldedJob(function(){renderBookmarks();_renderHash.bm=_tabHash('bookmarks');},'bookmarks',null),
     _shieldedJob(function(){renderGoals();_renderHash.goals=_tabHash('goals');},'goals',null),
-    // Settings: always pre-render — it's static DOM, cheap on all device tiers
+    // Settings: pre-render on all tiers but deferred so quran data loads first
     _shieldedJob(function(){renderSettings();_renderHash.settings=_tabHash('settings');},'settings','panelSettings'),
     _shieldedJob(function(){if(window.PrayerUI){PrayerUI.render();_renderHash.prayer=_tabHash('prayer');
       requestAnimationFrame(function(){var _s=document.getElementById('prayerSkyScene');if(_s&&S.tab!=='prayer')_s.classList.add('sky-paused');});}},'prayer','panelPrayer'),
@@ -2047,29 +2055,70 @@ function loadTafsirData(){
 }
 
 /* ===== THEME & SIZES ===== */
+
+// Single source of truth for the top-chrome surface color (status bar + safe-area + header).
+// Must exactly match the CSS [data-theme] --bg values so native and WebView surfaces are identical.
+function getTopChromeColor(theme){
+  return {dark:'#0a0a0a',light:'#fafafa',noor:'#f4e8cc',sakina:'#0c1c12'}[theme]||'#0a0a0a';
+}
+
+// Cached overlay state: true = WebView draws behind status bar (Capacitor 8 Android default).
+// null = not yet determined (first call triggers async detection via getInfo).
+var _sbOverlays=null;
+
+// Apply native status bar icon style to match the header surface.
+// Called on every theme change and on every app resume.
+//
+// OVERLAY MODE NOTE: In Capacitor 8 Android (overlaysWebView=true), the WebView extends
+// behind the native status bar. setBackgroundColor() would apply a solid native color
+// ON TOP of the WebView glass header, causing a visible tint mismatch.
+// When overlay=true, we skip setBackgroundColor — the WebView CSS header IS the background.
+// When overlay=false (non-overlay native bar), we apply the solid color.
+function _applyStatusBar(theme){
+  var color=getTopChromeColor(theme);
+  var isDark=theme==='dark'||theme==='sakina';
+  // Keep meta[theme-color] current (Chrome Android browser + PWA mode)
+  try{var _tm=document.querySelector('meta[name="theme-color"]');if(_tm)_tm.setAttribute('content',color);}catch(e){}
+  var SB=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.StatusBar;
+  if(!SB)return;
+  if(_sbOverlays===null){
+    // First call: detect overlay mode, then apply background only if not overlaying.
+    try{SB.getInfo().then(function(info){
+      _sbOverlays=!!info.overlays;
+      if(!_sbOverlays)try{SB.setBackgroundColor({color:color});}catch(e){}
+    }).catch(function(){
+      _sbOverlays=false;
+      try{SB.setBackgroundColor({color:color});}catch(e){}
+    });}catch(e){}
+  }else if(!_sbOverlays){
+    try{SB.setBackgroundColor({color:color});}catch(e){}
+  }
+  try{SB.setStyle({style:isDark?'DARK':'LIGHT'});}catch(e){}
+}
+
 function applyTheme(){
   // Pause sky CSS animations during theme cascade to prevent compositor jank.
   var _skyEl=document.getElementById('prayerSkyScene');
   var _skyWasRunning=_skyEl&&!_skyEl.classList.contains('sky-paused');
   if(_skyWasRunning)_skyEl.classList.add('sky-paused');
 
-  var bgMap={light:'#fafafa',dark:'#0a0a0a',sakina:'#0c1c12',noor:'#f4e8cc'};
-  var bg=bgMap[S.theme]||'#fafafa';
+  var bg=getTopChromeColor(S.theme);
   document.documentElement.setAttribute('data-theme',S.theme);
   // Keep inline --bg in sync with the startup anti-flash script (index.html head).
   // Without this, the startup inline style overrides CSS [data-theme] rules on every theme switch.
   document.documentElement.style.background=bg;
   document.documentElement.style.setProperty('--bg',bg);
   localStorage.setItem('theme',S.theme);
+  if(window.S&&S.user)debouncedSync();
   _nativeSyncTheme(S.theme);
-  if(window.Capacitor&&window.Capacitor.Plugins.StatusBar){
-    var isDark=S.theme==='dark'||S.theme==='sakina';
-    try{window.Capacitor.Plugins.StatusBar.setStyle({style:isDark?'DARK':'LIGHT'})}catch(e){}
-    try{window.Capacitor.Plugins.StatusBar.setBackgroundColor({color:bg})}catch(e){}
-  }
+  _applyStatusBar(S.theme);
+
+  // Keep content backdrop color in sync with theme
+  if(window.HeaderOverlayManager)HeaderOverlayManager.setBackdropColor(S.theme);
 
   // Resume sky one frame later so the new theme paints before animations restart.
   if(_skyWasRunning){requestAnimationFrame(function(){var _s=document.getElementById('prayerSkyScene');if(_s)_s.classList.remove('sky-paused');});}
+
 }
 function applySizes(){
   document.documentElement.style.setProperty('--ar-size',S.arSize+'rem');
@@ -2191,6 +2240,27 @@ App.tab=function(name){
   }
   H.light(); // different-tab switch — clear selection feel
 
+  // Close any open panels/modals when switching tabs
+  (function(){
+    // Mushaf settings (dynamically created sheet)
+    var ms=$('mushafSettingsSheet');if(ms){var p=ms.querySelector('.mushaf-settings-pane');if(p){p.classList.remove('on');setTimeout(function(){if(ms.parentNode)ms.parentNode.removeChild(ms);},260);}}
+    // Reader quick settings sheet
+    var qs=$('qsSheet');if(qs&&qs.classList.contains('on'))App.closeReaderSettings&&App.closeReaderSettings();
+    // Copy modal
+    var cm=$('copyModal');if(cm&&cm.classList.contains('on'))App.closeCopyModal&&App.closeCopyModal();
+    // Repeat modal
+    var rm=$('repeatModal');if(rm&&rm.style.display!=='none')App.closeRepeat&&App.closeRepeat();
+    // Audio settings panel
+    var ap=$('audioSettingsPanel');if(ap&&ap.style.display!=='none')App.closeAudioSettings&&App.closeAudioSettings();
+    // Header panels (Search, Inbox) — HeaderOverlayManager closes whichever is open
+    if(window.HeaderOverlayManager)HeaderOverlayManager.close();
+    // IV overlays
+    var iso=$('ivSavedOverlay');if(iso&&iso.classList.contains('open'))App.ivCloseSaved&&App.ivCloseSaved();
+    var iho=$('ivHistoryOverlay');if(iho&&iho.classList.contains('open'))App.ivCloseHistory&&App.ivCloseHistory();
+    // Reset any in-flight PTR so the panel doesn't stay translated after tab switch
+    _ptrResets.forEach(function(fn){try{fn();}catch(e){}});
+  })();
+
   // Cancel any pending rAF render from a previous fast tab switch
   if(_pendingTabRaf){cancelAnimationFrame(_pendingTabRaf);_pendingTabRaf=null;}
 
@@ -2250,7 +2320,7 @@ App.tab=function(name){
       if(_skyEl2)_skyEl2.classList.add('sky-paused');
     }
     if(_prevTab==='quran'&&name!=='quran'){
-      var _sb=document.getElementById('searchBar');if(_sb)_sb.classList.remove('on');App.clearSearch();
+      App.clearSearch();
       if(_surahBadgeObs){_surahBadgeObs.disconnect();}
       clearMushafHighlights();
     }
@@ -3140,7 +3210,7 @@ function _handlePushDeepLink(type,id){
       var parts=id.split(':');
       var s=+parts[0],a=+parts[1];
       App.tab('quran');
-      setTimeout(function(){App.openSurah(s,a);},300);
+      setTimeout(function(){App.openSurah(s,a,{source:'deep_link',canTrackGoal:false});},300);
 
     }else if(type==='islamvoice_episodes'||type==='video'){
       App.tab('islamvoice');
@@ -3257,6 +3327,8 @@ function initPushToken(){
       localStorage.setItem('push_token_preview',token.slice(0,20)+'…');
       localStorage.setItem('push_token_platform',platform);
       if(!token){_pushLog('ERROR: empty token');return;}
+      // Persist full token so we can re-register with user_id after login
+      try{localStorage.setItem('push_token_current',JSON.stringify({token:token,platform:platform}));}catch(e){}
       // Persist for cross-session retry (cleared on success)
       try{localStorage.setItem('push_token_pending',JSON.stringify({token:token,platform:platform}));}catch(e){}
       _registerPushToken(token,platform,0);
@@ -3490,34 +3562,80 @@ function _appendSrcPills(item,srcs){
 
 
 
-App.toggleSearch=function(){
-  var bar=$('searchBar');
-  bar.classList.toggle('on');
-  if(bar.classList.contains('on')){
-    var inp=$('searchInput');
-    inp.focus();
-    // Restore last session query if input is empty
-    var lastQ='';try{lastQ=sessionStorage.getItem('qs_last')||'';}catch(e){}
-    if(lastQ&&!inp.value){
-      inp.value=lastQ;
-      App.onSearch(lastQ);
-    } else if(!inp.value){
-      App._renderSearchHistory();
+// ── HeaderOverlayManager ─────────────────────────────────────────────────────
+// Single manager for all header panels (Search, Inbox, etc.).
+// Guarantees only one panel is open at a time.
+// Owns the backdrop lifecycle, cleans up on tab switch / background / resize.
+var HeaderOverlayManager=(function(){
+  var _active=null;
+  var _closeFns={};
+  var _bdEl=null;
+  var _bdColors={
+    dark:'rgba(0,0,0,.24)',
+    light:'rgba(0,0,0,.14)',
+    noor:'rgba(70,45,10,.14)',
+    sakina:'rgba(0,12,8,.22)'
+  };
+  function _bd(){if(!_bdEl)_bdEl=document.getElementById('hdrBackdrop');return _bdEl;}
+  function _hideBackdrop(){var b=_bd();if(b)b.classList.remove('on');}
+  function _showBackdrop(){var b=_bd();if(b)b.classList.add('on');}
+  function _runClose(id){
+    var fn=_closeFns[id];
+    delete _closeFns[id];
+    try{if(fn)fn();}catch(e){if(window.HealthLog)HealthLog.add('hom_close_err',e&&e.message||e);}
+  }
+  function open(id,openFn,closeFn){
+    if(_active&&_active!==id){
+      var prev=_active;
+      _active=null;
+      _runClose(prev);
+      _hideBackdrop();
     }
-    // Close when tapping outside the search bar
-    setTimeout(function(){
-      function _outsideClose(e){
-        if(!bar.contains(e.target)){
-          document.removeEventListener('pointerdown',_outsideClose,true);
-          if(bar.classList.contains('on'))App.toggleSearch();
-        }
+    _active=id;
+    _closeFns[id]=closeFn||null;
+    _showBackdrop();
+    try{if(openFn)openFn();}catch(e){if(window.HealthLog)HealthLog.add('hom_open_err',e&&e.message||e);}
+  }
+  function close(){
+    if(!_active)return;
+    var id=_active;
+    _active=null;
+    _runClose(id);
+    _hideBackdrop();
+  }
+  function isOpen(id){return _active===id;}
+  function getActive(){return _active;}
+  function setBackdropColor(theme){var b=_bd();if(b)b.style.background=_bdColors[theme]||'rgba(0,0,0,.2)';}
+  // Auto-cleanup on app background and orientation change
+  AppRuntime.on('background',function(){close();});
+  AppRuntime.on('resize',function(){close();});
+  return{open:open,close:close,isOpen:isOpen,getActive:getActive,setBackdropColor:setBackdropColor};
+})();
+window.HeaderOverlayManager=HeaderOverlayManager;
+
+App.toggleSearch=function(){
+  if(HeaderOverlayManager.isOpen('search')){
+    HeaderOverlayManager.close();
+  }else{
+    HeaderOverlayManager.open('search',function(){
+      var bar=$('searchBar');
+      if(bar)bar.classList.add('on');
+      var inp=$('searchInput');
+      if(inp){
+        inp.focus();
+        var lastQ='';try{lastQ=sessionStorage.getItem('qs_last')||'';}catch(e){}
+        if(lastQ&&!inp.value){inp.value=lastQ;App.onSearch(lastQ);}
+        else if(!inp.value){App._renderSearchHistory();}
       }
-      document.addEventListener('pointerdown',_outsideClose,true);
-    },0);
-  } else {
-    App.clearSearch();
+    },function(){
+      var bar=$('searchBar');
+      if(bar)bar.classList.remove('on');
+      App.clearSearch();
+    });
   }
 };
+// Tapping the content backdrop closes whichever header panel is currently open
+App.onBackdropTap=function(){HeaderOverlayManager.close();};
 
 App.clearSearch=function(){
   clearTimeout(_searchTimer);_searchTimer=null;
@@ -3726,8 +3844,8 @@ App._mkSearchItem=function(r,isPrimary){
       H.selection();
       if(window.QuranSearch&&QuranSearch.trackTap)QuranSearch.trackTap(sn,an);
       _shAdd(q);
-      App.tab('quran');App.clearSearch();$('searchBar').classList.remove('on');
-      setTimeout(function(){App.openSurah(sn,an);},100);
+      HeaderOverlayManager.close();App.tab('quran');
+      setTimeout(function(){App.openSurah(sn,an,{source:'search',canTrackGoal:false});},100);
     };})(r.sn,r.an,S.search));
 
   }else if(r.type==='surah'){
@@ -3742,7 +3860,7 @@ App._mkSearchItem=function(r,isPrimary){
     item.appendChild(row);
     on(item,'click',(function(sn,q){return function(){
       _shAdd(q);
-      App.openSurah(sn);App.clearSearch();$('searchBar').classList.remove('on');
+      HeaderOverlayManager.close();App.openSurah(sn,undefined,{source:'search',canTrackGoal:false});
     };})(r.sn,S.search));
 
   }else{
@@ -3763,8 +3881,8 @@ App._mkSearchItem=function(r,isPrimary){
       H.selection();
       if(window.QuranSearch&&QuranSearch.trackTap)QuranSearch.trackTap(sn,an);
       _shAdd(q);
-      App.tab('quran');App.clearSearch();$('searchBar').classList.remove('on');
-      setTimeout(function(){App.openSurah(sn,an);},100);
+      HeaderOverlayManager.close();App.tab('quran');
+      setTimeout(function(){App.openSurah(sn,an,{source:'search',canTrackGoal:false});},100);
     };})(r.sn,r.an,S.search));
   }
 
@@ -3833,6 +3951,8 @@ function renderSurahGrid(){
     ayahsEl.className='surah-ayahs';
     ayahsEl.textContent=s.a+' '+ayahLbl;
     info.appendChild(deco);info.appendChild(nameEn);info.appendChild(ayahsEl);
+    var goalState=document.createElement('div');goalState.className='surah-goal-state';
+    imgPanel.appendChild(goalState);
     card.appendChild(imgPanel);card.appendChild(badge);card.appendChild(info);
     frag.appendChild(card);
   }
@@ -3860,6 +3980,34 @@ function renderSurahGrid(){
   }
   _surahBadgeObs.disconnect();
   grid.querySelectorAll('.surah-card').forEach(function(card){_surahBadgeObs.observe(card);});
+  _refreshSurahCompletionBadges();
+}
+
+function _refreshSurahCompletionBadges(){
+  var grid=$('surahGrid');
+  if(!grid)return;
+  var goal=getGoal();
+  var completed=(goal&&goal.completedSurahs)||[];
+  var progress=(goal&&goal.surahProgress)||{};
+  console.log('[BADGE_RENDER]',{completed:completed.length,progressKeys:Object.keys(progress).length});
+  grid.querySelectorAll('.surah-card').forEach(function(card){
+    var n=parseInt(card.dataset.n);
+    var st=card.querySelector('.surah-goal-state');
+    if(!st)return;
+    st.textContent='';
+    if(completed.indexOf(n)>=0){
+      var b=document.createElement('span');b.className='surah-done-badge';b.textContent='✓';
+      st.appendChild(b);
+    } else {
+      var hw=progress[String(n)]||progress[n]||0;
+      if(hw){
+        var s=SURAHS[n-1];
+        var p=document.createElement('span');p.className='surah-progress-badge';
+        p.textContent=String(hw)+(s?'/'+s.a:'');
+        st.appendChild(p);
+      }
+    }
+  });
 }
 
 /* ===== CONTINUE READING ===== */
@@ -3890,7 +4038,17 @@ function renderContinue(){
 }
 
 /* ===== OPEN SURAH ===== */
-App.openSurah=function(num,scrollTo){
+App.openSurah=function(num,scrollTo,opts){
+  // S.readerSession tracks the current open context.
+  // canTrackGoal defaults to true when a goal exists (normal navigation).
+  // External sources (search/notification/bookmark/deep_link/audio) pass canTrackGoal:false.
+  var _opts=opts||{};
+  S.readerSession={
+    source:_opts.source||'surah_grid',
+    canTrackGoal:(_opts.canTrackGoal!==undefined)?_opts.canTrackGoal:!!getGoal()
+  };
+  S.readerOpenSource=S.readerSession.source;
+  console.log('[OPEN_SURAH]',{surah:num,ayah:scrollTo,source:S.readerSession.source,canTrackGoal:S.readerSession.canTrackGoal});
   if(S.surah===num&&$('quranReader').classList.contains('on'))return; // already open
   if(tapGuard('openSurah',300))return; // prevent double-tap race
   var s=SURAHS[num-1]; // bounds-check before any state mutation
@@ -3925,6 +4083,7 @@ App.openSurah=function(num,scrollTo){
 
 App.backToList=function(){
   H.light();
+  S.readerSession=null; // leaving the reader clears goal context
   if(S.surah){
     try{localStorage.setItem('surah_scroll_'+S.surah,String($('ayahList').scrollTop))}catch(e){}
   }
@@ -3956,6 +4115,8 @@ var _qcfV2FontInjected={};
 var _qcfV4FontInjected={};
 // pageNum → Promise<boolean> — deduplicates concurrent font-load waits
 var _qcfV4FontLoadP={};
+// QPC V1 (QUL) font tracking — parallel to QCF4, same concurrency model
+var _qpcV1FontInjected={};var _qpcV1FontLoadP={};
 // Concurrency limiter: cap simultaneous QCF4 font fetches to 4 so fast-scroll
 // doesn't exhaust the browser's HTTP connection pool (typically 6 per origin).
 var _qcfFontActive=0,_qcfFontQueue=[];
@@ -3995,12 +4156,16 @@ function injectQCFFont(pageNum){
   s.textContent="@font-face{font-family:'QCFv1p"+pageNum+"';src:url('https://raw.githubusercontent.com/alquran-foundation/qpc-fonts/master/mushaf-woff2/QCF_P"+pad+".woff2') format('woff2');font-display:block}";
   document.head.appendChild(s);
 }
+// iOS: woff2 stripped by strip-ios-fonts.js (ITMS-90853); use bundled TTF in qpcv2ttf/
+// Android/web: use bundled woff2 in qpcv2/ (fully offline — 604 files in APK/public)
 function injectQCFV2Font(pageNum){
   if(_qcfV2FontInjected[pageNum])return;
   _qcfV2FontInjected[pageNum]=true;
-  var pad=String(pageNum).padStart(3,'0');
   var s=document.createElement('style');
-  s.textContent="@font-face{font-family:'QCFv2p"+pageNum+"';src:url('https://raw.githubusercontent.com/alquran-foundation/qpc-fonts/master/mushaf-v2/QCF2"+pad+".ttf') format('truetype');font-display:block}";
+  var localSrc=_isIOSCap
+    ?"url('/assets/fonts/qpcv2ttf/p"+pageNum+".ttf') format('truetype'),"
+    :"url('/assets/fonts/qpcv2/p"+pageNum+".woff2') format('woff2'),";
+  s.textContent="@font-face{font-family:'QCFv2p"+pageNum+"';src:"+localSrc+"url('https://static-cdn.tarteel.ai/qul/fonts/quran_fonts/v2/woff2/p"+pageNum+".woff2') format('woff2');font-display:block}";
   document.head.appendChild(s);
 }
 function injectQCFV4Font(pageNum){
@@ -4070,17 +4235,58 @@ function ensureQCFV4Font(pageNum){
   return _qcfV4FontLoadP[pageNum];
 }
 
-// Prefetch QCF4 font + page data for a page number — fire and forget.
+// ── QPC V1 (QUL) font injection + load wait ─────────────────────────────────
+// Mirrors injectQCFV4Font / ensureQCFV4Font exactly.
+// iOS: woff2 stripped by strip-ios-fonts.js (ITMS-90853); use bundled TTF in qpcv1ttf/
+// Android/Web: use bundled woff2 in qpcv1/ (fully offline — 604 files in APK/public)
+function injectQPCV1Font(pageNum){
+  if(_qpcV1FontInjected[pageNum])return;
+  _qpcV1FontInjected[pageNum]=true;
+  var s=document.createElement('style');
+  var localSrc=_isIOSCap
+    ?"url('/assets/fonts/qpcv1ttf/p"+pageNum+".ttf') format('truetype'),"
+    :"url('/assets/fonts/qpcv1/p"+pageNum+".woff2') format('woff2'),";
+  s.textContent="@font-face{font-family:'QPCv1p"+pageNum+"';src:"+localSrc+"url('https://static-cdn.tarteel.ai/qul/fonts/quran_fonts/v1/woff2/p"+pageNum+".woff2') format('woff2');font-display:block}";
+  document.head.appendChild(s);
+}
+function ensureQPCV1Font(pageNum){
+  if(_qpcV1FontLoadP[pageNum])return _qpcV1FontLoadP[pageNum];
+  injectQPCV1Font(pageNum);
+  var fontName='QPCv1p'+pageNum;
+  function _sentinelOk(){
+    try{
+      var cv=document.createElement('canvas');var cx=cv.getContext('2d');if(!cx)return false;
+      var s='ﭑﭒﭓﭔﭕ'; // QPC V1 sample codepoints
+      cx.font='48px monospace';var wRef=cx.measureText(s).width;
+      cx.font='48px "'+fontName+'",monospace';var wQCF=cx.measureText(s).width;
+      return wQCF>0&&Math.abs(wQCF-wRef)>2;
+    }catch(e){return false;}
+  }
+  if(!document.fonts||!document.fonts.load){_qpcV1FontLoadP[pageNum]=Promise.resolve(false);return _qpcV1FontLoadP[pageNum];}
+  var loadP=_qcfFontSlot(function(){
+    return document.fonts.load('1em "'+fontName+'"').then(function(faces){
+      if(!faces||!faces.length)return false;return _sentinelOk();
+    }).catch(function(){return false;});
+  });
+  var timeoutP=new Promise(function(res){setTimeout(function(){res(false);},5000);});
+  _qpcV1FontLoadP[pageNum]=Promise.race([loadP,timeoutP]).then(function(ok){
+    if(!ok){
+      var probe=_isIOSCap
+        ?('/assets/fonts/qpcv1ttf/p'+pageNum+'.ttf')
+        :('/assets/fonts/qpcv1/p'+pageNum+'.woff2');
+      fetch(probe).then(function(r){
+        console.warn('[QuranFont] QPCv1p'+pageNum+' FAILED — '+probe+' → HTTP '+r.status+(r.ok?' (file ok; face did not apply)':' (font file missing from bundle)'));
+      }).catch(function(e){console.warn('[QuranFont] QPCv1p'+pageNum+' FAILED — fetch error: '+(e&&e.message));});
+    }
+    return ok;
+  });
+  return _qpcV1FontLoadP[pageNum];
+}
+
 function _prefetchMushafPage(pageNum){
   if(pageNum<1||pageNum>604)return;
   var pf=_getPageFields();
-  if(S.mushafFont==='qcf4'){
-    ensureQCFV4Font(pageNum);
-  } else if(S.mushafFont==='qcf2'){
-    injectQCFV2Font(pageNum);
-  } else {
-    injectQCFFont(pageNum);
-  }
+  injectQPCV1Font(pageNum);
   getMushafPageData(pageNum,pf.fields,pf.cache,pf.mushafId).catch(function(){});
 }
 
@@ -4107,6 +4313,19 @@ function getMushafPageRange(surahNum){
     });
 }
 
+// Singleton Promise for loading mushaf-v1-pages.json (QPC V1).
+var _mushafV1DataP=null;
+function _loadMushafV1BundledData(){
+  if(window._mushafV1Pages)return Promise.resolve(window._mushafV1Pages);
+  if(_mushafV1DataP)return _mushafV1DataP;
+  var _c=new AbortController();var _t=setTimeout(function(){_c.abort();},_sn.ms(30000,55000));
+  _mushafV1DataP=fetch('/data/mushaf-v1-pages.json',{signal:_c.signal})
+    .then(function(r){clearTimeout(_t);return r.ok?r.json():null;})
+    .then(function(data){if(data&&Array.isArray(data))window._mushafV1Pages=data;return window._mushafV1Pages||null;})
+    .catch(function(){clearTimeout(_t);return null;});
+  return _mushafV1DataP;
+}
+
 // Singleton Promise for loading mushaf-v4-pages.json.
 // Shared across all getMushafPageData calls so the 3 MB file is fetched once only.
 var _mushafV4DataP=null;
@@ -4125,6 +4344,67 @@ function _loadMushafBundledData(){
   return _mushafV4DataP;
 }
 
+// Extract QPC V2 verses for one surah from the already-loaded V4 bundle.
+// Uses _MUSHAF_PAGE_RANGES to scan only the relevant page slice — fast.
+function _extractV2VersesBysurah(surahNum){
+  var data=window._mushafV4Pages;
+  if(!data)return null;
+  var r=_MUSHAF_PAGE_RANGES[surahNum-1];
+  if(!r)return null;
+  var startPi=Math.max(0,r[0]-2),endPi=Math.min(data.length-1,r[1]);
+  var ayahMap={};
+  for(var pi=startPi;pi<=endPi;pi++){
+    var page=data[pi];if(!page)continue;
+    var pn=pi+1;
+    for(var vi=0;vi<page.verses.length;vi++){
+      var verse=page.verses[vi];
+      var pts=verse.verse_key.split(':');
+      if(parseInt(pts[0])!==surahNum)continue;
+      var an=parseInt(pts[1]);
+      if(!ayahMap[an])ayahMap[an]={verse_key:verse.verse_key,words:[]};
+      var ws=verse.words||[];
+      for(var wi=0;wi<ws.length;wi++){
+        var w=ws[wi];
+        if(w.code_v2)ayahMap[an].words.push({code_v2:w.code_v2,page_number:pn});
+      }
+    }
+  }
+  var result=[];
+  var keys=Object.keys(ayahMap).map(Number).sort(function(a,b){return a-b;});
+  for(var ki=0;ki<keys.length;ki++)result[keys[ki]-1]=ayahMap[keys[ki]];
+  return result.length?result:null;
+}
+
+// Extract QPC V1 verses for one surah from the already-loaded V1 bundle.
+function _extractV1VersesBysurah(surahNum){
+  var data=window._mushafV1Pages;
+  if(!data)return null;
+  var r=_MUSHAF_PAGE_RANGES[surahNum-1];
+  if(!r)return null;
+  var startPi=Math.max(0,r[0]-2),endPi=Math.min(data.length-1,r[1]);
+  var ayahMap={};
+  for(var pi=startPi;pi<=endPi;pi++){
+    var page=data[pi];if(!page)continue;
+    var pn=pi+1;
+    for(var vi=0;vi<page.verses.length;vi++){
+      var verse=page.verses[vi];
+      var pts=verse.verse_key.split(':');
+      if(parseInt(pts[0])!==surahNum)continue;
+      var an=parseInt(pts[1]);
+      if(!ayahMap[an])ayahMap[an]={verse_key:verse.verse_key,words:[]};
+      var ws=verse.words||[];
+      for(var wi=0;wi<ws.length;wi++){
+        var w=ws[wi];
+        if(w.code_v1)ayahMap[an].words.push({code_v1:w.code_v1,page_number:pn});
+      }
+    }
+  }
+  var result=[];
+  var keys=Object.keys(ayahMap).map(Number).sort(function(a,b){return a-b;});
+  for(var ki=0;ki<keys.length;ki++)result[keys[ki]-1]=ayahMap[keys[ki]];
+  return result.length?result:null;
+}
+
 function getMushafPageData(pageNum,fields,cachePrefix,mushafId){
   fields=fields||'code_v1';cachePrefix=cachePrefix||'qcfV1p_';
   var key=cachePrefix+pageNum;
@@ -4133,6 +4413,24 @@ function getMushafPageData(pageNum,fields,cachePrefix,mushafId){
   // 2. For QCF4: wait for bundled data to finish loading, THEN check it.
   //    This resolves the race where getMushafPageData was called before the
   //    3 MB JSON fetch completed, causing the bundle check to be skipped.
+  // QPC V1 bundled JSON (mushaf-v1-pages.json) — same pattern as QCF4 below
+  if(fields==='code_v1'&&cachePrefix==='qpcV1r_'){
+    return _loadMushafV1BundledData().then(function(){
+      if(window._mushafV1Pages){
+        var bd1=window._mushafV1Pages[pageNum-1];
+        if(bd1&&bd1.verses&&bd1.verses.length){
+          try{localStorage.setItem(key,JSON.stringify(bd1));}catch(e){}
+          return bd1;
+        }
+      }
+      var _mc1=new AbortController();
+      var _mt1=setTimeout(function(){_mc1.abort();},_sn.ms(12000,22000));
+      return fetch('https://api.quran.com/api/v4/verses/by_page/'+pageNum+'?words=true&word_fields=code_v1&per_page=300',{signal:_mc1.signal})
+        .then(function(r){clearTimeout(_mt1);if(!r.ok)throw new Error(r.status);return r.json();})
+        .then(function(json){try{localStorage.setItem(key,JSON.stringify(json));}catch(e){}return json;})
+        .catch(function(){clearTimeout(_mt1);return{verses:[],_noData:true};});
+    }).catch(function(){return{verses:[],_noData:true};});
+  }
   if(fields==='code_v2'&&mushafId===19){
     return _loadMushafBundledData().then(function(){
       if(window._mushafV4Pages){
@@ -4161,13 +4459,7 @@ function getMushafPageData(pageNum,fields,cachePrefix,mushafId){
     .then(function(json){try{localStorage.setItem(key,JSON.stringify(json));}catch(e){}return json;})
     .catch(function(e){clearTimeout(_mt);throw e;});
 }
-function _getPageFields(){
-  if(S.mushafFont==='qcf2')return{fields:'code_v2',cache:'qcfV2p_'};
-  // qcfV4r_ (was qcfV4p_): bumped 2026-06-12 after the page-assignment repair —
-  // pre-fix cached pages contained misplaced boundary verses (soup/dup/holes).
-  if(S.mushafFont==='qcf4')return{fields:'code_v2',cache:'qcfV4r_',mushafId:19};
-  return{fields:'code_v1',cache:'qcfV1p_'};
-}
+function _getPageFields(){return{fields:'code_v1',cache:'qpcV1r_'};}
 
 
 // Returns the first ayah number currently visible in the normal ayah list
@@ -4293,7 +4585,9 @@ App.toggleMushafMode=function(){
 
 // Standard Medina Mushaf (604-page Hafs/Uthmani) — juz start pages
 var JUZ_PAGES=[1,22,42,62,82,102,121,142,162,182,201,222,242,262,282,302,322,342,362,382,402,422,442,462,482,502,522,542,562,582];
-function juzForPage(p){for(var j=JUZ_PAGES.length-1;j>=0;j--){if(p>=JUZ_PAGES[j])return j+1;}return 1;}
+// QPC V1 juz start pages — derived from mushaf-v1-pages.json (juz 7 differs: V1=122 vs QCF4=121)
+var JUZ_PAGES_V1=[1,22,42,62,82,102,122,142,162,182,201,222,242,262,282,302,322,342,362,382,402,422,442,462,482,502,522,542,562,582];
+function juzForPage(p){var jp=getEffectiveMushafFont()==='qpcv1'?JUZ_PAGES_V1:JUZ_PAGES;for(var j=jp.length-1;j>=0;j--){if(p>=jp[j])return j+1;}return 1;}
 
 function _mushafSkeleton(){
   var sk=el('div','mushaf-skeleton');
@@ -4332,8 +4626,6 @@ function _mushafSkeleton(){
 
 // â”€â”€ Mushaf integrity validation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // pageData = the raw API json; pageEl = rendered DOM element
-var _mushafRenderMetrics={};  // pageNum → {fontMs,dataMs,renderMs,total,height,ok}
-
 function validateMushafPage(pageNum,pageData,pageEl){
   var verses=pageData.verses||[];
   var expectedKeys=[];
@@ -4353,84 +4645,6 @@ function validateMushafPage(pageNum,pageData,pageEl){
   return{pageNum:pageNum,expected:expectedKeys,present:presentKeys,missing:missingKeys,lineCount:lineCount,height:height,ok:ok};
 }
 
-window.MushafDebug={
-  pageMetrics:function(pageNum){
-    var m=_mushafRenderMetrics[pageNum];
-    if(!m){console.log('[MushafDebug] no metrics for page '+pageNum);return null;}
-    console.log('[MushafDebug] page='+pageNum,JSON.stringify(m,null,2));
-    return m;
-  },
-  allMetrics:function(){
-    Object.keys(_mushafRenderMetrics).sort(function(a,b){return+a-+b;}).forEach(function(p){
-      var m=_mushafRenderMetrics[p];
-      console.log('[MushafDebug] page='+p+' ok='+m.ok+' missing='+(m.missing||[]).join(',')
-        +' dataMs='+m.dataMs+' fontMs='+m.fontMs+' total='+m.total+' height='+m.height+'px');
-    });
-    return _mushafRenderMetrics;
-  },
-  validate:function(pageNum){
-    var view=$('mushafView');
-    if(!view)return;
-    var pageEl=view.querySelector('.mushaf-text-page[data-page="'+pageNum+'"]');
-    if(!pageEl){console.warn('[MushafDebug] page el not found: '+pageNum);return;}
-    var pf=_getPageFields();
-    getMushafPageData(pageNum,pf.fields,pf.cache,pf.mushafId).then(function(json){
-      var r=validateMushafPage(pageNum,json,pageEl);
-      console.log('[MushafDebug] validate page='+pageNum,r);
-    });
-  },
-  visibleSurah:function(){
-    var view=$('mushafView');
-    if(!view)return null;
-    var banners=view.querySelectorAll('.mushaf-surah-banner[data-surah]');
-    var viewRect=view.getBoundingClientRect();
-    var best=null,bestTop=Infinity;
-    for(var b=0;b<banners.length;b++){
-      var br=banners[b].getBoundingClientRect();
-      var dist=Math.abs(br.top-viewRect.top);
-      if(br.bottom>viewRect.top&&br.top<viewRect.bottom&&dist<bestTop){bestTop=dist;best=banners[b];}
-    }
-    if(!best){console.log('[MushafDebug] no banner visible');return null;}
-    var sn=parseInt(best.dataset.surah);
-    var s=SURAHS[sn-1];
-    console.log('[MushafDebug] visibleSurah='+sn+(s?' ('+s.en+')':''));
-    return sn;
-  },
-  renderedAyahs:function(pageNum){
-    var view=$('mushafView');
-    if(!view)return [];
-    var pageEl=pageNum?view.querySelector('.mushaf-text-page[data-page="'+pageNum+'"]'):null;
-    var container=pageEl||view;
-    var segs=container.querySelectorAll('.mushaf-ayah-seg[data-surah][data-ayah]');
-    var keys=[];
-    for(var i=0;i<segs.length;i++){
-      var k=segs[i].getAttribute('data-surah')+':'+segs[i].getAttribute('data-ayah');
-      if(keys.indexOf(k)<0)keys.push(k);
-    }
-    console.log('[MushafDebug] renderedAyahs page='+pageNum+' count='+keys.length,keys);
-    return keys;
-  },
-  missingAyahs:function(pageNum){
-    var self=this;
-    var pf=_getPageFields();
-    return getMushafPageData(pageNum,pf.fields,pf.cache,pf.mushafId).then(function(json){
-      var verses=json.verses||[];
-      var expected=[];
-      verses.forEach(function(v){
-        var k=String(v.surah_number||parseInt((v.verse_key||'0:0').split(':')[0]))+':'+String(v.verse_number);
-        if(expected.indexOf(k)<0)expected.push(k);
-      });
-      var rendered=self.renderedAyahs(pageNum);
-      var missing=expected.filter(function(k){return rendered.indexOf(k)<0;});
-      if(missing.length){
-        console.warn('[MushafDebug] missingAyahs page='+pageNum+' MISSING='+missing.join(','));
-      } else {
-        console.log('[MushafDebug] missingAyahs page='+pageNum+' ALL PRESENT ('+expected.length+' ayahs)');
-      }
-      return missing;
-    });
-  }
-};
 
 // Wrap mushaf pages into horizontal snap spreads for iPad
 // Landscape (â‰¥1024px): 2 pages per spread. Portrait (<1024px): 1 page per spread.
@@ -4473,14 +4687,18 @@ function _mushafWrapSpreads(view){
 function renderMushafView(){
   var view=$('mushafView');
   if(!view||!S.surah)return;
-  // Start the 3 MB bundle fetch immediately so it's ready before the first page loads
-  if(S.mushafFont==='qcf4')_loadMushafBundledData();
+  // Remove stale per-render listeners from the previous call.
+  // These were added inside the async .then() below, so they can't be caught
+  // by the synchronous guard above — store and remove explicitly here.
+  if(_mushafHdrScrollFn){view.removeEventListener('scroll',_mushafHdrScrollFn);_mushafHdrScrollFn=null;}
+  if(_mushafTouchFn){view.removeEventListener('touchstart',_mushafTouchFn);_mushafTouchFn=null;}
+  // Start bundle fetch immediately so it's ready before the first page loads
+  _loadMushafV1BundledData();
   clearMushafHighlights();
   // Disconnect previous lazy-load observer to prevent accumulation
   if(_mushafLazyObs){_mushafLazyObs.disconnect();_mushafLazyObs=null;}
   _mqReset();
   window._mushafVerseElements={};
-  _mushafRenderMetrics={}; // reset per-surah — prevents unbounded growth across long sessions
   // Single clear + skeleton — never clear twice. When page range resolves we remove
   // only the skeleton node, so the view is never in a blank state between clears.
   clear(view);
@@ -4494,11 +4712,9 @@ function renderMushafView(){
     if(_skel.parentNode===view)view.removeChild(_skel); // remove skeleton, not entire view
     view.scrollTop=0;view.scrollLeft=0;
 
-    // Pre-inject QCF fonts for first 3 pages so they're downloading in parallel
+    // Pre-inject QPC V1 fonts for first 3 pages so they're downloading in parallel
     for(var pi=pages.start;pi<=Math.min(pages.end,pages.start+2);pi++){
-      if(S.mushafFont==='qcf1')injectQCFFont(pi);
-      else if(S.mushafFont==='qcf2')injectQCFV2Font(pi);
-      else if(S.mushafFont==='qcf4')injectQCFV4Font(pi);
+      injectQPCV1Font(pi);
     }
 
     // Full Quran: page 1â†’604. Always start from page 1 so scrolling back to
@@ -4613,16 +4829,16 @@ function renderMushafView(){
           if(!best)best=banners[0];
           var sn=parseInt(best.dataset.surah);
           var ns=SURAHS[sn-1];
-          if(ns&&$('readerName')){var _rnm=$('readerName'),_rnn=ns.en+' - '+ns.ar;if(_rnm.textContent!==_rnn){_rnm.style.opacity='0';(function(_t){setTimeout(function(){_rnm.textContent=_t;_rnm.style.opacity='1';},140);}(_rnn));}}}
+          if(ns&&$('readerName')){var _rnm=$('readerName'),_rnn=ns.en+' - '+ns.ar;if(_rnm.textContent!==_rnn){_rnm.style.opacity='0';(function(_t){setTimeout(function(){_rnm.textContent=_t;_rnm.style.opacity='1';},140);}(_rnn));}}
         },200);
       }
-      view.addEventListener('scroll',_updateHeaderFromScroll,{passive:true});
+      _mushafHdrScrollFn=_updateHeaderFromScroll;
+      view.addEventListener('scroll',_mushafHdrScrollFn,{passive:true});
     })();
 
     // Cancel any in-flight smooth scroll when the user touches the mushaf
-    view.addEventListener('touchstart',function(){
-      if(_mushafScrollAnim){_mushafScrollAnim.cancelled=true;_mushafScrollAnim=null;}
-    },{passive:true});
+    _mushafTouchFn=function(){if(_mushafScrollAnim){_mushafScrollAnim.cancelled=true;_mushafScrollAnim=null;}};
+    view.addEventListener('touchstart',_mushafTouchFn,{passive:true});
 
     // iPad (any orientation â‰¥768px): page-by-page horizontal navigation
     if(document.documentElement.classList.contains('is-ipad')&&window.innerWidth>=768){
@@ -4763,20 +4979,14 @@ function _buildHafsFallbackFrag(verses,pageNum){
   return frag;
 }
 
+
 function loadMushafPageQCF(pageEl,pageNum){
-  var font=S.mushafFont||'qcf4';
+  var font='qpcv1';
   var pf=_getPageFields();
   var _t0=Date.now();
 
   // Start font and data fetches in parallel
-  var fontP;
-  if(font==='qcf4'){
-    fontP=ensureQCFV4Font(pageNum);
-  } else {
-    if(font==='qcf1')injectQCFFont(pageNum);
-    else if(font==='qcf2')injectQCFV2Font(pageNum);
-    fontP=Promise.resolve(true);
-  }
+  var fontP=ensureQPCV1Font(pageNum);
   var _dataT=Date.now();
   // Race page data against a max-wait timeout. On slow networks the timeout is
   // longer, but if it expires we immediately render the Hafs fallback so the
@@ -4789,18 +4999,15 @@ function loadMushafPageQCF(pageEl,pageNum){
     var _dataMs=Date.now()-_dataT;
     var verses=json.verses||[];
     if(!verses.length){
-      // No page data — render Hafs Arabic text as fallback (never show ×)
-      if(font==='qcf4'){
-        var _nd=_buildHafsFallbackFrag([],pageNum);
-        clear(pageEl);pageEl.classList.add('mushaf-page-hafs-fallback');pageEl.appendChild(_nd);
-      } else {clear(pageEl);pageEl.appendChild(el('div','mushaf-page-ph','—'));}
+      var _nd=_buildHafsFallbackFrag([],pageNum);
+      clear(pageEl);pageEl.classList.add('mushaf-page-hafs-fallback');pageEl.appendChild(_nd);
       return;
     }
 
     // Render into a fragment — spinner stays visible until font is ready
     var frag=document.createDocumentFragment();
-    // Juz banner — show only at the START of a new juz
-    var juzIdx=JUZ_PAGES.indexOf(pageNum);
+    var _juzMap=JUZ_PAGES_V1;
+    var juzIdx=_juzMap.indexOf(pageNum);
     if(juzIdx>=0){
       var juzBanner=el('div','mushaf-juz-banner',t('reader.juz_label')+' '+toArabicNum(juzIdx+1));
       frag.appendChild(juzBanner);
@@ -4826,10 +5033,10 @@ function loadMushafPageQCF(pageEl,pageNum){
       }
     }
 
-    if(font==='qcf1'||font==='qcf2'||font==='qcf4'){
-      // ── QCF line-by-line rendering (V1, V2, or V4 tajweed) ──
-      var fontFam=(font==='qcf2')?"'QCFv2p"+pageNum+"'":(font==='qcf4')?"'QCFv4p"+pageNum+"'":"'QCFv1p"+pageNum+"'";
-      var codeField=(font==='qcf2'||font==='qcf4')?'code_v2':'code_v1';
+    if(font==='qpcv1'){
+      // ── QPC V1 line-by-line rendering ──
+      var fontFam="'QPCv1p"+pageNum+"'";
+      var codeField='code_v1';
       var lineOrder=[];var lineOrderSeen={};var lineStartsSurah={};var lineAyahGroups={};
 
       verses.forEach(function(verse){
@@ -4862,7 +5069,8 @@ function loadMushafPageQCF(pageEl,pageNum){
           seg.className='mushaf-ayah-seg';
           seg.setAttribute('data-surah',String(g.sn));
           seg.setAttribute('data-ayah',String(g.vn));
-          seg.textContent=g.words.join('');
+          var _glyphStr=g.words.join('‌'); // QCF4 only: ZWNJ between word tokens
+          seg.textContent=_glyphStr;
           var k=String(g.sn)+':'+String(g.vn);
           if(!window._mushafVerseElements[k])window._mushafVerseElements[k]=[];
           window._mushafVerseElements[k].push(seg);
@@ -4996,8 +5204,8 @@ function loadMushafPageQCF(pageEl,pageNum){
       var _total=Date.now()-_t0;
       // Re-fit once QCF1/QCF2 font actually downloads (fontP resolved instantly so
       // the first RAF below measures with the fallback font — this corrects it)
-      if(font==='qcf1'||font==='qcf2'){
-        var _qcfFam=(font==='qcf2')?"1em 'QCFv2p"+pageNum+"'":"1em 'QCFv1p"+pageNum+"'";
+      if(font==='qcf1'||font==='qcf2'||font==='qpcv1'){
+        var _qcfFam=font==='qcf2'?"1em 'QCFv2p"+pageNum+"'":font==='qpcv1'?"1em 'QPCv1p"+pageNum+"'":"1em 'QCFv1p"+pageNum+"'";
         if(document.fonts&&document.fonts.load){
           document.fonts.load(_qcfFam).then(function(){
             requestAnimationFrame(function(){_fitQCFLines(pageEl);});
@@ -5007,33 +5215,22 @@ function loadMushafPageQCF(pageEl,pageNum){
       // Integrity validation + line auto-fit — runs after DOM commit
       requestAnimationFrame(function(){
         _fitQCFLines(pageEl);
-        var result=validateMushafPage(pageNum,json,pageEl);
-        _mushafRenderMetrics[pageNum]={
-          fontMs:fontMs||0,dataMs:_dataMs,renderMs:_renderMs,total:_total,
-          height:pageEl.offsetHeight,ok:result.ok,
-          expected:result.expected,missing:result.missing
-        };
-        console.log('[MushafPerf] page='+pageNum+' dataMs='+_dataMs+' fontMs='+(fontMs||0)+' renderMs='+_renderMs+' total='+_total+' ok='+result.ok+(result.missing.length?' MISSING='+result.missing.join(','):''));
+        validateMushafPage(pageNum,json,pageEl);
       });
     };
 
-    // For QCF4 font already resolved by ensureQCFV4Font; for other modes font is always ready
     return fontP.then(function(fontOk){
-      var QFM=window.QuranFontManager;
       var _fontMs=Date.now()-_t0-_dataMs;
-      if(font==='qcf4'&&!fontOk){
-        // QCF4 font unavailable — sentinel test failed or font timed out.
-        // Render readable Hafs Arabic text; never show broken PUA glyph codes.
-        if(QFM)QFM.qcfPageFailed(pageNum,'font-unavailable');
+      if(!fontOk){
+        // Font unavailable — sentinel test failed or font timed out.
         clear(pageEl);
         pageEl.classList.add('mushaf-page-hafs-fallback');
-        // Banner: tell user font is unavailable and offer retry
         var _fb=document.createElement('div');_fb.className='mushaf-fallback-banner';
         var _fi=document.createElement('i');_fi.className='fas fa-info-circle';_fb.appendChild(_fi);
         var _ft=document.createElement('span');_ft.textContent=' '+(window.t?t('mushaf.font_offline'):'ستایلا پەڕینێ نەکەتە دەست بی ئینتەرنەت.');_fb.appendChild(_ft);
         var _fr=document.createElement('button');_fr.className='mushaf-fallback-retry';_fr.textContent=window.t?t('general.retry','دوبارە'):'دوبارە';
         _fr.addEventListener('click',function(){
-          delete _qcfV4FontLoadP[pageNum];delete _qcfV4FontInjected[pageNum];
+          delete _qpcV1FontLoadP[pageNum];delete _qpcV1FontInjected[pageNum];
           delete pageEl.dataset.loaded;clear(pageEl);
           pageEl.classList.remove('mushaf-page-hafs-fallback');
           pageEl.appendChild(_mushafSkeleton());
@@ -5042,11 +5239,8 @@ function loadMushafPageQCF(pageEl,pageNum){
         _fb.appendChild(_fr);
         pageEl.appendChild(_fb);
         pageEl.appendChild(_buildHafsFallbackFrag(verses,pageNum));
-        _mushafRenderMetrics[pageNum]={fontMs:_fontMs,dataMs:_dataMs,total:Date.now()-_t0,ok:false,missing:['qcf4-font']};
-        console.log('[MushafPerf] page='+pageNum+' status=hafs-fallback total='+(Date.now()-_t0));
         return;
       }
-      if(font==='qcf4'&&QFM)QFM.qcfPageLoaded(pageNum,Date.now()-_t0);
       showContent(_fontMs);
     });
   }).catch(function(err){
@@ -5081,49 +5275,63 @@ function renderAyahs(surahNum,scrollTo){
   var list=$('ayahList');
   var s=SURAHS[surahNum-1];
   if(!s)return;
+  if(list._sentinelCleanup){list._sentinelCleanup();list._sentinelCleanup=null;}
 
-  // Glyph font mode: fetch per-page word codes from API
+  // Glyph font mode: QPC V2 reads from local bundle; v4tajweed fetches from API
   var glyphMode=(S.readerFont==='qpcv2'||S.readerFont==='v4tajweed');
   if(glyphMode&&!S.glyphVerses[surahNum]){
-    var _isV4=S.readerFont==='v4tajweed';
-    var _gkey='rfGlyph_'+(_isV4?'v4':'v2')+'_'+surahNum;
-    var _gc=null;try{_gc=JSON.parse(localStorage.getItem(_gkey));}catch(e){}
-    if(_gc){S.glyphVerses[surahNum]=_gc;}
-    else{
-      // In-flight dedup: if already fetching for this surah+font, wait for it
-      S.glyphFetching=S.glyphFetching||{};
-      if(S.glyphFetching[_gkey])return;
-      S.glyphFetching[_gkey]=true;
-      // Keep existing list content visible while loading — don't clear.
-      // Only show spinner when list is actually empty.
-      var _hadContent=list.hasChildNodes();
-      if(!_hadContent){
-        var sp=el('div','prayer-status');sp.textContent=t('prayer.loading')||'تەماشەکرن...';
-        list.appendChild(sp);
-      }
-      var _gctrl=new AbortController();
-      var _gtid=setTimeout(function(){_gctrl.abort();},_sn.ms(12000,22000));
-      fetch('https://api.quran.com/api/v4/verses/by_chapter/'+surahNum+'?words=true&word_fields=code_v2,page_number,char_type_name&per_page=300'+(_isV4?'&mushaf=19':''),{signal:_gctrl.signal})
-        .then(function(r){clearTimeout(_gtid);return r.json();})
-        .then(function(d){
-          delete S.glyphFetching[_gkey];
-          var vs=d.verses||[];
-          S.glyphVerses[surahNum]=vs;
-          try{localStorage.setItem(_gkey,JSON.stringify(vs));}catch(e){}
-          if(S.surah!==surahNum)return; // user navigated away — discard
-          renderAyahs(surahNum,scrollTo);
-        })
-        .catch(function(){
-          delete S.glyphFetching[_gkey];
-          clearTimeout(_gtid);
+    if(S.readerFont==='qpcv2'){
+      // Try to extract from already-loaded bundle (sync fast path)
+      var _extracted=_extractV2VersesBysurah(surahNum);
+      if(_extracted){
+        S.glyphVerses[surahNum]=_extracted;
+      }else{
+        // Bundle not loaded yet — load it (APK-local, instant on native; SW-cached on web)
+        var _hadV2=list.hasChildNodes();
+        if(!_hadV2){var _sp2=el('div','prayer-status');_sp2.textContent=t('prayer.loading')||'تەماشەکرن...';list.appendChild(_sp2);}
+        _loadMushafBundledData().then(function(){
           if(S.surah!==surahNum)return;
-          if(!_hadContent){
-            clear(list);
-            var e2=el('div','prayer-status prayer-error');e2.textContent=t('prayer.error')||'هەلە — دووباره هەوڵبدە';list.appendChild(e2);
-          }
-          // If list already had content, keep it — silent fail is better than blank screen
+          var _ex=_extractV2VersesBysurah(surahNum);
+          if(_ex)S.glyphVerses[surahNum]=_ex;
+          renderAyahs(surahNum,scrollTo);
+        }).catch(function(){
+          if(S.surah!==surahNum)return;
+          if(!_hadV2){clear(list);var _e2=el('div','prayer-status prayer-error');_e2.textContent=t('prayer.error')||'هەلە — دووباره هەوڵبدە';list.appendChild(_e2);}
         });
-      return;
+        return;
+      }
+    }else{
+      // v4tajweed: fetch from quran.com API
+      var _isV4=true;
+      var _gkey='rfGlyph_v4_'+surahNum;
+      var _gc=null;try{_gc=JSON.parse(localStorage.getItem(_gkey));}catch(e){}
+      if(_gc){S.glyphVerses[surahNum]=_gc;}
+      else{
+        S.glyphFetching=S.glyphFetching||{};
+        if(S.glyphFetching[_gkey])return;
+        S.glyphFetching[_gkey]=true;
+        var _hadContent=list.hasChildNodes();
+        if(!_hadContent){var sp=el('div','prayer-status');sp.textContent=t('prayer.loading')||'تەماشەکرن...';list.appendChild(sp);}
+        var _gctrl=new AbortController();
+        var _gtid=setTimeout(function(){_gctrl.abort();},_sn.ms(12000,22000));
+        fetch('https://api.quran.com/api/v4/verses/by_chapter/'+surahNum+'?words=true&word_fields=code_v2,page_number,char_type_name&per_page=300&mushaf=19',{signal:_gctrl.signal})
+          .then(function(r){if(!r.ok)throw new Error(r.status);clearTimeout(_gtid);return r.json();})
+          .then(function(d){
+            delete S.glyphFetching[_gkey];
+            var vs=d.verses||[];
+            S.glyphVerses[surahNum]=vs;
+            try{localStorage.setItem(_gkey,JSON.stringify(vs));}catch(e){}
+            if(S.surah!==surahNum)return;
+            renderAyahs(surahNum,scrollTo);
+          })
+          .catch(function(){
+            delete S.glyphFetching[_gkey];
+            clearTimeout(_gtid);
+            if(S.surah!==surahNum)return;
+            if(!_hadContent){clear(list);var e2=el('div','prayer-status prayer-error');e2.textContent=t('prayer.error')||'هەلە — دووباره هەوڵبدە';list.appendChild(e2);}
+          });
+        return;
+      }
     }
   }
 
@@ -5131,14 +5339,6 @@ function renderAyahs(surahNum,scrollTo){
   clear(list);
   list.scrollTop=0; // reset scroll after clear, not before
 
-  // Inject per-page fonts upfront when in glyph mode
-  if(glyphMode&&S.glyphVerses[surahNum]){
-    var _pages={};
-    S.glyphVerses[surahNum].forEach(function(v){(v.words||[]).forEach(function(w){if(w.page_number)_pages[w.page_number]=true;});});
-    Object.keys(_pages).forEach(function(pn){
-      if(S.readerFont==='v4tajweed')injectQCFV4Font(+pn);else injectQCFV2Font(+pn);
-    });
-  }
 
   var ayahs=[];
   if(S.quranData){
@@ -5265,13 +5465,13 @@ function renderAyahs(surahNum,scrollTo){
   prevBtn.appendChild(icon('fas fa-arrow-right'));
   prevBtn.appendChild(document.createTextNode(' '+t('reader.prev_surah')));
   if(surahNum<=1)prevBtn.disabled=true;
-  on(prevBtn,'click',function(){App.openSurah(surahNum-1)});
+  on(prevBtn,'click',function(){App.openSurah(surahNum-1,undefined,{source:'prev_next',canTrackGoal:!!(S.readerSession&&S.readerSession.canTrackGoal)});});
   nav.appendChild(prevBtn);
   var nextBtn=el('button','surah-nav-btn');
   nextBtn.appendChild(document.createTextNode(t('reader.next_surah')+' '));
   nextBtn.appendChild(icon('fas fa-arrow-left'));
   if(surahNum>=114)nextBtn.disabled=true;
-  on(nextBtn,'click',function(){App.openSurah(surahNum+1)});
+  on(nextBtn,'click',function(){App.openSurah(surahNum+1,undefined,{source:'prev_next',canTrackGoal:!!(S.readerSession&&S.readerSession.canTrackGoal)});});
   nav.appendChild(nextBtn);
   list.appendChild(nav);
 
@@ -5316,19 +5516,17 @@ function renderAyahs(surahNum,scrollTo){
     if(glyphMode&&S.glyphVerses[surahNum]&&S.glyphVerses[surahNum][ayahNum-1]){
       var _isV4g=S.readerFont==='v4tajweed';
       var _vd=S.glyphVerses[surahNum][ayahNum-1];
-      // Show normal Hafs text immediately — no blank box while glyph font loads
-      arabic.textContent=ayahs[ayahNum-1]?(ayahs[ayahNum-1].text||ayahs[ayahNum-1]):'';
-      // Build glyph spans in detached container
-      var _glyphDiv=document.createElement('div');
-      _glyphDiv.style.wordSpacing='normal';
+      arabic.style.wordSpacing='normal';
       var _pageNums=[],_curPg=null,_curCodes=[];
       var _flush=function(pg,codes){
         if(!codes.length)return;
         if(_pageNums.indexOf(pg)<0)_pageNums.push(pg);
+        if(_isV4g)injectQCFV4Font(pg);else injectQCFV2Font(pg);
         var sp=document.createElement('span');
         sp.style.fontFamily=_isV4g?"'QCFv4p"+pg+"',serif":"'QCFv2p"+pg+"',serif";
-        sp.textContent=codes.join('\u200c');
-        _glyphDiv.appendChild(sp);
+        sp.textContent=codes.join(' ');
+        arabic.appendChild(sp);
+        arabic.appendChild(document.createTextNode(' '));
       };
       (_vd.words||[]).forEach(function(w){
         if(!w.code_v2||w.char_type_name==='end')return;
@@ -5336,20 +5534,6 @@ function renderAyahs(surahNum,scrollTo){
         else{_curCodes.push(w.code_v2);}
       });
       if(_curPg!==null)_flush(_curPg,_curCodes);
-      // Swap to glyphs once all page fonts are loaded
-      if(_pageNums.length&&document.fonts){
-        var _fp=_isV4g?'QCFv4p':'QCFv2p';
-        Promise.all(_pageNums.map(function(pg){return document.fonts.load("1em '"+_fp+pg+"'");}))
-          .then(function(){
-            arabic.textContent='';
-            arabic.style.wordSpacing='normal';
-            while(_glyphDiv.firstChild)arabic.appendChild(_glyphDiv.firstChild);
-          }).catch(function(){});
-      }else{
-        arabic.textContent='';
-        arabic.style.wordSpacing='normal';
-        while(_glyphDiv.firstChild)arabic.appendChild(_glyphDiv.firstChild);
-      }
     }else{
       arabic.textContent=ayahs[ayahNum-1]?(ayahs[ayahNum-1].text||ayahs[ayahNum-1]):'';
     }
@@ -5380,11 +5564,16 @@ function renderAyahs(surahNum,scrollTo){
     _sentinelObs=new IntersectionObserver(function(entries){
       if(entries[0].isIntersecting){
         _sentinelObs.disconnect();_sentinelObs=null;
+        list._sentinelCleanup=null;
         if(_sentinel&&_sentinel.parentNode)_sentinel.parentNode.removeChild(_sentinel);_sentinel=null;
         appendBatch(_renderedTo+1,_renderedTo+BATCH,false);
       }
     },{root:$('ayahList'),rootMargin:'500px'});
     _sentinelObs.observe(_sentinel);
+    list._sentinelCleanup=function(){
+      if(_sentinelObs){_sentinelObs.disconnect();_sentinelObs=null;}
+      if(_sentinel&&_sentinel.parentNode){_sentinel.parentNode.removeChild(_sentinel);_sentinel=null;}
+    };
   }
 
   function appendBatch(from,to,sync,onTarget,targetAyah){
@@ -5472,10 +5661,16 @@ var _mqInFlight=[];    // page numbers mid-load — eviction skips these
 var _mqScrolling=false,_mqScrollTimer=null;
 var _mqScrollEl=null,_mqScrollFn=null;
 var MAX_MQ=2,MAX_MQ_KEPT=10; // 10 pages × ~300 DOM nodes × ~50KB font each
+// Track mushaf view listeners so they are removed before re-adding on re-render.
+// Without this, every renderMushafView() call accumulates another scroll+touch
+// handler on the same element, causing redundant setTimeout work per scroll event.
+var _mushafHdrScrollFn=null;
+var _mushafTouchFn=null;
 
 // Evict pages farthest from anchor, preserving slot heights to avoid scroll jump
 function _mqEvictFar(anchor){
-  var max=document.documentElement.classList.contains('perf-critical')?6:MAX_MQ_KEPT;
+  var _dcl=document.documentElement.classList;
+  var max=_dcl.contains('perf-critical')?6:_dcl.contains('perf-low')?8:MAX_MQ_KEPT;
   if(_mqLoadedPages.length<=max)return;
   var view=$('mushafView');
   while(_mqLoadedPages.length>max){
@@ -5963,10 +6158,53 @@ function updateMushafProgress(view){
   initTimer=setTimeout(checkVisible,500);
   periodic=setInterval(checkVisible,3000);
 
+  // ── Dev overlay: only when localStorage.devMode === '1' ──────────────────
+  // Enable:  localStorage.setItem('devMode','1'); location.reload()
+  // Disable: localStorage.removeItem('devMode'); location.reload()
+  var devOverlayInterval=null;
+  if(typeof localStorage!=='undefined'&&localStorage.getItem('devMode')==='1'){
+    var DOV_ID='_mushafDevOv';
+    var dov=document.getElementById(DOV_ID);
+    if(!dov){
+      dov=document.createElement('div');
+      dov.id=DOV_ID;
+      dov.style.cssText=[
+        'position:fixed','top:56px','left:6px','min-width:170px',
+        'background:rgba(0,0,20,0.88)','color:#7ef','font-size:9.5px',
+        'font-family:monospace','padding:6px 8px','border-radius:8px',
+        'z-index:2147483646','line-height:1.7','direction:ltr',
+        'pointer-events:none','white-space:nowrap'
+      ].join(';');
+      document.body.appendChild(dov);
+    }
+    dov.style.display='';
+    function _updateDevOv(){
+      if(destroyed){dov.style.display='none';return;}
+      var visAyah=_visibleAyahInMushaf();
+      var audioKey=_hl&&_hl.currentKey||'—';
+      var sn=_currentSurah||sessionSurah||S.surah||0;
+      var seenSet=_getSeen(sn);
+      var seenMax=0;seenSet.forEach(function(n){if(n>seenMax)seenMax=n;});
+      var savedRaw=0;
+      try{savedRaw=parseInt(localStorage.getItem('surah_read_v3_'+sn))||0;}catch(e){}
+      dov.textContent=[
+        'DEV │ renderer: '+getEffectiveMushafFont()+' (saved:'+S.mushafFont+')',
+        'surah: '+sn+'  visAyah: '+(visAyah||'—'),
+        'audio: '+audioKey,
+        'seen: '+seenSet.size+'  max: '+seenMax,
+        'savedMax: '+savedRaw
+      ].join('\n');
+    }
+    _updateDevOv();
+    devOverlayInterval=setInterval(_updateDevOv,500);
+  }
+
   _progressCleanup=function(){
     destroyed=true;
     clearTimeout(saveTimer);clearTimeout(initTimer);clearTimeout(scrollTick);
     clearTimeout(dwellTimer);clearInterval(periodic);
+    if(devOverlayInterval){clearInterval(devOverlayInterval);devOverlayInterval=null;}
+    var _dov=document.getElementById('_mushafDevOv');if(_dov)_dov.style.display='none';
     window.removeEventListener('scroll',onScroll,{capture:true});
     view.removeEventListener('scroll',onScroll);
   };
@@ -6016,8 +6254,12 @@ App.openReaderSettings=function(){
 App.closeReaderSettings=function(){
   $('qsOverlay').classList.remove('on');
   var qs=$('qsSheet');
-  qs.classList.remove('on');
-  qs.style.display='none';
+  qs.style.animation='slideDown .22s cubic-bezier(.4,0,1,1) both';
+  setTimeout(function(){
+    qs.style.animation='';
+    qs.classList.remove('on');
+    qs.style.display='none';
+  },210);
 };
 function applyShowTafsir(){
   document.querySelectorAll('.ayah-tafsir').forEach(function(el){
@@ -6062,6 +6304,7 @@ function renderReaderSettings(){
   /* ---- ARABIC FONT ---- */
   body.appendChild(el('div','qs-section-title',t('qs.quran_font_section')));
   var rfFonts=[
+    {id:'qpcv2', label:'QPC v2',       family:"'QCFv2p1','KFGQPC Hafs',serif"},
     {id:'hafs',  label:'KFGQPC Hafs', family:"'KFGQPC Hafs',serif"},
     {id:'amiri', label:'Amiri Quran', family:"'Amiri Quran',serif"}
   ];
@@ -6648,7 +6891,7 @@ App.audioNext=function(){
       _scrollMushafToAyah(_advSurah,1,0);
       updateMushafPlayBtn();
     } else if(S.tab==='quran'){
-      App.openSurah(_advSurah,1);
+      App.openSurah(_advSurah,1,{source:'audio',canTrackGoal:false});
     }
   }
   else{App.audioClose()}
@@ -6709,7 +6952,7 @@ App.openMushafSettings=function(){
   // (~20px on a 384px-wide phone) so every step visibly changes the page.
   // _fitQCFLines hard-guarantees no line ever clips, whatever value is chosen.
   var _fsMin=_isIpad?22:16, _fsMax=_isIpad?34:24;
-  var _fsKey=_isIpad?'mushafFontSize_ipad_'+S.mushafFont:'mushafFontSize_'+S.mushafFont;
+  var _fsKey=_isIpad?'mushafFontSize_ipad_qpcv1':'mushafFontSize_qpcv1';
   var _lhKey=_isIpad?'mushafLineH_ipad':'mushafLineH';
   var _lhMax=_isIpad?2.4:2.3;
   // Sync S values and CSS vars from the correct key for this device type
@@ -6729,6 +6972,7 @@ App.openMushafSettings=function(){
     v=Math.max(_fsMin,Math.min(_fsMax,Math.round(v)));S.mushafFontSize=v;fsVal.textContent=v+'px';
     document.documentElement.style.setProperty('--mushaf-size',v+'px');
     localStorage.setItem(_fsKey,String(v));
+    if(window.S&&S.user)debouncedSync();
     if(fsMBtn)fsMBtn.disabled=(v<=_fsMin);if(fsPBtn)fsPBtn.disabled=(v>=_fsMax);
     requestAnimationFrame(function(){
       var mv=$('mushafView');
@@ -6765,6 +7009,8 @@ App.openMushafSettings=function(){
   })();
   lhCtrl.appendChild(lhMBtn);lhCtrl.appendChild(lhVal);lhCtrl.appendChild(lhPBtn);
   body.appendChild(lhCtrl);
+
+
 
 
   pane.appendChild(body);ov.appendChild(pane);
@@ -6901,7 +7147,11 @@ App.openCopyModal=function(surah,ayah){
   $('copyTo').max=maxAyah;$('copyTo').value=Math.min(ayah+2,maxAyah);
   $('copyModal').classList.add('on');
 };
-App.closeCopyModal=function(){$('copyModal').classList.remove('on')};
+App.closeCopyModal=function(){
+  var p=$('copyModal');
+  p.style.animation='slideDown .22s cubic-bezier(.4,0,1,1) both';
+  setTimeout(function(){p.style.animation='';p.classList.remove('on');},210);
+};
 App.copyShowRange=function(){$('copyMainOpts').style.display='none';$('copyRangeOpts').style.display=''};
 App.copyBackToMain=function(){$('copyMainOpts').style.display='';$('copyRangeOpts').style.display='none'};
 App.copyFmtSelect=function(btn,fmt){
@@ -6949,7 +7199,9 @@ App.openAudioSettings=function(){
   renderAudioSettings();
 };
 App.closeAudioSettings=function(){
-  $('audioSettingsPanel').classList.remove('on');
+  var p=$('audioSettingsPanel');
+  p.style.animation='slideDown .22s cubic-bezier(.4,0,1,1) both';
+  setTimeout(function(){p.style.animation='';p.classList.remove('on');},210);
 };
 
 function renderAudioSettings(){
@@ -7725,10 +7977,7 @@ function syncFullPlayer(){
 }
 
 function _fpTick(ts){
-  if(!_fpOpen){_fpRafId=null;return;}
-  // Skip expensive work when app is backgrounded — RAF pauses anyway but
-  // when it resumes (tab focus) avoid a burst of stale-delta updates.
-  if(document.hidden){_fpRafId=requestAnimationFrame(_fpTick);return;}
+  if(!_fpOpen){_fpRafId=null;return false;} // return false signals Scheduler to stop loop
   var dt=ts-_fpLastTick;_fpLastTick=ts;
   var ae=S.audio.el;
   if(ae&&ae.duration>0&&!isNaN(ae.duration)){
@@ -7744,7 +7993,7 @@ function _fpTick(ts){
       var dur=$('fpDuration');if(dur)dur.textContent=_fmtTime(ae.duration);
     }
   }
-  _fpRafId=requestAnimationFrame(_fpTick);
+  // Scheduler owns rescheduling — do not call requestAnimationFrame here
 }
 
 function _buildRecPicker(){
@@ -7942,7 +8191,7 @@ App.openFP=function(){
   syncFullPlayer(); // _fpUpdateAyahs inside hits the guard and returns early — no animation
   ov.classList.add('open');
   pl.classList.add('open');
-  if(!_fpRafId)_fpRafId=requestAnimationFrame(_fpTick);
+  if(!_fpRafId)_fpRafId=AppRuntime.Scheduler.raf(_fpTick,'fullPlayer');
 };
 
 App.closeFP=function(){
@@ -7951,7 +8200,7 @@ App.closeFP=function(){
   _fpLastSurah=0;_fpLastAyah=0;_fpAnimating=false;_fpGen=0;
   var ov=$('fpOverlay'),pl=$('fullPlayer');
   if(ov)ov.classList.remove('open');
-  if(_fpRafId){cancelAnimationFrame(_fpRafId);_fpRafId=null;}
+  if(_fpRafId){_fpRafId.cancel();_fpRafId=null;}
   App.closeRecPicker();
   if(!pl||!pl.classList.contains('open'))return;
   // Slide player back down before hiding — mirrors the slideUp entry animation
@@ -7988,7 +8237,9 @@ App.openRepeat=function(){
 };
 
 App.closeRepeat=function(){
-  $('repeatModal').classList.remove('on');
+  var p=$('repeatModal');
+  p.style.animation='slideDown .22s cubic-bezier(.4,0,1,1) both';
+  setTimeout(function(){p.style.animation='';p.classList.remove('on');},210);
 };
 
 App.repeatMode=function(mode){
@@ -8323,7 +8574,7 @@ function renderBmList(bms){
     var openBtn=el('button','bm-card-btn');
     openBtn.appendChild(icon('fas fa-book-open'));
     openBtn.appendChild(document.createTextNode(' '+t('bookmarks.open')));
-    on(openBtn,'click',function(){App.tab('quran');setTimeout(function(){App.openSurah(bm.surah,bm.ayah)},100)});
+    on(openBtn,'click',function(){App.tab('quran');setTimeout(function(){App.openSurah(bm.surah,bm.ayah,{source:'bookmark',canTrackGoal:false})},100)});
     actions.appendChild(openBtn);
 
     var noteBtn=el('button','bm-card-btn');
@@ -8435,6 +8686,63 @@ function trackVerse(surah,ayah){
   _updateGoalsBadge();
   // Keep goal widget current — lightweight, no network
   pushGoalDataToWidget();
+  console.log('[TRACK_VERSE]',{surah:surah,ayah:ayah,canTrackGoal:!!(S.readerSession&&S.readerSession.canTrackGoal),source:S.readerSession&&S.readerSession.source});
+  if(S.readerSession&&S.readerSession.canTrackGoal)_updateGoalProgress(surah,ayah);
+}
+
+function _ensureGoalPointer(goal){
+  if(goal.pointerSurah)return goal;
+  if(!goal.surahProgress)goal.surahProgress={};
+  if(!goal.completedSurahs)goal.completedSurahs=[];
+  var _fi=1;
+  for(var _pi=1;_pi<=114;_pi++){if(goal.completedSurahs.indexOf(_pi)<0){_fi=_pi;break;}}
+  var _fsk=String(_fi);var _fsp=Number(goal.surahProgress[_fsk]||0);
+  var _fsi=SURAHS[_fi-1];
+  if(_fsi&&_fsp>=_fsi.a){
+    if(goal.completedSurahs.indexOf(_fi)<0)goal.completedSurahs.push(_fi);
+    goal.pointerSurah=_fi<114?_fi+1:114;goal.pointerAyah=1;
+  }else{
+    goal.pointerSurah=_fi;goal.pointerAyah=_fsp>0?_fsp:1;
+  }
+  return goal;
+}
+function _updateGoalProgress(surah,ayah){
+  var goal=getGoal();
+  if(!goal)return;
+  if(!goal.surahProgress)goal.surahProgress={};
+  if(!goal.completedSurahs)goal.completedSurahs=[];
+  goal=_ensureGoalPointer(goal);
+  var ps=goal.pointerSurah||1;var pa=goal.pointerAyah||1;
+  console.log('[GOAL_POINTER]',{pointerSurah:ps,pointerAyah:pa,completedSurahs:goal.completedSurahs,progress:goal.surahProgress});
+  // Sequential gate: only the current pointer surah, and only forward ayahs
+  if(surah!==ps||ayah<pa){
+    console.log('[GOAL_SKIP_OUT_OF_SEQUENCE]',{surah:surah,ayah:ayah,pointerSurah:ps,pointerAyah:pa});
+    return;
+  }
+  var sk=String(surah);var changed=false;
+  var prev=Number(goal.surahProgress[sk]||0);
+  var next=Math.max(prev,Number(ayah||0));
+  if(next>prev){goal.surahProgress[sk]=next;changed=true;}
+  var s=SURAHS[surah-1];
+  if(s&&ayah>=s.a){
+    // Surah complete — add to completedSurahs and advance pointer to next surah
+    if(goal.completedSurahs.indexOf(surah)<0){goal.completedSurahs.push(surah);changed=true;}
+    goal.surahProgress[sk]=s.a;
+    if(surah<114){goal.pointerSurah=surah+1;goal.pointerAyah=1;}
+    else{goal.pointerSurah=114;goal.pointerAyah=s.a;goal.finished=true;}
+    changed=true;
+    console.log('[GOAL_COMPLETE_SURAH]',{surah:surah,nextPointerSurah:goal.pointerSurah,nextPointerAyah:goal.pointerAyah});
+  }else{
+    // Partial — advance pointer within this surah
+    goal.pointerSurah=surah;goal.pointerAyah=ayah;changed=true;
+  }
+  if(changed){
+    goal.updatedAt=Date.now();
+    console.log('[GOAL_SAVE_BEFORE]',{surahProgress:goal.surahProgress,pointerSurah:goal.pointerSurah,pointerAyah:goal.pointerAyah});
+    saveGoal(goal);
+    console.log('[GOAL_SAVE_AFTER_RAW]',localStorage.getItem('readingGoal'));
+    _refreshSurahCompletionBadges();
+  }
 }
 
 function calcBestStreak(log){
@@ -8687,6 +8995,34 @@ function renderGoals(){
   });
   gc.appendChild(details);
   frag.appendChild(gc);
+
+  // Continue Goal card — sequential pointer (never affected by random opens)
+  goal=_ensureGoalPointer(goal);
+  var _ps=goal.pointerSurah;var _pa=goal.pointerAyah||1;
+  if(_ps&&_ps<=114&&(_ps>1||_pa>1||(goal.completedSurahs||[]).length>0||(goal.surahProgress&&Object.keys(goal.surahProgress).length>0))){
+    var cgSurah=SURAHS[_ps-1];
+    var cgCard=el('div','goal-card goal-continue-card');
+    var cgHdr=el('div','goal-card-name');
+    cgHdr.appendChild(icon('fas fa-book-open'));
+    cgHdr.appendChild(document.createTextNode(' '+(t('goals.continue_position')||'بەردەوامی خواندنا ئامانجی')));
+    cgCard.appendChild(cgHdr);
+    var cgDets=el('div','goal-details');
+    [{v:cgSurah?cgSurah.ar:'',l:t('goals.session.surah')||'سوورەت'},
+     {v:String(_pa),l:t('reader.ayah')||'ئایەت'},
+     {v:String((goal.completedSurahs||[]).length),l:t('goals.done_surahs')||'تەواوبوو'}
+    ].forEach(function(dd){
+      var det=el('div','goal-detail');
+      det.appendChild(el('div','goal-detail-val',dd.v));
+      det.appendChild(el('div','goal-detail-lbl',dd.l));
+      cgDets.appendChild(det);
+    });
+    cgCard.appendChild(cgDets);
+    on(cgCard,'click',(function(ps,pa){return function(){
+      H.medium();App.tab('quran');
+      setTimeout(function(){App.openSurah(ps,pa,{source:'continue_goal',canTrackGoal:true});},300);
+    };}(_ps,_pa)));
+    frag.appendChild(cgCard);
+  }
 
   // Last session card
   var sessions=getRecentSessions();
@@ -9120,7 +9456,10 @@ App.openPrayerProgress=function(){
 };
 App.closePrayerProgress=function(){
   _stopPppTick();_stopPppCdTick();
-  var p=$('prayerProgressPanel');if(p)p.classList.remove('on');
+  var p=$('prayerProgressPanel');
+  if(!p)return;
+  p.style.animation='slideDown .22s cubic-bezier(.4,0,1,1) both';
+  setTimeout(function(){p.style.animation='';p.classList.remove('on');},210);
 };
 App.openPrayerDay=function(dKey){
   var log=getPrayerLog();var dayLog=log[dKey]||{};
@@ -9169,7 +9508,14 @@ App.openPrayerDay=function(dKey){
   $('pppDayOverlay').classList.add('on');
 };
 App.closePrayerDay=function(){
-  $('pppDayOverlay').classList.remove('on');
+  var overlay=$('pppDayOverlay');
+  if(!overlay)return;
+  var sheet=overlay.querySelector('.ppp-day-sheet');
+  if(sheet)sheet.style.animation='slideDown .22s cubic-bezier(.4,0,1,1) both';
+  setTimeout(function(){
+    if(sheet)sheet.style.animation='';
+    overlay.classList.remove('on');
+  },210);
 };
 
 function _pppStreakVal(n){return n>0?'🔥 '+n:'0';}
@@ -9778,7 +10124,178 @@ setTimeout(function(){
   _updateGoalsBadge();
   _updatePrayerBadge();
   _updateMushafBadge();
+  _initInbox();
 },500);
+
+/* ===== NOTIFICATION INBOX ===== */
+(function(){
+  var INBOX_SEEN_KEY='notif_inbox_last_seen';
+  var INBOX_CACHE_KEY='notif_inbox_cache_v2';
+  var INBOX_CURSOR_KEY='notif_inbox_cursor_v2';
+  var _inboxItems=[];
+
+  function _getLastSeen(){
+    try{return parseInt(localStorage.getItem(INBOX_SEEN_KEY)||'0',10);}catch(e){return 0;}
+  }
+  function _markSeen(){
+    try{localStorage.setItem(INBOX_SEEN_KEY,Date.now().toString());}catch(e){}
+  }
+  function _loadCache(){
+    try{
+      var raw=localStorage.getItem(INBOX_CACHE_KEY);
+      return raw?JSON.parse(raw):[];
+    }catch(e){return[];}
+  }
+  function _saveCache(items){
+    try{localStorage.setItem(INBOX_CACHE_KEY,JSON.stringify(items));}catch(e){}
+  }
+  function _getCursor(){
+    try{return localStorage.getItem(INBOX_CURSOR_KEY)||null;}catch(e){return null;}
+  }
+  function _saveCursor(isoStr){
+    try{localStorage.setItem(INBOX_CURSOR_KEY,isoStr);}catch(e){}
+  }
+
+  // Merge newItems (newer) into cached, deduplicate by id, keep sorted desc by sent_at
+  function _mergeInbox(cached,newItems){
+    var byId={};
+    cached.forEach(function(n){byId[n.id]=n;});
+    newItems.forEach(function(n){byId[n.id]=n;});
+    var merged=Object.values(byId);
+    merged.sort(function(a,b){return new Date(b.sent_at)-new Date(a.sent_at);});
+    return merged.slice(0,50); // cap at 50 to avoid unbounded localStorage growth
+  }
+
+  // Fetch only notifications newer than our cursor; merge into cache.
+  // Falls back to full fetch if no cursor. Returns merged array.
+  async function _fetchAndMerge(){
+    try{
+      var cursor=_getCursor();
+      var reqBody={action:'public_inbox'};
+      if(cursor)reqBody.since=cursor;
+      var resp=await fetch('/admin-notifications-api',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(reqBody),
+      });
+      if(!resp.ok)return _loadCache(); // offline or error — serve from cache
+      var d=await resp.json();
+      var fresh=d.notifications||[];
+      var cached=_loadCache();
+      var merged=_mergeInbox(cached,fresh);
+      _saveCache(merged);
+      // Advance cursor to the most recent sent_at we now have
+      if(merged.length&&merged[0].sent_at)_saveCursor(merged[0].sent_at);
+      return merged;
+    }catch(e){
+      return _loadCache(); // network error — serve from cache
+    }
+  }
+
+  function _inboxBadgeUpdate(items){
+    var lastSeen=_getLastSeen();
+    var unread=items.filter(function(n){
+      return n.sent_at&&new Date(n.sent_at).getTime()>lastSeen;
+    }).length;
+    var badge=$('inboxBadge');
+    if(!badge)return;
+    if(unread>0){badge.style.display='inline-flex';badge.textContent=unread>9?'9+':String(unread);}
+    else{badge.style.display='none';}
+  }
+
+  function _renderInbox(items){
+    var list=$('inbox-list');
+    if(!list)return;
+    while(list.firstChild)list.removeChild(list.firstChild);
+    if(!items.length){
+      var empty=document.createElement('div');
+      empty.style.cssText='text-align:center;padding:40px 20px;color:var(--text-secondary);font-size:14px';
+      empty.textContent='چ ئاگەهدارکرن نینن!';
+      list.appendChild(empty);
+      return;
+    }
+    var lastSeen=_getLastSeen();
+    items.forEach(function(n){
+      var isNew=n.sent_at&&new Date(n.sent_at).getTime()>lastSeen;
+      var item=document.createElement('div');
+      item.style.cssText='padding:14px 20px;border-bottom:1px solid var(--border-light);cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent'+(isNew?';background:rgba(var(--primary-rgb,79,142,247),.04)':'');
+      if(isNew){
+        var dot=document.createElement('span');
+        dot.style.cssText='position:absolute;top:16px;inset-inline-start:8px;width:6px;height:6px;border-radius:50%;background:var(--accent,#4f8ef7)';
+        item.appendChild(dot);
+      }
+      var title=document.createElement('div');
+      title.style.cssText='font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:4px';
+      title.textContent=n.title||'';
+      var body=document.createElement('div');
+      body.style.cssText='font-size:13px;color:var(--text-secondary);line-height:1.4;margin-bottom:6px';
+      body.textContent=(n.body||'').slice(0,120)+((n.body||'').length>120?'…':'');
+      var date=document.createElement('div');
+      date.style.cssText='font-size:11px;color:var(--text-tertiary)';
+      date.textContent=n.sent_at?new Date(n.sent_at).toLocaleDateString('ku',{year:'numeric',month:'short',day:'numeric'}):'';
+      item.appendChild(title);
+      item.appendChild(body);
+      item.appendChild(date);
+      item.addEventListener('click',function(){
+        // Remove unread dot and highlight immediately on click
+        item.style.background='';
+        var d=item.querySelector('span');
+        if(d&&d.style.borderRadius==='50%')d.style.display='none';
+        if(n.deep_link_type&&n.deep_link_type!=='none'){
+          try{App.handleNotifTap&&App.handleNotifTap({type:n.deep_link_type,id:n.deep_link_id});}catch(e){}
+        }
+        App.closeInbox();
+      });
+      list.appendChild(item);
+    });
+  }
+
+  function _initInbox(){
+    var cached=_loadCache();
+    if(cached.length){_inboxItems=cached;_inboxBadgeUpdate(cached);}
+    _fetchAndMerge().then(function(items){
+      _inboxItems=items;
+      _inboxBadgeUpdate(items);
+    });
+  }
+
+  App.openInbox=function(){
+    var modal=$('inbox-modal');
+    if(!modal)return;
+    HeaderOverlayManager.open('inbox',function(){
+      modal.style.display='block';
+      _renderInbox(_inboxItems);
+      _markSeen();
+      var badge=$('inboxBadge');
+      if(badge)badge.style.display='none';
+      _fetchAndMerge().then(function(items){
+        _inboxItems=items;
+        _renderInbox(items);
+        _inboxBadgeUpdate(items);
+      });
+    },function(){
+      if(modal)modal.style.display='none';
+    });
+  };
+
+  App.closeInbox=function(){
+    if(HeaderOverlayManager.isOpen('inbox'))HeaderOverlayManager.close();
+  };
+
+  window._initInbox=_initInbox;
+
+  App.handleNotifTap=function(notif){
+    if(!notif||!notif.type||notif.type==='none')return;
+    if(notif.type==='video'){
+      App.tab('video');
+      if(notif.id){
+        setTimeout(function(){
+          try{window.tvApp&&window.tvApp.playEpisode(notif.id);}catch(e){}
+        },400);
+      }
+    }
+  };
+})();
 
 /* ===== WIDGET DATA PUSH ===== */
 
@@ -10034,7 +10551,9 @@ App.openWizard=function(){
   renderWizardStep();
 };
 App.closeWizard=function(){
-  $('wizard').classList.remove('on');
+  var p=$('wizard');
+  p.style.animation='slideDown .22s cubic-bezier(.4,0,1,1) both';
+  setTimeout(function(){p.style.animation='';p.classList.remove('on');},210);
 };
 App.openDeleteConfirm=function(){
   $('goalConfirmOverlay').classList.add('on');
@@ -10283,7 +10802,15 @@ function mkToggleRow(labelText,isOn,onToggle,subText){
   row.appendChild(left);
   var toggle=el('div','toggle'+(isOn?' on':''));
   toggle.appendChild(el('div','toggle-knob'));
-  on(toggle,'click',function(){H.light();onToggle();});
+  on(toggle,'click',function(){
+    H.light();
+    toggle.classList.toggle('on');
+    try{onToggle();}
+    catch(e){
+      toggle.classList.toggle('on'); // revert visual on failure
+      if(window.HealthLog)HealthLog.add('toggle_crash',e&&e.message||e);
+    }
+  });
   row.appendChild(toggle);
   return row;
 }
@@ -10400,7 +10927,17 @@ async function openAboutSheet(type){
     _cfgOverlayEl.classList.add('on');
     _cfgSheetEl.style.display='';
     _cfgSheetEl.classList.add('open');
-    ss=await getSiteSettings();
+    try{ss=await getSiteSettings();}catch(e){
+      clear(body);
+      var _errEl=el('div','ab-error');
+      _errEl.style.cssText='display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px;color:var(--text2,#888);text-align:center;gap:12px';
+      var _errIc=el('i');_errIc.className='fas fa-circle-exclamation';_errIc.style.cssText='font-size:1.8rem;opacity:.4';
+      _errEl.appendChild(_errIc);
+      _errEl.appendChild(el('div','',_tl('error_loading','بارکردن سەرنەکەوت')));
+      body.appendChild(_errEl);
+      if(window.HealthLog)HealthLog.add('about_sheet_error',e&&e.message||e);
+      return;
+    }
     clear(body);
   }else{
     _cfgOverlayEl.classList.add('on');
@@ -10737,7 +11274,16 @@ function _showIgPicker(){
   });
 }
 
+var _renderSettingsScheduled=false;
 function renderSettings(){
+  if(_renderSettingsScheduled)return;
+  _renderSettingsScheduled=true;
+  (window.requestAnimationFrame||function(fn){setTimeout(fn,16);})(function(){
+    _renderSettingsScheduled=false;
+    _renderSettingsNow();
+  });
+}
+function _renderSettingsNow(){
   var content=$('settingsContent');
   var frag=document.createDocumentFragment();
 
@@ -10793,31 +11339,54 @@ function renderSettings(){
   frag.appendChild(profile);
 
   // ── (1) Reading Stats Card ────────────────────
-  var log=getReadLog();
-  var bms=getBookmarks();
-  var totalRead=calcTotalRead(log);
-  var streak=calcStreak(log);
-  var bestStreak=calcBestStreak(log);
-  var khatmCount=Math.floor(totalRead/6236);
-  var pLog=getPrayerLog();
-  var totalPrayers=Object.keys(pLog).reduce(function(acc,d){return acc+_TRACK_PRAYERS.filter(function(p){return pLog[d]&&pLog[d][p];}).length;},0);
+  // Always render immediately with — placeholders; fill real values after paint
+  // so Settings is instant on all tiers including low/critical devices.
   function _tl(key,fb){var v=t(key);return(v&&v!==key)?v:fb;}
   var statsCard=el('div','stats-card');
-  [[icon('fas fa-book-open'),totalRead,_tl('settings.stats_ayahs','ئایەتێن خواندی')],
-   [icon('fas fa-fire'),streak,_tl('settings.stats_streak','بەردەوامیا ڕۆژان')],
-   [icon('fas fa-bookmark'),bms.length,_tl('settings.stats_bookmarks','نیشانکری')],
-   [icon('fas fa-ranking-star'),bestStreak,_tl('settings.stats_best_streak','بلندترین بەردەوامییا خواندنێ')],
-   [icon('fas fa-star'),khatmCount,_tl('settings.stats_khatm','ختم')],
-   [icon('fas fa-mosque'),totalPrayers,_tl('settings.stats_prayers','نڤێژ')]
-  ].forEach(function(item){
+  var _statDefs=[
+    [icon('fas fa-book-open'),'—',_tl('settings.stats_ayahs','ئایەتێن خواندی')],
+    [icon('fas fa-fire'),'—',_tl('settings.stats_streak','بەردەوامیا ڕۆژان')],
+    [icon('fas fa-bookmark'),'—',_tl('settings.stats_bookmarks','نیشانکری')],
+    [icon('fas fa-ranking-star'),'—',_tl('settings.stats_best_streak','بلندترین بەردەوامییا خواندنێ')],
+    [icon('fas fa-star'),'—',_tl('settings.stats_khatm','ختم')],
+    [icon('fas fa-mosque'),'—',_tl('settings.stats_prayers','نڤێژ')]
+  ];
+  var _statNumEls=[];
+  _statDefs.forEach(function(item){
     var col=el('div','stats-col');
     var ic=item[0];ic.className+=' stats-icon';
     col.appendChild(ic);
-    col.appendChild(el('div','stats-num',String(item[1])));
+    var numEl=el('div','stats-num',item[1]);
+    _statNumEls.push(numEl);
+    col.appendChild(numEl);
     col.appendChild(el('div','stats-lbl',item[2]));
     statsCard.appendChild(col);
   });
   frag.appendChild(statsCard);
+  // Defer expensive calculation until idle — never blocks first render
+  (window.requestIdleCallback
+    ?function(fn){requestIdleCallback(fn,{timeout:2000});}
+    :function(fn){setTimeout(fn,120);}
+  )(function(){
+    try{
+      var log=getReadLog();
+      var bms=getBookmarks();
+      var totalRead=calcTotalRead(log);
+      var streak=calcStreak(log);
+      var bestStreak=calcBestStreak(log);
+      var khatmCount=Math.floor(totalRead/6236);
+      var pLog=getPrayerLog();
+      var totalPrayers=Object.keys(pLog).reduce(function(acc,d){
+        return acc+_TRACK_PRAYERS.filter(function(p){return pLog[d]&&pLog[d][p];}).length;
+      },0);
+      if(!statsCard.isConnected)return; // settings re-rendered while we were computing
+      [totalRead,streak,bms.length,bestStreak,khatmCount,totalPrayers].forEach(function(v,i){
+        if(_statNumEls[i])_statNumEls[i].textContent=String(v);
+      });
+    }catch(e){
+      if(window.HealthLog)HealthLog.add('stats_calc_error',e&&e.message||e);
+    }
+  });
 
   // ── Appearance ───────────────────────────────
   var g1=el('div','settings-group');
@@ -10853,7 +11422,14 @@ function renderSettings(){
     card.appendChild(el('div','theme-card-name',th.name));
     card.appendChild(el('div','theme-card-sub',th.sub));
     var chk=el('div','theme-card-check');chk.appendChild(icon('fas fa-check'));card.appendChild(chk);
-    on(card,'click',function(){S.theme=th.id;applyTheme();try{localStorage.setItem('themeUserChosen','1');}catch(e){}H.light();renderSettings();});
+    on(card,'click',function(){
+      S.theme=th.id;applyTheme();
+      try{localStorage.setItem('themeUserChosen','1');}catch(e){}
+      H.light();
+      // Update active state in-place — no full re-render needed
+      tGrid.querySelectorAll('.theme-card').forEach(function(c){c.classList.remove('on');});
+      card.classList.add('on');
+    });
     tGrid.appendChild(card);
   });
   g1.appendChild(tGrid);
@@ -10865,33 +11441,29 @@ function renderSettings(){
   g2.appendChild(mkToggleRow('نیشادانا تەفسیرێ',S.showTafsir,function(){
     S.showTafsir=!S.showTafsir;
     localStorage.setItem('showTafsir',String(S.showTafsir));
-    applyShowTafsir();renderSettings();
+    applyShowTafsir(); // toggle updates in-place via mkToggleRow
   }));
   g2.appendChild(mkToggleRow('چوونا ئۆتۆماتیکی بۆ سورەتا دویڤدا',S.autoAdvance,function(){
     S.autoAdvance=!S.autoAdvance;
     localStorage.setItem('autoAdvance',String(S.autoAdvance));
-    renderSettings();
   },'دەمێ دەنگێ سوورەتەکێ ب دوماهی دهێت'));
   g2.appendChild(mkToggleRow('گوهدان و دیتنا قورئانێ د هەمان دەمدا.',S.scrollFollowsAudio,function(){
     S.scrollFollowsAudio=!S.scrollFollowsAudio;
     localStorage.setItem('scrollFollowsAudio',String(S.scrollFollowsAudio));
-    renderSettings();
   },'ئەرێ تە دڤێت دەمێ گوهدانا قورئانێ، نڤیسین ئوتوماتیک بچیتە ئایەتا دویڤدا؟ ئەڤێ هەلبژێرە.'));
   g2.appendChild(mkToggleRow('دەمێ خواندنا قورئانێ، شاشە ڤەنامریت',S.keepAwake,function(){
     S.keepAwake=!S.keepAwake;
     localStorage.setItem('keepAwake',String(S.keepAwake));
-    applyKeepAwake();renderSettings();
+    applyKeepAwake();
   }));
   g2.appendChild(mkToggleRow('دەمێ دەرکەفتنێ، دەنگێ قورئانێ دمینیت.',S.bgAudio,function(){
     S.bgAudio=!S.bgAudio;
     localStorage.setItem('bgAudio',String(S.bgAudio));
-    renderSettings();
   }));
   var _hapticRow=mkToggleRow('لەرزینا دەستی',S.hapticFeedback,function(){
     S.hapticFeedback=!S.hapticFeedback;
     localStorage.setItem('hapticFeedback',String(S.hapticFeedback));
     H.success();
-    renderSettings();
   },'لەرزین دگەل هەر هەلبژارتنەکێ');
   var _hapticSupported=!!(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Haptics)||!!navigator.vibrate;
   if(!_hapticSupported){
@@ -10966,12 +11538,11 @@ function renderSettings(){
   // App notifications toggle (new video, new book — NOT prayer)
   var _appNotifOn=localStorage.getItem('appNotifEnabled')!=='false';
   g4.appendChild(mkToggleRow(
-    _appNotifOn ? 'چاڵاككرنا بیرئینانان' : 'نەچاڵاككرنا بیرئینانان',
+    'بیرئینانان',
     _appNotifOn,
     function(){
       _appNotifOn=!_appNotifOn;
       localStorage.setItem('appNotifEnabled',String(_appNotifOn));
-      renderSettings();
     },
     'ڕاوەستاندنا چاڵاکییا بیرئینانان (پەرتوکێن نوی، فەرموودە، ڤیدیو، ئایەت، زکر..)'
   ));
@@ -11397,6 +11968,14 @@ function checkAuthSession(){
       _renderHash.settings=null;
       startCloudSync();
       if(S.tab==='settings')renderSettings();
+      // Re-register push token with the logged-in session so user_id is saved in DB.
+      // Token registration fires on app startup before the session is restored,
+      // which is why all tokens default to user_id=null. Re-registering here
+      // patches the row with the verified user_id.
+      try{
+        var _ptc=JSON.parse(localStorage.getItem('push_token_current')||'null');
+        if(_ptc&&_ptc.token)_registerPushToken(_ptc.token,_ptc.platform,0);
+      }catch(_e){}
     }else if(event==='SIGNED_OUT'){
       S.user=null;_clearProfileCache();
       _renderHash.settings=null;
@@ -11447,8 +12026,9 @@ function _syncStatusInfo(){
   if(!navigator.onLine)return{dot:'⚠',txt:t('settings.sync_status_offline'),col:'#f09000'};
   if(S.isSyncing)return{dot:'⟳',txt:t('settings.sync_status_syncing'),col:'var(--text3)'};
   if(S.syncFailed)return{dot:'✕',txt:(t('settings.sync_status_failed')||'هەلگرتن سەرنەکەفت')+(S.syncErrorDetail?' ['+S.syncErrorDetail.slice(0,60)+']':''),col:'#e53935'};
-  if(S.lastSyncTime){
-    var ts=new Date(S.lastSyncTime).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  var _syncDisplayTime=S.lastSyncTime?new Date(S.lastSyncTime).toISOString():localStorage.getItem('_lastSyncTs');
+  if(_syncDisplayTime){
+    var ts=new Date(_syncDisplayTime).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
     return{dot:'✓',txt:(t('settings.sync_last')||'')+' '+ts,col:'#43a047'};
   }
   return{dot:'○',txt:t('settings.sync_never'),col:'var(--text3)'};
@@ -11589,20 +12169,31 @@ function _removeCurrentDeviceSession(){
 //   FURTHEST  — take whichever position is further in the Quran (lastRead)
 
 var SYNC_SIMPLE_KEYS=[
+  // Quran progress & goals
   'lastRead','readingGoal','readLog','readAyahsToday','trackingResetAt','fullResetAt',
-  'app_bookmarks','iv_watch_progress','iv_saved_eps',
-  'showTafsir','bgAudio','theme','keepAwake',
+  'bestStreak','khatmCelebAt','ayahMark',
+  // Bookmarks & saved content
+  'app_bookmarks','iv_saved_eps',
+  // iv_watch_progress intentionally excluded — uses per-episode ts merge in mergeSyncData
+  // Reader / Mushaf settings
+  'showTafsir','mushafMode','readerFont','mushafFont',
+  'mushafLineH','mushafLineH_ipad',
+  'mushafFontSize_qpcv1','mushafFontSize_ipad_qpcv1',
   'app_arSize','app_tfSize','app_lineH',
+  // Audio settings
   'app_reciter','app_speed','app_repeat','app_repeatCount',
-  'autoAdvance','scrollFollowsAudio','hapticFeedback',
-  'bestStreak',
-  'mushafMode','readerFont','mushafFont','mushafLineH',
-  'mushafFontSize_qcf4','mushafFontSize_ipad_qcf4','mushafFontSize_qcf1',
+  'autoAdvance','scrollFollowsAudio','bgAudio',
+  // App preferences
+  'theme','themeUserChosen','keepAwake','hapticFeedback','appNotifEnabled',
+  // Books
   'book_saved','book_read_ids',
+  // Prayer settings & goals
   'prayerCity','prayerMethod','prayerAthanEnabled','prayerToggles',
   'prayerAthanVoice','prayerTimeFormat',
-  'tasbihDhikr','tasbihTarget',
-  'prayerTrackingStart'
+  'prayerReminderEnabled','prayerReminderOffset','prayerReminderConfig',
+  'prayerTrackingStart','prayerYearCelebAt',
+  // Dhikr
+  'tasbihDhikr','tasbihTarget'
 ];
 
 // â”€â”€ Merge helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -11654,6 +12245,40 @@ function _mergePrayerLog(aStr,bStr){
   }catch(e){return aStr||bStr||'{}';}
 }
 
+// iv_watch_progress: per-episode LWW by .ts (most-recently-watched position wins per episode)
+// Full-object LWW was wrong: watching ep5 on phone A then ep3 on phone B wiped ep5 progress.
+function _mergeWatchProgress(aStr,bStr){
+  try{
+    var a=JSON.parse(aStr||'{}');var b=JSON.parse(bStr||'{}');
+    if(typeof a!=='object'||Array.isArray(a))a={};
+    if(typeof b!=='object'||Array.isArray(b))b={};
+    var r=Object.assign({},a);
+    Object.keys(b).forEach(function(epId){
+      var ae=a[epId],be=b[epId];
+      if(!ae)r[epId]=be;
+      else if(!be)r[epId]=ae;
+      else r[epId]=(be.ts||0)>(ae.ts||0)?be:ae;
+    });
+    return JSON.stringify(r);
+  }catch(e){return aStr||bStr||'{}'}
+}
+
+// ── Dirty-key tracking ────────────────────────────────────────────────────────
+// Tracks which keys have changed since last successful sync.
+// _syncPendingDirty survives app kills so a terminated-while-dirty session
+// flushes on next launch (even offline → queued until online returns).
+var _dirtyKeys=new Set();
+var _syncDirtyGen=0; // incremented by every _markDirty call
+var _isNewDeviceLogin=false; // set in startCloudSync, cleared after restore banner
+
+function _markDirty(key){
+  _syncDirtyGen++;
+  _dirtyKeys.add(key);
+  try{localStorage.setItem('_syncPendingDirty','1');}catch(e){}
+  debouncedSync();
+}
+App.markDirty=_markDirty; // exposed so prayer/books modules can call it
+
 // Master merge — called on both login-load and realtime push
 function mergeSyncData(local,cloud){
   if(!local)return cloud;
@@ -11695,6 +12320,51 @@ function mergeSyncData(local,cloud){
     if(lrv>0||crv>0){result[vrk]=String(Math.max(lrv,crv));}
   }
 
+  // readingGoal: smart merge — never let cloud LWW wipe local surahProgress/trackedSurah/trackedAyah
+  try{
+    var _lg=local.readingGoal?JSON.parse(local.readingGoal):null;
+    var _cg=cloud.readingGoal?JSON.parse(cloud.readingGoal):null;
+    if(!_lg&&!_cg){delete result.readingGoal;}
+    else if(!_lg){result.readingGoal=cloud.readingGoal;}
+    else if(!_cg){result.readingGoal=local.readingGoal;}
+    else if((_lg.created||0)!==(_cg.created||0)){
+      // Different goals (one was replaced) — use whichever was created more recently
+      result.readingGoal=(_lg.created||0)>=(_cg.created||0)?local.readingGoal:cloud.readingGoal;
+    }else{
+      // Same goal — merge additive fields, use newer updatedAt for tracked position
+      var _lgT=_lg.updatedAt||0;var _cgT=_cg.updatedAt||0;
+      var _gBase=_cgT>_lgT?_cg:_lg;
+      var _mg=Object.assign({},_gBase);
+      // surahProgress: max per surah (never decrease)
+      var _lsp=_lg.surahProgress||{};var _csp=_cg.surahProgress||{};
+      var _spAll={};
+      Object.keys(_lsp).forEach(function(k){_spAll[k]=true;});
+      Object.keys(_csp).forEach(function(k){_spAll[k]=true;});
+      var _sp={};
+      Object.keys(_spAll).forEach(function(k){_sp[k]=Math.max(Number(_lsp[k]||0),Number(_csp[k]||0));});
+      _mg.surahProgress=_sp;
+      // completedSurahs: union (add-only)
+      var _lcs=_lg.completedSurahs||[];var _ccs=_cg.completedSurahs||[];
+      var _csU={};
+      _lcs.forEach(function(n){_csU[n]=true;});_ccs.forEach(function(n){_csU[n]=true;});
+      _mg.completedSurahs=Object.keys(_csU).map(Number).sort(function(a,b){return a-b;});
+      // Recalculate sequential pointer from merged completedSurahs + surahProgress
+      var _fis=1;
+      for(var _spi=1;_spi<=114;_spi++){if(_mg.completedSurahs.indexOf(_spi)<0){_fis=_spi;break;}}
+      var _fsk2=String(_fis);var _fsp2=Number(_mg.surahProgress[_fsk2]||0);
+      var _fsInfo=SURAHS[_fis-1];
+      if(_fsInfo&&_fsp2>=_fsInfo.a){
+        if(_mg.completedSurahs.indexOf(_fis)<0)_mg.completedSurahs.push(_fis);
+        _mg.pointerSurah=_fis<114?_fis+1:114;_mg.pointerAyah=1;
+      }else{
+        _mg.pointerSurah=_fis;_mg.pointerAyah=_fsp2>0?_fsp2:1;
+      }
+      delete _mg.trackedSurah;delete _mg.trackedAyah;
+      _mg.updatedAt=Math.max(_lgT,_cgT)||undefined;
+      result.readingGoal=JSON.stringify(_mg);
+    }
+  }catch(_e_rg){}
+
   // FURTHEST: last read position — take whichever is deeper in the Quran,
   // UNLESS a full reset has happened (fullResetAt) — then use reset-winner's lastRead
   try{
@@ -11728,8 +12398,9 @@ function mergeSyncData(local,cloud){
   Object.keys(local).forEach(function(k){if(k.indexOf('pdfProg_')===0)_allBpKeys[k]=true;});
   Object.keys(cloud).forEach(function(k){if(k.indexOf('pdfProg_')===0)_allBpKeys[k]=true;});
   Object.keys(_allBpKeys).forEach(function(k){
-    var lv=local[k]?JSON.parse(local[k]):null;
-    var cv=cloud[k]?JSON.parse(cloud[k]):null;
+    var lv=null,cv=null;
+    try{lv=local[k]?JSON.parse(local[k]):null;}catch(_){}
+    try{cv=cloud[k]?JSON.parse(cloud[k]):null;}catch(_){}
     if(!lv)result[k]=cloud[k];
     else if(!cv)result[k]=local[k];
     else result[k]=(cv.ts||0)>(lv.ts||0)?cloud[k]:local[k];
@@ -11738,7 +12409,11 @@ function mergeSyncData(local,cloud){
   // prayer_log: additive union (pray on any device, all devices know)
   result.prayer_log=_mergePrayerLog(local.prayer_log,cloud.prayer_log);
 
+  // iv_watch_progress: per-episode LWW by .ts (not in SYNC_SIMPLE_KEYS — handled here)
+  result.iv_watch_progress=_mergeWatchProgress(local.iv_watch_progress,cloud.iv_watch_progress);
+
   result._syncTime=new Date().toISOString();
+  result._schemaVersion='2';
   return result;
 }
 
@@ -11750,6 +12425,10 @@ function gatherSyncData(){
     var v=localStorage.getItem(k);
     if(v!==null)data[k]=v;
   });
+  // iv_watch_progress gathered explicitly (not in SYNC_SIMPLE_KEYS — merged per-episode)
+  var wp=localStorage.getItem('iv_watch_progress');if(wp!==null)data.iv_watch_progress=wp;
+  // readSessions: cleared on user-switch, synced to preserve reading history across devices
+  var rs=localStorage.getItem('readSessions');if(rs!==null)data.readSessions=rs;
   var pl=localStorage.getItem('prayer_log');if(pl!==null)data.prayer_log=pl;
   for(var i=1;i<=114;i++){
     var pk='surah_progress_'+i;var sk='surah_scroll_'+i;var rk='surah_read_v3_'+i;
@@ -11762,12 +12441,33 @@ function gatherSyncData(){
   var _bpKeys=[];
   for(var _bi=0;_bi<localStorage.length;_bi++){var _bk=localStorage.key(_bi);if(_bk&&_bk.indexOf('pdfProg_')===0)_bpKeys.push(_bk);}
   _bpKeys.forEach(function(k){var v=localStorage.getItem(k);if(v!==null)data[k]=v;});
+  data._schemaVersion='2';
   // _syncTime set by caller so reads never pollute the timestamp
   return data;
 }
 
+function _showRestoreBanner(){
+  try{
+    var b=document.createElement('div');
+    b.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--accent,#4caf50);color:#fff;padding:10px 20px;border-radius:24px;font-size:14px;z-index:9999;box-shadow:0 2px 12px rgba(0,0,0,.3);pointer-events:none;';
+    b.textContent=t('settings.sync_restored')||'داتاکەت لە هەژمارەکەت گەڕاندرایەوە';
+    document.body.appendChild(b);
+    setTimeout(function(){if(b.parentNode)b.parentNode.removeChild(b);},4000);
+  }catch(e){}
+}
+
+function _validateSyncPayload(data){
+  if(!data||typeof data!=='object')return false;
+  if(typeof data._syncTime!=='string')return false;
+  if(data.lastRead!==undefined){
+    try{var _lr=JSON.parse(data.lastRead);if(typeof _lr!=='object'||_lr===null)return false;}
+    catch(e){return false;}
+  }
+  return true;
+}
+
 function applySyncData(data){
-  if(!data)return;
+  if(!_validateSyncPayload(data))return;
   Object.keys(data).forEach(function(k){
     if(k==='_syncTime')return;
     try{localStorage.setItem(k,data[k]);}catch(e){}
@@ -11784,20 +12484,13 @@ function applySyncData(data){
   S.hapticFeedback=localStorage.getItem('hapticFeedback')!=='false';
   S.mushafMode=localStorage.getItem('mushafMode')==='true';
   S.readerFont=localStorage.getItem('readerFont')||'hafs';
-  // Pinned to QCF4 — the only fully-bundled mode (604 local fonts + mushaf-v4-pages.json),
-  // so Mushaf works with no network at all. qcf1/qcf2 remain code-supported but require
-  // internet (raw.githubusercontent.com fonts + api.quran.com page data).
-  S.mushafFont='qcf4';
-  try{localStorage.setItem('mushafFont','qcf4');}catch(e){}
-  // Clamps/defaults MUST match the mushaf-settings stepper (phone 23-25/24,
-  // iPad 24-34/28) — the old 25-32/30 here forced 30px on phones, wider than
-  // the page card, which is what caused clipped line edges before the
-  // fit-to-width pass existed. _fitQCFLines() is the hard guarantee; this
-  // just keeps the first paint close to the fitted size.
+  // Mushaf always uses QPC V1; migrate any old saved value silently.
+  try{localStorage.setItem('mushafFont','qpcv1');}catch(e){}
+  S.mushafFont='qpcv1';
   var _ipadLS=document.documentElement.classList.contains('is-ipad');
   S.mushafFontSize=_ipadLS
-    ?Math.min(34,Math.max(22,parseInt(localStorage.getItem('mushafFontSize_ipad_qcf4'))||28))
-    :Math.min(24,Math.max(16,parseInt(localStorage.getItem('mushafFontSize_qcf4'))||22));
+    ?Math.min(34,Math.max(22,parseInt(localStorage.getItem('mushafFontSize_ipad_qpcv1'))||28))
+    :Math.min(24,Math.max(16,parseInt(localStorage.getItem('mushafFontSize_qpcv1'))||22));
   S.mushafLineH=_ipadLS
     ?Math.min(2.4,Math.max(1.8,parseFloat(localStorage.getItem('mushafLineH_ipad'))||2.0))
     :Math.min(2.3,Math.max(1.8,parseFloat(localStorage.getItem('mushafLineH'))||1.8));
@@ -11813,6 +12506,33 @@ function applySyncData(data){
       }
       _pk.forEach(function(k){localStorage.removeItem(k);});
       localStorage.setItem('qcfV4purged','1');
+    }
+  }catch(e){}
+  // One-time purge of V1 page caches built before end-marker patch (2026-06-27).
+  // Old entries were missing ayah end-marker glyphs; drop them so next render uses
+  // the updated bundled JSON which includes the end marker for every verse.
+  try{
+    if(!localStorage.getItem('qpcV1purged1')){
+      var _vk=[];
+      for(var _vi=0;_vi<localStorage.length;_vi++){
+        var _vkk=localStorage.key(_vi);
+        if(_vkk&&_vkk.indexOf('qpcV1r_')===0)_vk.push(_vkk);
+      }
+      _vk.forEach(function(k){localStorage.removeItem(k);});
+      localStorage.setItem('qpcV1purged1','1');
+    }
+  }catch(e){}
+  // One-time purge of legacy qcf1/qcf2 page caches — no longer needed now that
+  // QPC V1 is the only renderer. Prefix patterns: qcfV1p_, qcfV2p_.
+  try{
+    if(!localStorage.getItem('qcfLegacyPurged')){
+      var _lk=[];
+      for(var _li=0;_li<localStorage.length;_li++){
+        var _lkk=localStorage.key(_li);
+        if(_lkk&&(_lkk.indexOf('qcfV1p_')===0||_lkk.indexOf('qcfV2p_')===0))_lk.push(_lkk);
+      }
+      _lk.forEach(function(k){localStorage.removeItem(k);});
+      localStorage.setItem('qcfLegacyPurged','1');
     }
   }catch(e){}
   S.prayerCity=localStorage.getItem('prayerCity')||'Duhok';
@@ -11843,10 +12563,13 @@ function syncToCloud(){
   if(!S.supabase||!S.user||S.isSyncing)return;
   var now=Date.now();
   if(now-S.lastSyncTime<5000)return;
+  // Skip if nothing has changed and last sync was recent (2 min window)
+  if(_dirtyKeys.size===0&&localStorage.getItem('_syncPendingDirty')!=='1'&&(now-S.lastSyncTime)<120000)return;
   S.isSyncing=true;
   _updateSyncPanelStatus(); // show "syncing…" immediately
   var payload=gatherSyncData();
   payload._syncTime=new Date().toISOString();
+  var _genAtStart=_syncDirtyGen; // snapshot — detect writes that land during upload
   var _syncTO=new Promise(function(_,rej){setTimeout(function(){rej(new Error('sync_timeout'));},_sn.ms(18000,30000));});
   Promise.race([
     S.supabase.from('user_data').upsert({
@@ -11860,17 +12583,29 @@ function syncToCloud(){
       console.error('Sync error:',resp.error);
       S.syncErrorDetail=(resp.error.code||'')+' '+(resp.error.message||'');
       S.syncFailed=true;
+      try{localStorage.setItem('_syncPendingDirty','1');}catch(e){}
       _schedSyncRetry();
     }else{
       S.lastSyncTime=Date.now();
       S.syncFailed=false;
       S.syncErrorDetail=null;
       localStorage.setItem('_lastSyncTime',payload._syncTime);
+      localStorage.setItem('_lastSyncTs',payload._syncTime);
+      _dirtyKeys.clear();
       _syncRetryDelay=2000;
+      if(_syncDirtyGen===_genAtStart){
+        // No new writes during upload — clear the pending flag
+        localStorage.removeItem('_syncPendingDirty');
+      }else{
+        // New localStorage writes arrived during upload — they weren't in this payload.
+        // Leave _syncPendingDirty='1' and schedule a follow-up sync.
+        setTimeout(debouncedSync,0);
+      }
     }
   }).catch(function(e){
     console.error('Sync failed:',e);
     S.syncFailed=true;
+    try{localStorage.setItem('_syncPendingDirty','1');}catch(e2){}
     _schedSyncRetry();
   }).finally(function(){S.isSyncing=false;_updateSyncPanelStatus();});
 }
@@ -11888,7 +12623,11 @@ function _schedSyncRetry(){
 
 function loadFromCloud(cb){
   if(!S.supabase||!S.user){if(cb)cb();return}
-  S.supabase.from('user_data').select('app_data,updated_at').eq('user_id',S.user.id).single()
+  var _lto=new Promise(function(_,rej){setTimeout(function(){rej(new Error('load_timeout'));},_sn.ms(15000,25000));});
+  Promise.race([
+    S.supabase.from('user_data').select('app_data,updated_at').eq('user_id',S.user.id).single(),
+    _lto
+  ])
   .then(function(resp){
     if(resp.error){
       if(resp.error.code==='PGRST116'){
@@ -11915,11 +12654,20 @@ function loadFromCloud(cb){
       if(cb)cb();return;
     }
     if(resp.data&&resp.data.app_data){
+      if(!_validateSyncPayload(resp.data.app_data)){
+        console.warn('Cloud sync: invalid payload schema, skipping apply');
+        if(cb)cb();return;
+      }
       var localData=gatherSyncData();
       localData._syncTime=localStorage.getItem('_lastSyncTime')||'0';
       var merged=mergeSyncData(localData,resp.data.app_data);
       applySyncData(merged);
       localStorage.setItem('_lastSyncTime',merged._syncTime);
+      // Show "Restored from your account" banner on first login from a new device
+      if(_isNewDeviceLogin){
+        _isNewDeviceLogin=false;
+        _showRestoreBanner();
+      }
       // Push merged result back if it added anything from local
       setTimeout(syncToCloud,500);
       renderCurrentTab();
@@ -11940,6 +12688,7 @@ function subscribeRealtime(){
     },function(payload){
       if(S.isSyncing)return; // ignore echo while we are uploading
       if(!payload.new||!payload.new.app_data)return;
+      if(!_validateSyncPayload(payload.new.app_data))return;
       // Echo detection: skip if this update's _syncTime matches our own last push
       var incomingTime=payload.new.app_data._syncTime;
       var myLastSync=localStorage.getItem('_lastSyncTime');
@@ -11972,7 +12721,7 @@ function _clearUserLocalData(){
     localStorage.removeItem('surah_scroll_'+i);
     localStorage.removeItem('surah_read_v3_'+i);  // list-mode read progress
   }
-  ['_lastSyncTime','readingGoal','readLog','readAyahsToday','bestStreak','readSessions','prayer_log'].forEach(function(k){localStorage.removeItem(k);});
+  ['_lastSyncTime','_lastSyncTs','_syncPendingDirty','readingGoal','readLog','readAyahsToday','bestStreak','readSessions','iv_watch_progress','prayer_log'].forEach(function(k){localStorage.removeItem(k);});
   var _clearBpKeys=[];
   for(var _ci=0;_ci<localStorage.length;_ci++){var _ck=localStorage.key(_ci);if(_ck&&_ck.indexOf('pdfProg_')===0)_clearBpKeys.push(_ck);}
   _clearBpKeys.forEach(function(k){localStorage.removeItem(k);});
@@ -12042,10 +12791,16 @@ function startCloudSync(){
   if(prevUserId&&prevUserId!==S.user.id){
     _clearUserLocalData();
   }
+  // New device = this device has never synced for this account
+  _isNewDeviceLogin=!prevUserId||prevUserId!==S.user.id||!localStorage.getItem('_lastSyncTs');
   lsSet('_lastUserId',S.user.id);
   loadFromCloud(function(){
-    S.syncInterval=setInterval(syncToCloud,30000);
+    // On low-end devices use a longer sync interval to reduce background CPU
+    var _syncMs=(window.TKPerf&&(window.TKPerf.level==='low'||window.TKPerf.level==='critical'))?60000:30000;
+    S.syncInterval=setInterval(syncToCloud,_syncMs);
     subscribeRealtime();
+    // Flush any dirty data queued while offline (app killed before sync completed)
+    if(localStorage.getItem('_syncPendingDirty')==='1'){setTimeout(syncToCloud,1000);}
   });
   document.addEventListener('visibilitychange',syncOnHide);
   // Register this device and start heartbeat
@@ -12056,6 +12811,8 @@ function startCloudSync(){
 
 function stopCloudSync(){
   if(S.syncInterval){clearInterval(S.syncInterval);S.syncInterval=null}
+  clearTimeout(_syncRetryTimer);_syncRetryTimer=null;
+  _syncRetryDelay=2000;
   document.removeEventListener('visibilitychange',syncOnHide);
   unsubscribeRealtime();
   _stopSessionHeartbeat();
@@ -12085,8 +12842,157 @@ window.addEventListener('online',function(){
 
 window.addEventListener('offline',function(){ _updateOfflineBanner(true); });
 
-// Persistent offline banner — small non-dismissible chip at top of screen.
-// Created once, toggled with .on class, never shown on Capacitor (native UI handles it).
+// ── Top-banner system ────────────────────────────────────────────────────────
+// showTopBanner(msg, type, autoDismissMs)
+//   type: 'err' | 'warn' | 'info' | 'ok'
+//   Returns a dismiss() function.
+//
+// Features: spring entry/exit · swipe-down to dismiss · timer pause on touch ·
+//           haptics by severity · keyboard-aware (Visual Viewport) · a11y
+var _topBnrHost=null;
+function _getTopBnrHost(){
+  if(!_topBnrHost){
+    _topBnrHost=document.createElement('div');
+    _topBnrHost.className='top-bnr-host';
+    _topBnrHost.setAttribute('aria-live','assertive');
+    _topBnrHost.setAttribute('aria-atomic','false');
+    document.body.appendChild(_topBnrHost);
+    // Keyboard awareness — move host above the software keyboard when it opens.
+    // Visual Viewport shrinks when the keyboard opens; the gap is the KB height.
+    if(window.visualViewport){
+      var _vvTick=null;
+      var _vvUpdate=function(){
+        if(_vvTick)return;
+        _vvTick=requestAnimationFrame(function(){
+          _vvTick=null;
+          var kb=Math.max(0,window.innerHeight-window.visualViewport.height-window.visualViewport.offsetTop);
+          _topBnrHost.style.bottom=kb>80?(kb+10)+'px':'';
+        });
+      };
+      window.visualViewport.addEventListener('resize',_vvUpdate,{passive:true});
+      window.visualViewport.addEventListener('scroll',_vvUpdate,{passive:true});
+    }
+  }
+  return _topBnrHost;
+}
+// External API: sheets/dialogs call App.setBannerFloor(px) when opening/closing
+// so banners never overlap them. Pass 0 to reset.
+App.setBannerFloor=function(px){
+  var host=_getTopBnrHost();
+  if(px>0){
+    var base='calc(var(--tab-h,60px) + env(safe-area-inset-bottom,0px) + var(--audio-bar-h,0px) + 10px)';
+    host.style.bottom='max('+base+',calc('+(px+10)+'px))';
+  }else{
+    host.style.bottom='';
+  }
+};
+function showTopBanner(msg,type,autoDismissMs){
+  var host=_getTopBnrHost();
+  var card=document.createElement('div');
+  card.className='top-bnr '+(type||'err');
+  // Errors get role=alert for immediate screen-reader announcement
+  card.setAttribute('role',type==='err'?'alert':'status');
+
+  var txt=document.createElement('span');
+  txt.className='top-bnr-txt';
+  txt.textContent=msg;
+
+  var xBtn=document.createElement('button');
+  xBtn.className='top-bnr-x';
+  xBtn.setAttribute('aria-label',tSafe('a11y.dismiss')||'Dismiss notification');
+  xBtn.textContent='✕';
+
+  card.appendChild(txt);
+  card.appendChild(xBtn);
+  host.appendChild(card);
+
+  // Double rAF: let browser paint the start state before the transition fires.
+  requestAnimationFrame(function(){requestAnimationFrame(function(){card.classList.add('in');});});
+
+  // Haptic feedback keyed to severity
+  try{
+    if(type==='ok')H.success();
+    else if(type==='warn')H.warning();
+    else if(type==='err')H.heavy();
+    else H.light();
+  }catch(e){}
+
+  // ── Auto-dismiss with pause-on-touch ──────────────────────────────────────
+  var _dismissed=false;
+  var _remaining=autoDismissMs>0?autoDismissMs:0;
+  var _timer=null,_timerStart=0,_paused=false;
+  function _startTimer(){
+    if(!_remaining||_paused||_dismissed)return;
+    _timerStart=Date.now();
+    _timer=setTimeout(dismiss,_remaining);
+  }
+  function _pauseTimer(){
+    if(!_remaining||_paused)return;
+    _paused=true;clearTimeout(_timer);
+    _remaining=Math.max(0,_remaining-(Date.now()-_timerStart));
+  }
+  function _resumeTimer(){
+    if(!_remaining||!_paused)return;
+    _paused=false;_startTimer();
+  }
+  if(_remaining>0)_startTimer();
+
+  // ── Dismiss ───────────────────────────────────────────────────────────────
+  function dismiss(){
+    if(_dismissed)return;
+    _dismissed=true;clearTimeout(_timer);
+    card.style.transition='';
+    card.classList.remove('in');
+    card.classList.add('out');
+    setTimeout(function(){if(card.parentNode)card.parentNode.removeChild(card);},400);
+  }
+
+  // ── Swipe-down gesture ────────────────────────────────────────────────────
+  // Finger follows card naturally; flick threshold 56 px or velocity > 0.4 px/ms.
+  var _t0Y=0,_t0T=0,_tDelta=0,_tActive=false;
+  card.addEventListener('touchstart',function(e){
+    _t0Y=e.touches[0].clientY;_t0T=Date.now();
+    _tDelta=0;_tActive=true;
+    _pauseTimer();
+    card.style.transition='none'; // follow finger without easing
+    card.style.willChange='transform,opacity';
+  },{passive:true});
+  card.addEventListener('touchmove',function(e){
+    if(!_tActive)return;
+    var d=e.touches[0].clientY-_t0Y;
+    _tDelta=d<0?0:d; // only downward
+    card.style.transform='translateY('+_tDelta+'px)';
+    card.style.opacity=String(Math.max(0,1-_tDelta/110));
+  },{passive:true});
+  function _onTouchEnd(){
+    if(!_tActive)return;_tActive=false;
+    var vel=_tDelta/(Date.now()-_t0T+1); // px/ms
+    if(_tDelta>56||vel>0.4){
+      // Commit dismiss — flick card down off screen
+      _dismissed=true;clearTimeout(_timer);
+      card.style.transition='transform .26s cubic-bezier(.4,0,1,1),opacity .2s';
+      card.style.transform='translateY(140px)';
+      card.style.opacity='0';
+      setTimeout(function(){if(card.parentNode)card.parentNode.removeChild(card);},280);
+    }else{
+      // Snap back with spring
+      card.style.transition='';
+      card.style.transform='';
+      card.style.opacity='';
+      card.style.willChange='';
+      _resumeTimer();
+    }
+  }
+  card.addEventListener('touchend',_onTouchEnd,{passive:true});
+  card.addEventListener('touchcancel',_onTouchEnd,{passive:true});
+
+  xBtn.addEventListener('click',function(e){e.stopPropagation();dismiss();});
+  return dismiss;
+}
+App.showTopBanner=showTopBanner;
+
+// Persistent offline banner — card style, safe-area-aware, dismissible.
+// Only shown in the web context; Capacitor native layer handles it on iOS/Android.
 (function(){
   var _b=null;
   function _mkBanner(){
@@ -12094,7 +13000,19 @@ window.addEventListener('offline',function(){ _updateOfflineBanner(true); });
     _b.id='offlineBanner';
     _b.setAttribute('role','status');
     _b.setAttribute('aria-live','polite');
-    _b.textContent=t('toast.offline_cached','بەبێ ئینتەرنێت — ناوەرۆکی کاشێ');
+    var txt=document.createElement('span');
+    txt.className='offline-bnr-txt';
+    txt.textContent=t('toast.offline_cached','بەبێ ئینتەرنێت — ناوەرۆکی کاشێ');
+    var xBtn=document.createElement('button');
+    xBtn.className='offline-bnr-x';
+    xBtn.setAttribute('aria-label','Close');
+    xBtn.textContent='✕';
+    xBtn.addEventListener('click',function(e){
+      e.stopPropagation();
+      _b.classList.remove('on');
+    });
+    _b.appendChild(txt);
+    _b.appendChild(xBtn);
     document.body.appendChild(_b);
   }
   window._updateOfflineBanner=function(isOffline){
@@ -12533,7 +13451,7 @@ App.openLogin=function(){
       console.log('[Apple] nonce ready, calling plugin.authorize()');
       return plugin.authorize({nonce:hashedNonce});
     }).then(function(res){
-      console.log('[Apple] native result — user:',res&&res.user,'token present:',(res&&!!res.identityToken),'email:',res&&res.email,'givenName:',res&&res.givenName);
+      console.log('[Apple] native result — token present:',(res&&!!res.identityToken));
       var token=res&&res.identityToken;
       if(!token){
         console.warn('[Apple] no identityToken in result');
@@ -12550,7 +13468,7 @@ App.openLogin=function(){
         return;
       }
       var session=resp.data&&resp.data.session;
-      console.log('[Apple] Supabase session OK — user:',session&&session.user&&session.user.email);
+      console.log('[Apple] Supabase session OK');
       if(session){
         // checkProfileComplete handles profile creation + startCloudSync + loginSuccess
         checkProfileComplete(session);
@@ -13116,6 +14034,15 @@ function _ptrAnyOverlayOpen(){
   if(_ro&&_ro.style.display!=='none'&&parseFloat(_ro.style.opacity||'0')>0)return true;
   var _qs=document.getElementById('quickSettings');
   if(_qs&&parseFloat(_qs.style.opacity||'0')>0&&_qs.style.pointerEvents!=='none')return true;
+  if(document.querySelector('.qs-sheet.on'))return true;
+  if(document.querySelector('.repeat-modal.on'))return true;
+  if(document.querySelector('.copy-modal.on'))return true;
+  if(document.querySelector('.audio-settings-panel.on'))return true;
+  if(document.querySelector('.wizard.on'))return true;
+  if(document.querySelector('.ppp-panel.on'))return true;
+  if(document.querySelector('.ppp-day-overlay.on'))return true;
+  if(document.querySelector('.full-player.open'))return true;
+  if(document.querySelector('.iv-overlay.open'))return true;
   return false;
 }
 
@@ -13126,377 +14053,219 @@ var _ptrIsAndroid=(function(){
 })();
 
 // â”€â”€ setupPullToRefresh â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Design goals:
-//   touchstart  — validate gates, cache everything, zero work in move path
-//   touchmove   — calculate delta only, schedule rAF; no DOM reads, no layout
-//   rAF         — apply transform + opacity only; single pending rAF at a time
-//   touchend    — commit or snap; refresh runs async after animation settles
+// States: idle -> pulling -> refreshing -> settling -> idle
+// No momentum lock. No generation counters. No cross-panel flags.
+// _reset() is safe to call from any state at any time.
 function setupPullToRefresh(panelId,refreshFn,checkFn){
   var panel=$(panelId);
   if(!panel)return;
   ensurePtrSpinner();
 
-  // â”€â”€ Tuning â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // iOS keeps the original values. Android uses tighter constants:
-  //   Lower DEAD_ZONE arms PTR before Chrome's ~6px compositor scroll threshold.
-  //   Lower RESISTANCE gives a heavier feel that matches Android conventions.
-  //   Higher THRESHOLD offsets the earlier arm to avoid accidental triggers.
-  //   Wider DIR_CHECK_PX requires a more decisive horizontal gesture to cancel.
-  var DEAD_ZONE    = _ptrIsAndroid ? 4   : 8;    // px raw — jitter filter only
-  var THRESHOLD    = _ptrIsAndroid ? 88  : 80;   // px visual to arm trigger
-  var MAX_PULL     = 108;                         // px visual ceiling
-  var RESISTANCE   = _ptrIsAndroid ? 0.38: 0.45; // panel visual / raw finger travel
-  var DIR_CHECK_PX = _ptrIsAndroid ? 8   : 6;    // Manhattan px before direction locks
-  var LOCK_BASE    = 700;
-  var COOLDOWN_MS  = 2500;
+  var DEAD_ZONE    = _ptrIsAndroid ? 4   : 8;
+  var THRESHOLD    = _ptrIsAndroid ? 88  : 80;
+  var MAX_PULL     = 108;
+  var RESISTANCE   = _ptrIsAndroid ? 0.38: 0.45;
+  var DIR_CHECK_PX = _ptrIsAndroid ? 8   : 6;
   var RECENT_MS    = 30000;
-  var SCROLL_SETTLE_MS = 350;                     // ms after last scroll before PTR can arm
-  var TOP_EPSILON  = _ptrIsAndroid ? 3 : 1;       // px: max scrollTop still considered "at top"
+  var TOP_EPSILON  = _ptrIsAndroid ? 3   : 1;
+  var SCROLL_SETTLE_MS = 300;
+  var SETTLE_MS    = 260;
 
-  // â”€â”€ Per-panel state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  var startY=0,startX=0;
-  var armed=false,pulling=false,refreshing=false,_snapDone=false;
-  var _ticked=false,_dirDecided=false;
-  var _momentumLock=false,_momentumTimer=null;
-  var _lastRefreshTime=0;
-  // _spinnerY: fixed viewport Y for spinner, captured once on touchstart.
-  // Constant during the gesture — no recalculation per frame.
+  var _rm=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion:reduce)').matches);
+
+  // Single state variable
+  var _state='idle'; // 'idle'|'pulling'|'refreshing'|'settling'
+
+  // Per-gesture
+  var _startY=0,_startX=0,_dy=0;
+  var _dirDecided=false,_ticked=false,_rafPending=false;
   var _spinnerY=-60;
-  // _panelScrolled: updated by scroll listener — avoids scrollTop DOM read in touchmove.
-  var _panelScrolled=false;
-  var _lastScrollTime=0;    // timestamp of last scroll event inside this panel subtree
-  var _activeScroller=null; // actual scroll container detected on touchstart
-  var _latestDy=0,_rafPending=false;
-  var _vBuf=[],_VN=5;
+  var _capTimer=null;
+  var _lastScrollTime=0,_panelScrolled=false;
+  var _lastRefreshTime=0;
 
-  // â”€â”€ Debug metrics (gated: window._ptrDebugMode = true to enable) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  var _dbg={moves:0,rafs:0,prevs:0,t0:0,dtSum:0,dtN:0,lastT:0};
+  function _dbg(m){if(window.__PTR_DEBUG)console.log('[PTR:'+panelId+'] '+m);}
+  function _blk(r){if(window.__PTR_DEBUG)console.log('[PTR:'+panelId+'] blocked: '+r);}
 
-  // â”€â”€ Scroll tracker — catches scroll on panel AND nested containers â”€â”€â”€â”€â”€â”€â”€â”€
-  // scroll events do NOT bubble, so panel.addEventListener('scroll') misses nested
-  // scrollers like #settingsContent and #gencineContent which are the real scrollers
-  // for those tabs. document capture fires for ALL scroll targets in the subtree.
-  // Android threshold 6px: WebView overscroll glow transiently moves scrollTop 1-3px.
-  document.addEventListener('scroll',function(e){
-    if(!panel.contains(e.target))return;
-    var st=(e.target).scrollTop||0;
-    _lastScrollTime=Date.now();
-    _panelScrolled=st>(_ptrIsAndroid?6:2);
-  },{passive:true,capture:true});
-
-  // â”€â”€ Rubber band — resistance from pixel zero, steeper above threshold â”€â”€â”€â”€â”€â”€â”€
-  // Below threshold: linear at RESISTANCE factor (light, native feel)
-  // Above threshold: extra resistance so pull "stalls" near MAX_PULL
   function _rubberBand(raw){
     var v=raw*RESISTANCE;
     if(v<=THRESHOLD)return v;
     return Math.min(THRESHOLD+(v-THRESHOLD)*0.28,MAX_PULL);
   }
 
-  function _endVelocity(){
-    if(_vBuf.length<2)return 0;
-    var a=_vBuf[0],b=_vBuf[_vBuf.length-1],dt=b.t-a.t;
-    return dt>10?(b.y-a.y)/dt:0;
-  }
-
-  // Walk from touch target toward panel boundary.
-  // Returns the first ancestor whose scrollTop > 0 (the element that has actually scrolled),
-  // or the panel itself when nothing inside has scrolled (we are at the true top).
-  // This correctly identifies #settingsContent / #gencineContent as the real scrollers
-  // instead of their non-scrolling outer panels.
-  function _findScrollContainer(node){
-    var cur=node;
-    while(cur&&cur!==panel){
-      if((cur.scrollTop||0)>0)return cur;
-      cur=cur.parentElement;
-    }
-    return panel;
-  }
-
-  function _setMomentumLock(){
-    var v=_endVelocity();
-    var ms=v<-1.5?1400:v<-0.7?950:LOCK_BASE;
-    _momentumLock=true;
-    clearTimeout(_momentumTimer);
-    _momentumTimer=setTimeout(function(){_momentumLock=false;},ms);
-    _vBuf=[];
-  }
-
-  function _clearWillChange(){
-    panel.style.willChange='';
-    if(ptrSpinner)ptrSpinner.style.willChange='';
-  }
-
-  // Hard reset — visibilitychange / tab-switch / interrupted gesture
-  function _forceReset(){
+  // Hard reset — safe from any state
+  function _reset(){
+    clearTimeout(_capTimer);_capTimer=null;
+    _state='idle';
+    _rafPending=false;_dirDecided=false;_ticked=false;_dy=0;
+    panel.style.transform='';panel.style.willChange='';
+    panel.classList.remove('ptr-pulling','ptr-releasing');
     if(ptrSpinner){
       ptrSpinner.style.transition='none';
       ptrSpinner.style.transform='translate(-50%,'+_spinnerY+'px) scale(0)';
-      ptrSpinner.style.opacity='0';
+      ptrSpinner.style.opacity='0';ptrSpinner.style.willChange='';
       ptrSpinner.classList.remove('refreshing','ptr-snapping');
     }
-    panel.style.transform='';
-    _clearWillChange();
-    panel.classList.remove('ptr-pulling','ptr-releasing');
-    if(refreshing)_ptrGlobalRefreshing=false;
-    armed=false;pulling=false;refreshing=false;_snapDone=true;
-    _ticked=false;_dirDecided=false;_rafPending=false;_vBuf=[];
+    _dbg('→ idle (reset)');
   }
-  _ptrResets.push(_forceReset);
+  _ptrResets.push(_reset);
 
-  // Smooth cancel — two-phase: remove ptr-pulling this frame, add transition in next rAF
-  // so the browser captures the current translateY as the animation "from" value.
-  function _cancelPull(){
-    _rafPending=false;
-    if(pulling){
-      pulling=false;
-      panel.classList.remove('ptr-pulling');
-      requestAnimationFrame(function(){
-        if(refreshing)return;
-        _clearWillChange();
-        panel.classList.add('ptr-releasing');
-        panel.style.transform='';
-        ptrSpinner.style.transition='transform .22s cubic-bezier(0,0,.2,1),opacity .18s';
-        ptrSpinner.style.opacity='0';
-        ptrSpinner.style.transform='translate(-50%,'+_spinnerY+'px) scale(0)';
-        setTimeout(function(){
-          panel.classList.remove('ptr-releasing');
-          ptrSpinner.style.transition='';
-        },240);
-      });
-    }
-    armed=false;_ticked=false;_dirDecided=false;
-  }
+  // Listen on the panel element directly, not document capture — prevents 7 permanent
+  // capture-phase scroll handlers accumulating and firing on every scroll in the app.
+  // The panel is the scroll container; scroll events fire on it directly.
+  panel.addEventListener('scroll',function(e){
+    _lastScrollTime=Date.now();
+    _panelScrolled=(e.target.scrollTop||0)>(_ptrIsAndroid?6:2);
+  },{passive:true});
 
-  // â”€â”€ rAF visual update — ALL style writes live here â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // Called at most once per display frame. No DOM reads. Only transform + opacity.
   function _updateVisuals(){
     _rafPending=false;
-    if(!pulling)return;
-    if(window._ptrDebugMode)_dbg.rafs++;
-    var pullRaw=_latestDy-DEAD_ZONE;
-    if(pullRaw<0)return;
-    var pull=_rubberBand(pullRaw);
-    panel.style.transform='translateY('+pull+'px)';
-    // Spinner: fixed position captured on touchstart — no recalculation per frame.
-    // Opacity and scale grow independently for a smooth emerge effect.
-    ptrSpinner.style.opacity=String(Math.min(pullRaw/50,1));
-    ptrSpinner.style.transform='translate(-50%,'+_spinnerY+'px) scale('+Math.min(pullRaw/55,1)+')';
-    // Arc rotates up to 360Â° at threshold — one full turn signals "ready to release"
-    if(_ptrArc)_ptrArc.style.transform='rotate('+Math.min(pullRaw*2.0,360)+'deg)';
+    if(_state!=='pulling')return;
+    var raw=_dy-DEAD_ZONE;if(raw<0)return;
+    var pull=_rubberBand(raw);
+    if(!_rm)panel.style.transform='translateY('+pull+'px)';
+    ptrSpinner.style.opacity=String(Math.min(raw/50,1));
+    ptrSpinner.style.transform='translate(-50%,'+_spinnerY+'px) scale('+Math.min(raw/55,1)+')';
+    if(_ptrArc&&!_rm)_ptrArc.style.transform='rotate('+Math.min(raw*2.0,360)+'deg)';
     if(!_ticked&&pull>=THRESHOLD){_ticked=true;H.selection();}
   }
 
-  // ── touchstart ────────────────────────────────────────────────────────────
-  // All expensive work (DOM queries, getBoundingClientRect) happens here only.
-  // Nothing computed here is repeated in touchmove.
-  on(panel,'touchstart',function(e){
-    _vBuf=[];
-    // Second finger added while PTR is active — force-reset so panel snaps back immediately (no rAF delay).
-    if(e.touches.length>1){if(armed||pulling){_forceReset();}return;}
-    if(refreshing||_momentumLock||_ptrGlobalRefreshing)return;
-    if(window._sbLocked)return; // swipe-back gesture active — do not compete
-    if(checkFn&&!checkFn())return;
-    if(document.body.classList.contains('tk-tab-switching'))return;
-    var ae=document.activeElement;
-    if(ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA'||ae.isContentEditable))return;
-    if(panel.querySelector('.search-results.on')||panel.querySelector('.search-bar-wrap.open'))return;
-    if(_ptrAnyOverlayOpen())return;
-    if(e.target&&_ptrInHorizScroll(e.target))return;
-    if(Date.now()-_lastRefreshTime<COOLDOWN_MS)return;
-    // Identify the actual scroll container for this gesture — may be a nested element
-    // (#settingsContent, #gencineContent) rather than the outer panel itself.
-    // _findScrollContainer walks from touch target upward: first ancestor with scrollTop>0
-    // is the real scroller; falls back to panel when already at the true top.
-    _activeScroller=_findScrollContainer(e.target||panel);
-    if(_activeScroller.scrollTop>TOP_EPSILON)return; // mid-page — never arm PTR
-    if(Date.now()-_lastScrollTime<SCROLL_SETTLE_MS)return; // momentum may still be settling
+  // settling -> idle
+  function _toIdle(){
+    if(_state!=='settling')return; // _reset() may have already moved us past this
+    panel.classList.remove('ptr-releasing');
+    if(ptrSpinner){ptrSpinner.classList.remove('ptr-snapping');ptrSpinner.style.transition='';}
+    panel.style.willChange='';if(ptrSpinner)ptrSpinner.style.willChange='';
+    _state='idle';
+    _dbg('settling -> idle');
+  }
 
-    startY=e.touches[0].clientY;
-    startX=e.touches[0].clientX;
-    _panelScrolled=false; // document capture listener flips this if any nested scroller moves
-    // Spinner Y: fixed position just inside the gap that opens above the panel.
-    // Captured once — no per-frame getBoundingClientRect.
+  // refreshing -> settling
+  function _toSettling(){
+    if(_state!=='refreshing')return;
+    clearTimeout(_capTimer);_capTimer=null;
+    _state='settling';
+    _dbg('refreshing -> settling');
+    panel.style.transform='';
+    if(ptrSpinner){
+      ptrSpinner.style.transition='transform .24s cubic-bezier(0,0,.2,1),opacity .2s';
+      ptrSpinner.style.transform='translate(-50%,'+_spinnerY+'px) scale(0)';
+      ptrSpinner.style.opacity='0';
+      ptrSpinner.classList.remove('refreshing');
+    }
+    setTimeout(_toIdle,SETTLE_MS);
+  }
+
+  // touchstart
+  panel.addEventListener('touchstart',function(e){
+    if(_state==='refreshing'||_state==='settling')return;
+    if(e.touches.length>1){if(_state==='pulling')_reset();return;}
+    if(_state!=='idle')return;
+    if(window._sbLocked){_blk('swipe_back');return;}
+    if(checkFn&&!checkFn()){_blk('checkFn');return;}
+    if(document.body.classList.contains('tk-tab-switching')){_blk('tab_switching');return;}
+    var ae=document.activeElement;
+    if(ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA'||ae.isContentEditable)){_blk('input');return;}
+    if(panel.querySelector('.search-results.on')||panel.querySelector('.search-bar-wrap.open')){_blk('search');return;}
+    if(_ptrAnyOverlayOpen()){_blk('overlay');return;}
+    if(e.target&&_ptrInHorizScroll(e.target)){_blk('horiz_scroll');return;}
+    var _cur=e.target||panel;
+    while(_cur&&_cur!==panel){if((_cur.scrollTop||0)>0)break;_cur=_cur.parentElement;}
+    var _scr=(_cur&&_cur!==panel)?_cur:panel;
+    if((_scr.scrollTop||0)>TOP_EPSILON){_blk('scrollTop='+_scr.scrollTop);return;}
+    if(Date.now()-_lastScrollTime<SCROLL_SETTLE_MS){_blk('scroll_settle');return;}
+    _startY=e.touches[0].clientY;_startX=e.touches[0].clientX;
+    _dy=0;_dirDecided=false;_ticked=false;_panelScrolled=false;
     _spinnerY=Math.max((panel.getBoundingClientRect().top||0)+18,46);
-    armed=true;_dirDecided=false;pulling=false;_snapDone=false;
-    if(window._ptrDebugMode){_dbg.moves=0;_dbg.rafs=0;_dbg.prevs=0;_dbg.t0=Date.now();_dbg.dtSum=0;_dbg.dtN=0;_dbg.lastT=Date.now();}
+    _state='pulling';
+    _dbg('idle -> pulling');
   },{passive:true});
 
-  // â”€â”€ touchmove â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // Hot path — must do almost no work:
-  //   1. push velocity sample
-  //   2. compute dy/dx (arithmetic only)
-  //   3. direction lock once — no sqrt, Manhattan distance
-  //   4. store dy, schedule one rAF
-  // NO DOM reads (scrollTop replaced by _panelScrolled cache).
-  // NO class or style writes (deferred to rAF and the pulling-start block).
+  // touchmove
   panel.addEventListener('touchmove',function(e){
-    var _now=Date.now();
-    if(e.touches.length>1){if(armed||pulling){_forceReset();}return;}
-    _vBuf.push({y:e.touches[0].clientY,t:_now});
-    if(_vBuf.length>_VN)_vBuf.shift();
-
-    if(!armed||refreshing)return;
-
-    if(window._ptrDebugMode){
-      var _dt=_now-_dbg.lastT;_dbg.lastT=_now;
-      _dbg.dtSum+=_dt;_dbg.dtN++;_dbg.moves++;
-    }
-
-    var dy=e.touches[0].clientY-startY;
-    var dx=e.touches[0].clientX-startX;
-
-    if(dy<=0){_cancelPull();return;}
-    // Use cached flag — avoids forced synchronous layout from scrollTop read
-    if(_panelScrolled){_cancelPull();return;}
-
-    // Direction lock: Manhattan distance, no sqrt.
-    // Cancel if |dx| > 55% of dy — gesture has significant horizontal component.
+    if(_state!=='pulling')return;
+    if(e.touches.length>1){_reset();return;}
+    var cDy=e.touches[0].clientY-_startY;
+    var cDx=e.touches[0].clientX-_startX;
+    if(cDy<=0||_panelScrolled){_reset();return;}
     if(!_dirDecided){
-      var absDx=dx<0?-dx:dx;
-      if(absDx+dy>=DIR_CHECK_PX){
+      var absDx=cDx<0?-cDx:cDx;
+      if(absDx+cDy>=DIR_CHECK_PX){
         _dirDecided=true;
-        if(absDx>dy*0.55){_cancelPull();return;}
+        if(absDx>cDy*0.55){_reset();return;}
       }
     }
-
-    // Android: call preventDefault before the dead zone so Chrome's compositor
-    // cannot start scrolling the panel during those first ~4px of downward travel.
-    // Only fires when the gesture is clearly vertical (dy >= |dx|).
-    // armed guarantees scrollTop=0, no overlay, no input, no tab-switching.
-    if(_ptrIsAndroid&&e.cancelable){
-      var _absDxEarly=dx<0?-dx:dx;
-      if(dy>=_absDxEarly){e.preventDefault();}
+    if(_ptrIsAndroid&&e.cancelable){var absDx2=cDx<0?-cDx:cDx;if(cDy>=absDx2)e.preventDefault();}
+    if(cDy>=DEAD_ZONE){
+      if(!panel.classList.contains('ptr-pulling')){
+        panel.style.willChange='transform';ptrSpinner.style.willChange='transform,opacity';
+        panel.classList.add('ptr-pulling');panel.classList.remove('ptr-releasing');
+        ptrSpinner.classList.remove('ptr-snapping');ptrSpinner.style.transition='none';
+      }
+      if(e.cancelable)e.preventDefault();
     }
-
-    if(dy<DEAD_ZONE)return;
-
-    // First frame past dead zone: promote layers, arm visuals, subtle haptic.
-    // Only class + willChange writes here — actual style deferred to rAF.
-    if(!pulling){
-      pulling=true;
-      panel.style.willChange='transform';
-      ptrSpinner.style.willChange='transform,opacity';
-      panel.classList.add('ptr-pulling');
-      panel.classList.remove('ptr-releasing');
-      ptrSpinner.classList.remove('ptr-snapping');
-      ptrSpinner.style.transition='none';
-      H.selection();
-    }
-
-    // preventDefault must be synchronous — cannot defer to rAF
-    if(e.cancelable){
-      e.preventDefault();
-      if(window._ptrDebugMode)_dbg.prevs++;
-    }
-
-    _latestDy=dy;
+    _dy=cDy;
     if(!_rafPending){_rafPending=true;requestAnimationFrame(_updateVisuals);}
   },{passive:false});
 
-  // â”€â”€ touchend â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  function _doTouchEnd(){
-    _setMomentumLock();
-    _ticked=false;_dirDecided=false;_rafPending=false;
-    if(!pulling||refreshing){armed=false;return;}
-
-    pulling=false;armed=false;
-    panel.classList.remove('ptr-pulling');
-    panel.classList.add('ptr-releasing');
-    ptrSpinner.style.transition='transform .24s cubic-bezier(0,0,.2,1),opacity .2s';
-    ptrSpinner.classList.add('ptr-snapping');
-
-    var currentY=parseFloat((panel.style.transform.match(/translateY\(([^p]+)px\)/)||[,'0'])[1])||0;
-
-    if(window._ptrDebugMode){
-      var _elapsed=Date.now()-_dbg.t0;
-      var _avgMs=_dbg.dtN>0?(_dbg.dtSum/_dbg.dtN).toFixed(1):'?';
-      console.log('[PTR] moves='+_dbg.moves+' rafs='+_dbg.rafs+' prevs='+_dbg.prevs
-        +' avg-interval='+_avgMs+'ms total='+_elapsed+'ms currentY='+currentY.toFixed(1)+'px');
-      window._ptrLastDebug={moves:_dbg.moves,rafs:_dbg.rafs,prevs:_dbg.prevs,avgIntervalMs:+_avgMs,totalMs:_elapsed,currentY:currentY};
-    }
-
-    if(currentY>=THRESHOLD*0.75){
-      // â”€â”€ TRIGGERED â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-      refreshing=true;
-      _ptrGlobalRefreshing=true;
-      var _prevRefreshTime=_lastRefreshTime;
-      _lastRefreshTime=Date.now();
-
-      // Settle panel and spinner into held loading position.
-      // Android: defer transform to rAF so .ptr-releasing transition has one frame
-      // to register before the style change lands — prevents the hard jump to holdY.
-      var holdY=44;
+  // touchend
+  panel.addEventListener('touchend',function(e){
+    if(e.touches.length>0){if(_state==='pulling')_reset();return;}
+    if(_state!=='pulling')return;
+    var curY=parseFloat((panel.style.transform.match(/translateY\(([^p]+)px\)/)||[,'0'])[1])||0;
+    _rafPending=false;
+    if(curY>=THRESHOLD*0.75){
+      // pulling -> refreshing
+      _state='refreshing';
+      _dbg('pulling -> refreshing');
+      panel.classList.remove('ptr-pulling');panel.classList.add('ptr-releasing');
+      if(ptrSpinner){
+        ptrSpinner.style.transition='transform .24s cubic-bezier(0,0,.2,1),opacity .2s';
+        ptrSpinner.classList.add('ptr-snapping');
+      }
       H.medium();
+      var holdY=44;
       if(_ptrIsAndroid){
         requestAnimationFrame(function(){
+          if(_state!=='refreshing')return; // _reset() fired before this frame
           panel.style.transform='translateY('+holdY+'px)';
-          ptrSpinner.style.transform='translate(-50%,'+_spinnerY+'px) scale(1)';
-          ptrSpinner.style.opacity='1';
-          ptrSpinner.classList.add('refreshing');
+          if(ptrSpinner){ptrSpinner.style.transform='translate(-50%,'+_spinnerY+'px) scale(1)';ptrSpinner.style.opacity='1';ptrSpinner.classList.add('refreshing');}
         });
       }else{
         panel.style.transform='translateY('+holdY+'px)';
-        ptrSpinner.style.transform='translate(-50%,'+_spinnerY+'px) scale(1)';
-        ptrSpinner.style.opacity='1';
-        ptrSpinner.classList.add('refreshing');
+        if(ptrSpinner){ptrSpinner.style.transform='translate(-50%,'+_spinnerY+'px) scale(1)';ptrSpinner.style.opacity='1';ptrSpinner.classList.add('refreshing');}
       }
-
-      function _snapBack(){
-        if(_snapDone)return;
-        _snapDone=true;
-        _clearWillChange();
-        panel.style.transform='';
-        ptrSpinner.style.transition='transform .24s cubic-bezier(0,0,.2,1),opacity .2s';
-        ptrSpinner.style.transform='translate(-50%,'+_spinnerY+'px) scale(0)';
-        ptrSpinner.style.opacity='0';
-        ptrSpinner.classList.remove('refreshing');
-        setTimeout(function(){
-          panel.classList.remove('ptr-releasing');
-          ptrSpinner.classList.remove('ptr-snapping');
-          ptrSpinner.style.transition='';
-          refreshing=false;
-          _ptrGlobalRefreshing=false;
-        },260);
-      }
-      _snapDone=false;
-      // Hard cap — fires if refreshFn never calls done() (async paths, network timeout)
-      var _hardCap=setTimeout(_snapBack,1500);
-      // done() is passed to refreshFn so sync renders snap back as soon as content is ready,
-      // rather than waiting a fixed 600ms minimum.
       var _doneCalled=false;
-      function _ptrDone(){
-        if(_doneCalled)return;
+      function done(){
+        if(_doneCalled||_state!=='refreshing')return;
         _doneCalled=true;
-        clearTimeout(_hardCap);
-        // Brief 200ms hold lets the user see the refreshed content before spinner hides
-        setTimeout(_snapBack,200);
+        setTimeout(_toSettling,200);
       }
-
-      var _isRecent=_prevRefreshTime>0&&(Date.now()-_prevRefreshTime)<RECENT_MS;
-      try{refreshFn(_isRecent,_ptrDone);}catch(e){console.warn('[PTR] refreshFn error:',e);_ptrDone();}
-
+      _capTimer=setTimeout(function(){if(_state==='refreshing')_toSettling();},1500);
+      var _isRecent=_lastRefreshTime>0&&(Date.now()-_lastRefreshTime)<RECENT_MS;
+      _lastRefreshTime=Date.now();
+      try{refreshFn(_isRecent,done);}catch(ex){console.warn('[PTR]',ex);done();}
     }else{
-      // â”€â”€ BELOW THRESHOLD — snap back silently â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-      _clearWillChange();
+      // pulling -> idle (sub-threshold)
+      _dbg('pulling -> idle (sub-threshold)');
+      _state='idle'; // set immediately so next gesture can start without waiting
+      panel.classList.remove('ptr-pulling');panel.classList.add('ptr-releasing');
       panel.style.transform='';
-      ptrSpinner.style.transform='translate(-50%,'+_spinnerY+'px) scale(0)';
-      ptrSpinner.style.opacity='0';
+      if(ptrSpinner){
+        ptrSpinner.style.transition='transform .22s cubic-bezier(0,0,.2,1),opacity .18s';
+        ptrSpinner.style.opacity='0';
+        ptrSpinner.style.transform='translate(-50%,'+_spinnerY+'px) scale(0)';
+      }
       setTimeout(function(){
+        if(_state!=='idle')return; // new gesture started — skip cleanup to avoid corrupting it
         panel.classList.remove('ptr-releasing');
-        ptrSpinner.classList.remove('ptr-snapping');
-        ptrSpinner.style.transition='';
-      },260);
+        if(ptrSpinner)ptrSpinner.style.transition='';
+        panel.style.willChange='';if(ptrSpinner)ptrSpinner.style.willChange='';
+      },240);
     }
-  }
-
-  on(panel,'touchend',function(e){
-    // If another finger is still on screen, abort the gesture rather than
-    // committing (or half-committing) a refresh with phantom data.
-    if(e.touches.length>0){if(armed||pulling){_forceReset();}return;}
-    _doTouchEnd();
   });
-  on(panel,'touchcancel',function(){_setMomentumLock();_cancelPull();});
+
+  panel.addEventListener('touchcancel',function(){if(_state==='pulling')_reset();});
 }
 
 /* ===== ISLAMVOICE ===== */
@@ -14745,8 +15514,8 @@ function startApp(){
   // for the whole session (battery + data drain, needless backend load).
   // Clear any existing interval before creating — prevents duplicate polls if
   // startApp() is called more than once (hot reload, re-init paths).
-  if(window._forceUpdateInterval)clearInterval(window._forceUpdateInterval);
-  window._forceUpdateInterval=setInterval(function(){ if(!document.hidden) ForceUpdate.check(); }, 15*60*1000);
+  if(window._forceUpdateInterval)window._forceUpdateInterval.cancel();
+  window._forceUpdateInterval=AppRuntime.Scheduler.interval(function(){ ForceUpdate.check(); }, 15*60*1000,'forceUpdate');
 
   // â”€â”€ Runtime jank monitoring — auto-downgrade performance tier â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // Starts 8s after launch so startup pre-renders don't trigger false positives.
@@ -14843,5 +15612,69 @@ function startApp(){
   // i18n:updated already handled at top of file (line ~558) — no duplicate here
 }
 if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',startApp)}else{startApp()}
+
+// ── Scroll performance: activate the tk-scrolling CSS pause system ──────────────
+// CSS body.tk-scrolling rules pause sky-scene *, streak-ring.pulse, fp-btn-lg.playing.
+// rAF-throttled: no matter how many scroll events fire per frame, classList is touched
+// at most once per frame. capture:true catches scroll on any nested panel.
+(function(){
+  var _st=null,_raf=false;
+  function _frame(){
+    _raf=false;
+    if(!_st)document.body.classList.add('tk-scrolling');
+    clearTimeout(_st);
+    _st=setTimeout(function(){_st=null;document.body.classList.remove('tk-scrolling');},150);
+  }
+  function _onScroll(){
+    if(!_raf){_raf=true;requestAnimationFrame(_frame);}
+  }
+  document.addEventListener('scroll',_onScroll,{passive:true,capture:true});
+})();
+
+// ── Keyboard-open detection: hide tabbar while keyboard is visible ──────────
+// adjustResize shrinks window.innerHeight when keyboard opens — visualViewport
+// alone won't detect this. We track the max observed innerHeight as a baseline,
+// reset it only when width changes (orientation change, not keyboard).
+// Adds/removes body.keyboard-open; CSS slides tabbar out of view.
+(function(){
+  var _kbOpen=false,_raf=null,_prevW=window.innerWidth,_maxH=window.innerHeight;
+
+  function _clear(){
+    if(_kbOpen){_kbOpen=false;document.body.classList.remove('keyboard-open');}
+  }
+
+  function _check(){
+    _raf=null;
+    var w=window.innerWidth;
+    if(w!==_prevW){
+      // Width changed = orientation, not keyboard — reset baseline
+      _prevW=w;_maxH=window.innerHeight;_clear();return;
+    }
+    if(window.innerHeight>_maxH)_maxH=window.innerHeight;
+    // adjustNothing / iOS path: visualViewport shrinks, innerHeight stays
+    var kbVV=0;
+    if(window.visualViewport)kbVV=Math.max(0,window.innerHeight-window.visualViewport.height-window.visualViewport.offsetTop);
+    // adjustResize path: innerHeight shrinks vs. our max baseline
+    var kbRS=Math.max(0,_maxH-window.innerHeight);
+    var open=Math.max(kbVV,kbRS)>100;
+    if(open!==_kbOpen){_kbOpen=open;document.body.classList.toggle('keyboard-open',open);}
+  }
+
+  function _sched(){if(!_raf)_raf=requestAnimationFrame(_check);}
+
+  // Safety net: on resume/visibility restore, clear stuck state if no input is focused
+  function _onVisible(){
+    if(document.visibilityState==='visible'){
+      var a=document.activeElement;
+      var inputFocused=a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA'||a.isContentEditable);
+      if(!inputFocused)_clear();
+    }
+  }
+
+  window.addEventListener('resize',_sched,{passive:true});
+  if(window.visualViewport)window.visualViewport.addEventListener('resize',_sched,{passive:true});
+  document.addEventListener('visibilitychange',_onVisible);
+  // Capacitor app resume fires this too via App plugin state-change → visibilitychange
+})();
 
 })();
