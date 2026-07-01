@@ -4311,6 +4311,24 @@ function _prefetchMushafPage(pageNum){
 // Source: api.quran.com/api/v4/chapters (retrieved 2026-05-15).
 var _MUSHAF_PAGE_RANGES=[[1,1],[2,49],[50,76],[77,106],[106,127],[128,150],[151,176],[177,186],[187,207],[208,221],[221,235],[235,248],[249,255],[255,261],[262,267],[267,281],[282,293],[293,304],[305,312],[312,321],[322,331],[332,341],[342,349],[350,359],[359,366],[367,376],[377,385],[385,396],[396,404],[404,410],[411,414],[415,417],[418,427],[428,434],[434,440],[440,445],[446,452],[453,458],[458,467],[467,476],[477,482],[483,489],[489,495],[496,498],[499,502],[502,506],[507,510],[511,515],[515,517],[518,520],[520,523],[523,525],[526,528],[528,531],[531,534],[534,537],[537,541],[542,545],[545,548],[549,551],[551,552],[553,554],[554,555],[556,557],[558,559],[560,561],[562,564],[564,566],[566,568],[568,570],[570,571],[572,573],[574,575],[575,577],[577,578],[578,580],[580,581],[582,583],[583,584],[585,585],[586,586],[587,587],[587,589],[589,589],[590,590],[591,591],[591,592],[592,592],[593,594],[594,594],[595,595],[595,596],[596,596],[596,596],[597,597],[597,597],[598,598],[598,599],[599,599],[599,600],[600,600],[600,600],[601,601],[601,601],[601,601],[602,602],[602,602],[602,602],[603,603],[603,603],[603,603],[604,604],[604,604],[604,604]];
 
+// QCF Surah Header font glyph characters — index 0 = Surah 1.
+// Characters from the Arabic Presentation Forms block repurposed by the
+// QCF_SurahHeader font to render each surah's calligraphic name.
+var _MUSHAF_SURAH_HEADER_GLYPHS=[
+  'ﱅ','ﱆ','ﱇ','ﱊ','ﱋ','ﱎ','ﱏ','ﱑ','ﱒ','ﱓ', // 1-10
+  'ﱕ','ﱖ','ﱘ','ﱚ','ﱛ','ﱜ','ﱝ','ﱞ','ﱡ','ﱢ', // 11-20
+  'ﱤ','ﭑ','ﭒ','ﭔ','ﭕ','ﭗ','ﭘ','ﭚ','ﭛ','ﭝ', // 21-30
+  'ﭞ','ﭠ','ﭡ','ﭣ','ﭤ','ﭦ','ﭧ','ﭩ','ﭪ','ﭬ', // 31-40
+  'ﭭ','ﭯ','ﭰ','ﭲ','ﭳ','ﭵ','ﭶ','ﭸ','ﭹ','ﭻ', // 41-50
+  'ﭼ','ﭾ','ﭿ','ﮁ','ﮂ','ﮄ','ﮅ','ﮇ','ﮈ','ﮊ', // 51-60
+  'ﮋ','ﮍ','ﮎ','ﮐ','ﮑ','ﮓ','ﮔ','ﮖ','ﮗ','ﮙ', // 61-70
+  'ﮚ','ﮜ','ﮝ','ﮟ','ﮠ','ﮢ','ﮣ','ﮥ','ﮦ','ﮨ', // 71-80
+  'ﮩ','ﮫ','ﮬ','ﮮ','ﮯ','ﮱ','﮲','﮴','﮵','﮷', // 81-90
+  '﮸','﮺','﮻','﮽','﮾','﯀','﯁','ﯓ','ﯔ','ﯖ', // 91-100
+  'ﯗ','ﯙ','ﯚ','ﯜ','ﯝ','ﯟ','ﯠ','ﯢ','ﯣ','ﯥ', // 101-110
+  'ﯦ','ﯨ','ﯩ','ﯫ'                             // 111-114
+];
+
 function getMushafPageRange(surahNum){
   // Bundled static data — works fully offline
   var r=_MUSHAF_PAGE_RANGES[surahNum-1];
@@ -5009,10 +5027,9 @@ function _buildHafsFallbackFrag(verses,pageNum){
   function _hafsHeader(sn){
     if(sn===prevSn)return;prevSn=sn;
     var bn=el('div','mushaf-surah-banner');bn.dataset.surah=String(sn);
-    var nt=document.createElement('div');nt.className='surah-name-ar no-kurdish-convert';
-    var gc='surah'+String(sn).padStart(3,'0');nt.dataset.glyph=gc;
-    var fr=(window.QuranFontManager&&window.QuranFontManager.isReady('SurahName'))||window._surahNameFontReady;
-    var ss=SURAHS[sn-1];nt.textContent=fr?gc:(ss?ss.ar:('سورة '+sn));
+    var nt=document.createElement('div');nt.className='mushaf-surah-header-name no-kurdish-convert';
+    var _hg=_MUSHAF_SURAH_HEADER_GLYPHS[sn-1];
+    var ss=SURAHS[sn-1];nt.textContent=_hg||(ss?ss.ar:('سورة '+sn));
     bn.appendChild(nt);frag.appendChild(bn);
     if(sn!==1&&sn!==9){var bm=el('div','mushaf-bismillah');bm.textContent='بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ';frag.appendChild(bm);}
   }
@@ -5088,12 +5105,10 @@ function loadMushafPageQCF(pageEl,pageNum){
       var s=SURAHS[sn-1];
       var banner=el('div','mushaf-surah-banner');
       banner.dataset.surah=String(sn);
-      var gc='surah'+String(sn).padStart(3,'0');
       var titleEl=document.createElement('div');
-      titleEl.className='surah-name-ar no-kurdish-convert';
-      titleEl.dataset.glyph=gc;
-      var fontReady=(window.QuranFontManager&&window.QuranFontManager.isReady('SurahName'))||window._surahNameFontReady;
-      titleEl.textContent=fontReady?gc:(s?s.ar:('سورة '+sn));
+      titleEl.className='mushaf-surah-header-name no-kurdish-convert';
+      var _hg2=_MUSHAF_SURAH_HEADER_GLYPHS[sn-1];
+      titleEl.textContent=_hg2||(s?s.ar:('سورة '+sn));
       banner.appendChild(titleEl);
       frag.appendChild(banner);
       if(sn!==1&&sn!==9){

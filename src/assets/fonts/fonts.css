@@ -76,6 +76,16 @@
        url('/assets/fonts/SurahName.ttf') format('truetype');
 }
 
+/* QCFSurahHeader — QCF calligraphic surah name headers (mushaf banners only) */
+@font-face {
+  font-family: 'QCFSurahHeader';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url('/assets/fonts/QCF_SurahHeader-Regular.woff2?v=1') format('woff2'),
+       url('/assets/fonts/QCF_SurahHeader-Regular.ttf?v=1') format('truetype');
+}
+
 /* SurahNameV2 — Tarteel calligraphy (reader header)
    woff2 primary for web; ttf fallback survives iOS strip */
 @font-face {

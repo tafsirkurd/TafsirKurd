@@ -1,4 +1,4 @@
-﻿const CACHE_NAME = 'tafsir-kurd-v1302';
+﻿const CACHE_NAME = 'tafsir-kurd-v1303';
 
 // All files required to run the app fully offline.
 // IMPORTANT: version strings here must match the ?v= params in index.html exactly.
@@ -91,13 +91,14 @@ const PRECACHE = [
   '/audio-cache.js?v=20260406a',
   '/qibla/qibla.js?v=20260417',
   // Fonts & icons
-  '/assets/fonts/fonts.css?v=17',
+  '/assets/fonts/fonts.css?v=18',
   '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2',
   '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-600.woff2',
   '/assets/fonts/hafs.woff2',
   '/assets/fonts/amiri-quran-v1-arabic-regular.woff2',
   '/assets/fonts/surah-name-v4.woff2',
   '/assets/fonts/surah-name-v2.woff2',
+  '/assets/fonts/QCF_SurahHeader-Regular.woff2',
   '/assets/fontawesome/all.min.css',
   '/assets/fontawesome/webfonts/fa-solid-900.woff2',
   '/assets/fontawesome/webfonts/fa-regular-400.woff2',
