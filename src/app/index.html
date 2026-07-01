@@ -165,7 +165,7 @@
      not the network â€” eliminates the data-loading wait on first launch -->
 <link rel="preload" href="/data/quran.json" as="fetch" crossorigin="anonymous">
 <link rel="preload" href="/i18n/kmr-bundled.js?v=20260628a" as="script">
-<link rel="preload" href="/app/app.min.js?v=1224" as="script">
+<link rel="preload" href="/app/app.min.js?v=1226" as="script">
 <link rel="preload" href="/prayer/prayer.ui.js?v=20260616d" as="script">
 <!-- platform.js inlined: eliminates one parser-blocking network request -->
 <script>window.isNativePlatform=(function(){try{return window.Capacitor&&window.Capacitor.isNativePlatform();}catch(e){return false;}})();</script>
@@ -196,8 +196,8 @@ if(window.isNativePlatform&&window.Capacitor.Plugins.StatusBar){
 /* Critical: theme bg applied before external CSS loads — prevents flash */
 html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 </style>
-<link rel="preload" href="/app/app-styles.min.css?v=19" as="style">
-<link rel="stylesheet" href="/app/app-styles.min.css?v=19">
+<link rel="preload" href="/app/app-styles.min.css?v=20" as="style">
+<link rel="stylesheet" href="/app/app-styles.min.css?v=20">
 <style>
 /* Search bar — open: spring bounce */
 .search-bar.on{transform:translateY(0) scale(1);opacity:1;pointer-events:auto;padding:10px 16px 12px;max-height:600px;position:relative;z-index:51;transition:max-height .01s,padding .01s,opacity .3s cubic-bezier(0.34,1.56,0.64,1),transform .3s cubic-bezier(0.34,1.56,0.64,1)}
@@ -851,7 +851,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 <script src="/img-cache.js?v=1"></script>
 <script src="/utils/app-hardening.js?v=2"></script>
 <script src="/app/app-runtime.js?v=1"></script>
-<script src="/app/app.min.js?v=1224"></script>
+<script src="/app/app.min.js?v=1226"></script>
 <script>
 /* Register service worker — web/PWA only; native Capacitor loads from bundle, no SW needed */
 if ('serviceWorker' in navigator && !(window.Capacitor && window.Capacitor.isNativePlatform())) {

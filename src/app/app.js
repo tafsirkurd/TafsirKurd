@@ -3988,8 +3988,7 @@ function _refreshSurahCompletionBadges(){
   if(!grid)return;
   var goal=getGoal();
   var completed=(goal&&goal.completedSurahs)||[];
-  var progress=(goal&&goal.surahProgress)||{};
-  console.log('[BADGE_RENDER]',{completed:completed.length,progressKeys:Object.keys(progress).length});
+  var pointer=goal?_ensureGoalPointer(goal).pointerSurah:0;
   grid.querySelectorAll('.surah-card').forEach(function(card){
     var n=parseInt(card.dataset.n);
     var st=card.querySelector('.surah-goal-state');
@@ -3998,14 +3997,9 @@ function _refreshSurahCompletionBadges(){
     if(completed.indexOf(n)>=0){
       var b=document.createElement('span');b.className='surah-done-badge';b.textContent='✓';
       st.appendChild(b);
-    } else {
-      var hw=progress[String(n)]||progress[n]||0;
-      if(hw){
-        var s=SURAHS[n-1];
-        var p=document.createElement('span');p.className='surah-progress-badge';
-        p.textContent=String(hw)+(s?'/'+s.a:'');
-        st.appendChild(p);
-      }
+    } else if(pointer&&n===pointer){
+      var p=document.createElement('span');p.className='surah-pointer-badge';
+      st.appendChild(p);
     }
   });
 }
@@ -4014,27 +4008,49 @@ function _refreshSurahCompletionBadges(){
 function renderContinue(){
   var c=$('continueReading');
   clear(c);
+  var goal=getGoal();
+  if(goal&&goal.pointerSurah){
+    goal=_ensureGoalPointer(goal);
+    var _ps=goal.pointerSurah;var _pa=goal.pointerAyah||1;
+    try{var _lr=JSON.parse(localStorage.getItem('lastRead'));if(_lr&&_lr.surah===_ps&&_lr.ayah>_pa)_pa=_lr.ayah;}catch(e){}
+    var ps=SURAHS[_ps-1];
+    if(ps){
+      var card=el('div','continue-card');
+      card.style.backgroundImage="url('/assets/icons/"+(ps.t==='Meccan'?'Makkah':'Maddinah')+".webp')";
+      var _cdec=document.createElement('div');
+      _cdec.className='continue-surah-deco no-kurdish-convert';
+      var _cg='surah'+String(ps.n).padStart(3,'0');
+      _cdec.dataset.glyph=_cg;_cdec.textContent=_surahNameFontReady?_cg:ps.ar;
+      card.appendChild(_cdec);
+      var info=el('div','continue-info');
+      info.appendChild(el('div','continue-label','بەردەوامی د خواندنێدا'));
+      info.appendChild(el('div','continue-title',ps.en+' - '+ps.ar));
+      info.appendChild(el('div','continue-sub',t('reader.ayah')+' '+_pa));
+      card.appendChild(info);
+      on(card,'click',(function(s2,a2){return function(){App.openSurah(s2,a2,{source:'continue_goal',canTrackGoal:true});};}(_ps,_pa)));
+      c.appendChild(card);
+      return;
+    }
+  }
   var last=null;
   try{last=JSON.parse(localStorage.getItem('lastRead'))}catch(e){}
   if(!last)return;
   var s=SURAHS[last.surah-1];
   if(!s)return;
-  var card=el('div','continue-card');
-  card.style.backgroundImage="url('/assets/icons/"+(s.t==='Meccan'?'Makkah':'Maddinah')+".webp')";
-  var _cdec=document.createElement('div');
-  _cdec.className='continue-surah-deco no-kurdish-convert';
-  var _cglyph='surah'+String(s.n).padStart(3,'0');
-  _cdec.dataset.glyph=_cglyph;
-  _cdec.textContent=_surahNameFontReady?_cglyph:s.ar;
-  var deco=_cdec;
-  card.appendChild(deco);
-  var info=el('div','continue-info');
-  info.appendChild(el('div','continue-label','بەردەوامی د خواندنێدا'));
-  info.appendChild(el('div','continue-title',s.en+' - '+s.ar));
-  info.appendChild(el('div','continue-sub',t('reader.ayah')+' '+last.ayah));
-  card.appendChild(info);
-  on(card,'click',function(){App.openSurah(last.surah,last.ayah)});
-  c.appendChild(card);
+  var card2=el('div','continue-card');
+  card2.style.backgroundImage="url('/assets/icons/"+(s.t==='Meccan'?'Makkah':'Maddinah')+".webp')";
+  var _cdec2=document.createElement('div');
+  _cdec2.className='continue-surah-deco no-kurdish-convert';
+  var _cglyph2='surah'+String(s.n).padStart(3,'0');
+  _cdec2.dataset.glyph=_cglyph2;_cdec2.textContent=_surahNameFontReady?_cglyph2:s.ar;
+  card2.appendChild(_cdec2);
+  var info2=el('div','continue-info');
+  info2.appendChild(el('div','continue-label','بەردەوامی د خواندنێدا'));
+  info2.appendChild(el('div','continue-title',s.en+' - '+s.ar));
+  info2.appendChild(el('div','continue-sub',t('reader.ayah')+' '+last.ayah));
+  card2.appendChild(info2);
+  on(card2,'click',function(){App.openSurah(last.surah,last.ayah)});
+  c.appendChild(card2);
 }
 
 /* ===== OPEN SURAH ===== */
@@ -8668,26 +8684,31 @@ function trackVerse(surah,ayah){
   try{
     localStorage.setItem('readAyahsToday',JSON.stringify({date:today,ayahs:Array.from(S.todayVerses)}));
   }catch(e){}
-  // Increment readLog
-  var l=getReadLog();
-  l[today]=(l[today]||0)+1;
-  saveReadLog(l);
-  // Haptic exactly once on daily goal completion — success pattern
+  // Sequential goal gate: only count readLog + goal progress when reading the pointer surah
   var g=getGoal();
-  if(g&&l[today]===g.pages){H.success();}
-  // Khatm celebration — fires each time total crosses a new multiple of 6236
-  var totalAfter=calcTotalRead(l);
-  var khatmAt=parseInt(localStorage.getItem('khatmCelebAt')||'0');
-  var nextKhatm=(Math.floor(khatmAt/6236)+1)*6236;
-  if(totalAfter>=nextKhatm){
-    localStorage.setItem('khatmCelebAt',String(totalAfter));
-    setTimeout(function(){_goalCelebrateKhatm(totalAfter,calcStreak(l),calcBestStreak(l));},900);
+  var _ps=g?(g.pointerSurah||(_ensureGoalPointer(g).pointerSurah)):0;
+  var _canCount=!_ps||(S.readerSession&&S.readerSession.canTrackGoal&&surah===_ps);
+  console.log('[TRACK_VERSE]',{surah:surah,ayah:ayah,pointer:_ps,canTrackGoal:!!(S.readerSession&&S.readerSession.canTrackGoal),_canCount:_canCount});
+  if(_canCount){
+    // Increment readLog
+    var l=getReadLog();
+    l[today]=(l[today]||0)+1;
+    saveReadLog(l);
+    // Haptic exactly once on daily goal completion — success pattern
+    if(g&&l[today]===g.pages){H.success();}
+    // Khatm celebration — fires each time total crosses a new multiple of 6236
+    var totalAfter=calcTotalRead(l);
+    var khatmAt=parseInt(localStorage.getItem('khatmCelebAt')||'0');
+    var nextKhatm=(Math.floor(khatmAt/6236)+1)*6236;
+    if(totalAfter>=nextKhatm){
+      localStorage.setItem('khatmCelebAt',String(totalAfter));
+      setTimeout(function(){_goalCelebrateKhatm(totalAfter,calcStreak(l),calcBestStreak(l));},900);
+    }
+    if(S.readerSession&&S.readerSession.canTrackGoal)_updateGoalProgress(surah,ayah);
   }
   _updateGoalsBadge();
   // Keep goal widget current — lightweight, no network
   pushGoalDataToWidget();
-  console.log('[TRACK_VERSE]',{surah:surah,ayah:ayah,canTrackGoal:!!(S.readerSession&&S.readerSession.canTrackGoal),source:S.readerSession&&S.readerSession.source});
-  if(S.readerSession&&S.readerSession.canTrackGoal)_updateGoalProgress(surah,ayah);
 }
 
 function _ensureGoalPointer(goal){
