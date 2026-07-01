@@ -1009,6 +1009,7 @@ window.S = S; /* expose state for smart-dhikr.js and other external modules */
 
 /* ===== INIT ===== */
 function init(){
+  _migrateGoalV231(); // backward-compat: migrate old goal shapes before any goal read
   _loadBookmarks(); // load bookmark map into memory before any render
   try{
     // v3: Force reset font sizes and clear stale caches
@@ -3991,15 +3992,15 @@ function _refreshSurahCompletionBadges(){
   var pointer=goal?_ensureGoalPointer(goal).pointerSurah:0;
   grid.querySelectorAll('.surah-card').forEach(function(card){
     var n=parseInt(card.dataset.n);
+    card.classList.remove('surah-goal-done','surah-goal-current');
     var st=card.querySelector('.surah-goal-state');
-    if(!st)return;
-    st.textContent='';
+    if(st)st.textContent='';
     if(completed.indexOf(n)>=0){
-      var b=document.createElement('span');b.className='surah-done-badge';b.textContent='✓';
-      st.appendChild(b);
+      card.classList.add('surah-goal-done');
+      if(st){var b=document.createElement('div');b.className='sg-icon sg-done';b.textContent='✓';st.appendChild(b);}
     } else if(pointer&&n===pointer){
-      var p=document.createElement('span');p.className='surah-pointer-badge';
-      st.appendChild(p);
+      card.classList.add('surah-goal-current');
+      if(st){var p=document.createElement('div');p.className='sg-icon sg-next';p.textContent='▶';st.appendChild(p);}
     }
   });
 }
@@ -8648,6 +8649,62 @@ function getGoal(){
   try{return JSON.parse(localStorage.getItem('readingGoal'))||null}catch(e){return null}
 }
 function saveGoal(g){localStorage.setItem('readingGoal',JSON.stringify(g));debouncedSync()}
+// One-time migration: converts old goal shapes (trackedSurah/trackedAyah) into the
+// current sequential-pointer structure without losing any progress.
+function _migrateGoalV231(){
+  var BACKUP_KEY='readingGoal_backup_v231';
+  var DONE_KEY='readingGoal_migrated_v231';
+  if(localStorage.getItem(DONE_KEY))return;
+  var raw=localStorage.getItem('readingGoal');
+  if(!raw){localStorage.setItem(DONE_KEY,'1');return;}
+  if(!localStorage.getItem(BACKUP_KEY)){try{localStorage.setItem(BACKUP_KEY,raw);}catch(e){}}
+  try{
+    var g=JSON.parse(raw);
+    if(!g){localStorage.setItem(DONE_KEY,'1');return;}
+    var changed=false;
+    if(!g.surahProgress){g.surahProgress={};changed=true;}
+    if(!g.completedSurahs){g.completedSurahs=[];changed=true;}
+    // Fold trackedSurah/trackedAyah → surahProgress (never lower existing)
+    if(g.trackedSurah&&g.trackedAyah){
+      var _tsk=String(g.trackedSurah);
+      if(Number(g.trackedAyah)>Number(g.surahProgress[_tsk]||0)){
+        g.surahProgress[_tsk]=Number(g.trackedAyah);changed=true;
+      }
+    }
+    // Ensure completed surahs have full ayah count in surahProgress
+    g.completedSurahs.forEach(function(sn){
+      var _si=SURAHS[sn-1];
+      if(_si){var _sk=String(sn);if(Number(g.surahProgress[_sk]||0)<_si.a){g.surahProgress[_sk]=_si.a;changed=true;}}
+    });
+    // Promote any surahProgress entry that hit the last ayah into completedSurahs
+    Object.keys(g.surahProgress).forEach(function(sk){
+      var sn=parseInt(sk);var _si=SURAHS[sn-1];
+      if(_si&&Number(g.surahProgress[sk])>=_si.a&&g.completedSurahs.indexOf(sn)<0){
+        g.completedSurahs.push(sn);g.completedSurahs.sort(function(a,b){return a-b;});changed=true;
+      }
+    });
+    // Derive pointer from completedSurahs + surahProgress
+    var _fi=1;
+    for(var _i=1;_i<=114;_i++){if(g.completedSurahs.indexOf(_i)<0){_fi=_i;break;}}
+    var _fsp=Number(g.surahProgress[String(_fi)]||0);
+    var _fsi=SURAHS[_fi-1];
+    var _nps,_npa;
+    if(_fsi&&_fsp>=_fsi.a){
+      if(g.completedSurahs.indexOf(_fi)<0){g.completedSurahs.push(_fi);g.completedSurahs.sort(function(a,b){return a-b;});}
+      _nps=_fi<114?_fi+1:114;_npa=1;
+    }else{_nps=_fi;_npa=_fsp>0?_fsp:1;}
+    // Never lower an existing pointer
+    var _ops=g.pointerSurah||0;var _opa=g.pointerAyah||1;
+    if(!_ops||_nps>_ops||(_nps===_ops&&_npa>_opa)){g.pointerSurah=_nps;g.pointerAyah=_npa;changed=true;}
+    if(changed){g.updatedAt=g.updatedAt||Date.now();localStorage.setItem('readingGoal',JSON.stringify(g));}
+    localStorage.setItem(DONE_KEY,'1');
+  }catch(e){
+    console.warn('[GOAL_MIGRATE] failed, restoring backup:',e);
+    var _bk=localStorage.getItem(BACKUP_KEY);
+    if(_bk)try{localStorage.setItem('readingGoal',_bk);}catch(e2){}
+    localStorage.setItem(DONE_KEY,'1');
+  }
+}
 function getReadLog(){
   try{return JSON.parse(localStorage.getItem('readLog'))||{}}catch(e){return{}}
 }
@@ -12357,7 +12414,11 @@ function mergeSyncData(local,cloud){
       var _gBase=_cgT>_lgT?_cg:_lg;
       var _mg=Object.assign({},_gBase);
       // surahProgress: max per surah (never decrease)
-      var _lsp=_lg.surahProgress||{};var _csp=_cg.surahProgress||{};
+      // Also fold any legacy trackedSurah/trackedAyah from either side into surahProgress
+      var _lsp=Object.assign({},_lg.surahProgress||{});
+      var _csp=Object.assign({},_cg.surahProgress||{});
+      if(_lg.trackedSurah&&_lg.trackedAyah){var _ltk=String(_lg.trackedSurah);if(Number(_lg.trackedAyah)>Number(_lsp[_ltk]||0))_lsp[_ltk]=Number(_lg.trackedAyah);}
+      if(_cg.trackedSurah&&_cg.trackedAyah){var _ctk=String(_cg.trackedSurah);if(Number(_cg.trackedAyah)>Number(_csp[_ctk]||0))_csp[_ctk]=Number(_cg.trackedAyah);}
       var _spAll={};
       Object.keys(_lsp).forEach(function(k){_spAll[k]=true;});
       Object.keys(_csp).forEach(function(k){_spAll[k]=true;});
