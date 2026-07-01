@@ -3609,7 +3609,7 @@ var HeaderOverlayManager=(function(){
   function setBackdropColor(theme){var b=_bd();if(b)b.style.background=_bdColors[theme]||'rgba(0,0,0,.2)';}
   // Auto-cleanup on app background and orientation change
   AppRuntime.on('background',function(){close();});
-  AppRuntime.on('resize',function(){close();});
+  AppRuntime.on('resize',function(){var a=getActive();if(a==='search'||a==='iv-search')return;close();});
   return{open:open,close:close,isOpen:isOpen,getActive:getActive,setBackdropColor:setBackdropColor};
 })();
 window.HeaderOverlayManager=HeaderOverlayManager;
@@ -3620,7 +3620,7 @@ App.toggleSearch=function(){
   }else{
     HeaderOverlayManager.open('search',function(){
       var bar=$('searchBar');
-      if(bar)bar.classList.add('on');
+      if(bar){var hdr=bar.closest('.hdr');if(hdr)hdr.classList.add('search-open');}
       var inp=$('searchInput');
       if(inp){
         inp.focus();
@@ -3630,7 +3630,7 @@ App.toggleSearch=function(){
       }
     },function(){
       var bar=$('searchBar');
-      if(bar)bar.classList.remove('on');
+      if(bar){var hdr=bar.closest('.hdr');if(hdr)hdr.classList.remove('search-open');}
       App.clearSearch();
     });
   }
@@ -4728,6 +4728,8 @@ function renderMushafView(targetAyah){
   if(_mushafTouchFn){view.removeEventListener('touchstart',_mushafTouchFn);_mushafTouchFn=null;}
   // Start bundle fetch immediately so it's ready before the first page loads
   _loadMushafV1BundledData();
+  // Page-1 font always needed for bismillah glyphs on every surah header
+  injectQPCV1Font(1);
   clearMushafHighlights();
   // Disconnect previous lazy-load observer to prevent accumulation
   if(_mushafLazyObs){_mushafLazyObs.disconnect();_mushafLazyObs=null;}
@@ -15591,20 +15593,27 @@ App.ivShowHistory=function(){$('ivHistoryOverlay').classList.add('open');ivRende
 App.ivCloseHistory=function(){$('ivHistoryOverlay').classList.remove('open')};
 
 App.ivToggleSearch=function(){
-  var bar=$('ivSearchBar');
-  if(bar.classList.contains('on')){
-    bar.classList.remove('on');
-    $('ivSearchInput').value='';
-    App.ivSearch('');
+  if(HeaderOverlayManager.isOpen('iv-search')){
+    HeaderOverlayManager.close();
   }else{
-    bar.classList.add('on');
-    $('ivSearchInput').focus();
+    HeaderOverlayManager.open('iv-search',function(){
+      var bar=$('ivSearchBar');
+      if(bar){var hdr=bar.closest('.hdr');if(hdr)hdr.classList.add('search-open');}
+      var inp=$('ivSearchInput');
+      if(inp)inp.focus();
+    },function(){
+      var bar=$('ivSearchBar');
+      if(bar){var hdr=bar.closest('.hdr');if(hdr)hdr.classList.remove('search-open');}
+      var inp=$('ivSearchInput');
+      if(inp)inp.value='';
+      App.ivSearch('');
+    });
   }
 };
 
 App.ivSearch=function(val){
   var q=val.trim().toLowerCase();
-  var clearBtn=document.querySelector('.iv-search-clear');
+  var clearBtn=document.querySelector('#ivSearchBar .search-clear');
   if(clearBtn){
     if(q)clearBtn.classList.add('on');
     else clearBtn.classList.remove('on');

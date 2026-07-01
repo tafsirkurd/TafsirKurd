@@ -165,7 +165,7 @@
      not the network â€” eliminates the data-loading wait on first launch -->
 <link rel="preload" href="/data/quran.json" as="fetch" crossorigin="anonymous">
 <link rel="preload" href="/i18n/kmr-bundled.js?v=20260628a" as="script">
-<link rel="preload" href="/app/app.min.js?v=1240" as="script">
+<link rel="preload" href="/app/app.min.js?v=1241" as="script">
 <link rel="preload" href="/prayer/prayer.ui.js?v=20260616d" as="script">
 <!-- platform.js inlined: eliminates one parser-blocking network request -->
 <script>window.isNativePlatform=(function(){try{return window.Capacitor&&window.Capacitor.isNativePlatform();}catch(e){return false;}})();</script>
@@ -196,7 +196,7 @@ if(window.isNativePlatform&&window.Capacitor.Plugins.StatusBar){
 /* Critical: theme bg applied before external CSS loads — prevents flash */
 html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 </style>
-<link rel="preload" href="/app/app-styles.min.css?v=26" as="style">
+<link rel="preload" href="/app/app-styles.min.css?v=27" as="style">
 <link rel="stylesheet" href="/app/app-styles.min.css?v=26">
 <style>
 /* Search bar — open: spring bounce */
@@ -277,22 +277,24 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 <section class="panel on" id="panelQuran" data-tab="quran">
   <div id="quranHome">
     <div class="hdr">
-      <div class="hdr-logo"><img src="/assets/images/logo.png" alt=""><span>Tafsir Kurd</span></div>
-      <div class="hdr-actions">
-        <button class="hdr-btn" id="hdrGoalsBtn" onclick="App.tab('goals')" title="Goals"><i class="fas fa-bullseye"></i><span class="hdr-badge" id="goalsBadge"></span></button>
-        <button class="hdr-btn" onclick="App.tab('bookmarks')" title="Bookmarks"><i class="fas fa-bookmark"></i></button>
-        <button class="hdr-btn" id="inboxBtn" onclick="App.openInbox()" title="ئاگەهدارکرن" style="position:relative"><i class="fas fa-bell"></i><span id="inboxBadge" style="display:none;align-items:center;justify-content:center;position:absolute;top:2px;right:2px;min-width:16px;height:16px;width:auto;padding:0 4px;border-radius:8px;background:#e53e3e;color:#fff;font-size:10px;font-weight:700;line-height:1;pointer-events:none"></span></button>
-        <button class="hdr-btn" onclick="App.toggleSearch()"><i class="fas fa-search"></i></button>
+      <div class="hdr-main">
+        <div class="hdr-logo"><img src="/assets/images/logo.png" alt=""><span>Tafsir Kurd</span></div>
+        <div class="hdr-actions">
+          <button class="hdr-btn" id="hdrGoalsBtn" onclick="App.tab('goals')" title="Goals"><i class="fas fa-bullseye"></i><span class="hdr-badge" id="goalsBadge"></span></button>
+          <button class="hdr-btn" onclick="App.tab('bookmarks')" title="Bookmarks"><i class="fas fa-bookmark"></i></button>
+          <button class="hdr-btn" id="inboxBtn" onclick="App.openInbox()" title="ئاگەهدارکرن" style="position:relative"><i class="fas fa-bell"></i><span id="inboxBadge" style="display:none;align-items:center;justify-content:center;position:absolute;top:2px;right:2px;min-width:16px;height:16px;width:auto;padding:0 4px;border-radius:8px;background:#e53e3e;color:#fff;font-size:10px;font-weight:700;line-height:1;pointer-events:none"></span></button>
+          <button class="hdr-btn" onclick="App.toggleSearch()"><i class="fas fa-search"></i></button>
+        </div>
+      </div>
+      <div class="hdr-search" id="searchBar">
+        <div class="search-wrap">
+          <i class="fas fa-search"></i>
+          <input type="text" id="searchInput" data-i18n-placeholder="search.placeholder" placeholder="گەڕان..." oninput="App.onSearch(this.value)">
+          <button class="search-clear" onclick="App.toggleSearch()"><i class="fas fa-times"></i></button>
+        </div>
       </div>
     </div>
-    <div class="search-bar" id="searchBar">
-      <div class="search-wrap">
-        <i class="fas fa-search"></i>
-        <input type="text" id="searchInput" data-i18n-placeholder="search.placeholder" placeholder="گەڕان..." oninput="App.onSearch(this.value)">
-        <button class="search-clear" onclick="App.toggleSearch()"><i class="fas fa-times"></i></button>
-      </div>
-      <div class="search-results" id="searchResults"></div>
-    </div>
+    <div class="search-results" id="searchResults"></div>
     <div id="continueReading"></div>
     <div class="surah-grid" id="surahGrid"></div>
   </div>
@@ -347,19 +349,21 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 <section class="panel" id="panelIslamvoice" data-tab="islamvoice">
   <div id="ivHome" class="iv-home">
     <div class="hdr">
-      <div class="hdr-title"><span data-t="android_span_5">دەنگێ ئیسلامێ</span></div>
-      <div style="display:flex;gap:2px">
-        <button class="hdr-btn" id="ivSpeakerFilterBtn" onclick="App.ivShowSpeakerFilter()" title="ماموستا" data-i18n-title="iv.sheikh_title"><i class="fas fa-user"></i></button>
-        <button class="hdr-btn" id="ivHistoryBtn" onclick="App.ivShowHistory()" title="مێژوو" data-i18n-title="iv.history_title"><i class="fas fa-clock-rotate-left"></i></button>
-        <button class="hdr-btn" id="ivSavedBtn" onclick="App.ivShowSaved()" title="پاراستە" data-i18n-title="iv.saved_title"><i class="fas fa-bookmark"></i></button>
-        <button class="hdr-btn" onclick="App.ivToggleSearch()"><i class="fas fa-search"></i></button>
+      <div class="hdr-main">
+        <div class="hdr-title"><span data-t="android_span_5">دەنگێ ئیسلامێ</span></div>
+        <div style="display:flex;gap:2px">
+          <button class="hdr-btn" id="ivSpeakerFilterBtn" onclick="App.ivShowSpeakerFilter()" title="ماموستا" data-i18n-title="iv.sheikh_title"><i class="fas fa-user"></i></button>
+          <button class="hdr-btn" id="ivHistoryBtn" onclick="App.ivShowHistory()" title="مێژوو" data-i18n-title="iv.history_title"><i class="fas fa-clock-rotate-left"></i></button>
+          <button class="hdr-btn" id="ivSavedBtn" onclick="App.ivShowSaved()" title="پاراستە" data-i18n-title="iv.saved_title"><i class="fas fa-bookmark"></i></button>
+          <button class="hdr-btn" onclick="App.ivToggleSearch()"><i class="fas fa-search"></i></button>
+        </div>
       </div>
-    </div>
-    <div class="iv-search-bar" id="ivSearchBar">
-      <div class="iv-search-wrap">
-        <i class="fas fa-search iv-search-icon"></i>
-        <input type="text" id="ivSearchInput" class="iv-search-input" data-i18n-placeholder="iv.search_placeholder" placeholder="بگەڕێ بۆ بەش، زنجیرە، یان بابەت..." oninput="App.ivSearch(this.value)">
-        <button class="iv-search-clear" onclick="App.ivToggleSearch()"><i class="fas fa-times"></i></button>
+      <div class="hdr-search" id="ivSearchBar">
+        <div class="search-wrap">
+          <i class="fas fa-search"></i>
+          <input type="text" id="ivSearchInput" data-i18n-placeholder="iv.search_placeholder" placeholder="بگەڕێ بۆ بەش، زنجیرە، یان بابەت..." oninput="App.ivSearch(this.value)">
+          <button class="search-clear" onclick="App.ivToggleSearch()"><i class="fas fa-times"></i></button>
+        </div>
       </div>
     </div>
     <div id="ivHero" class="iv-hero" style="display:none">
