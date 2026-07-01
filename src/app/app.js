@@ -4814,15 +4814,27 @@ function renderMushafView(){
       var b=view.querySelector('.mushaf-surah-banner[data-surah="'+targetSurah+'"]');
       if(b)view.scrollTop=b.offsetTop;
       updateMushafProgress(view);
-      // One residual check: any IO pages just outside the preload range may still
-      // be settling. A single correction 500ms later is enough — no cascade.
-      setTimeout(function(){
-        if(S.surah!==capturedSurah||!S.mushafMode)return;
-        var b2=view.querySelector('.mushaf-surah-banner[data-surah="'+targetSurah+'"]');
-        if(!b2)return;
-        var delta=b2.getBoundingClientRect().top-view.getBoundingClientRect().top;
-        if(Math.abs(delta)>4)view.scrollTop+=delta;
-      },500);
+
+      // Re-anchor every time scrollHeight grows (IO-triggered pages below the target
+      // keep rendering after Promise.all, expanding total height and pushing the
+      // banner down). Poll every 80ms; each time height changed, correct delta.
+      // Stop after 3s (all nearby pages will have settled long before then).
+      // This replaces the single 500ms correction that was too early/too late.
+      var _aH=view.scrollHeight;
+      if(view._anchorTimer){clearInterval(view._anchorTimer);view._anchorTimer=null;}
+      view._anchorTimer=setInterval(function(){
+        if(S.surah!==capturedSurah||!S.mushafMode){clearInterval(view._anchorTimer);view._anchorTimer=null;return;}
+        var h=view.scrollHeight;
+        if(h!==_aH){
+          _aH=h;
+          var b2=view.querySelector('.mushaf-surah-banner[data-surah="'+targetSurah+'"]');
+          if(b2){
+            var delta=b2.getBoundingClientRect().top-view.getBoundingClientRect().top;
+            if(Math.abs(delta)>2)view.scrollTop+=delta;
+          }
+        }
+      },80);
+      setTimeout(function(){if(view._anchorTimer){clearInterval(view._anchorTimer);view._anchorTimer=null;}},3000);
     }).catch(function(){
       var b=view.querySelector('.mushaf-surah-banner[data-surah="'+targetSurah+'"]');
       if(b)view.scrollTop=b.offsetTop;
@@ -4853,8 +4865,11 @@ function renderMushafView(){
       view.addEventListener('scroll',_mushafHdrScrollFn,{passive:true});
     })();
 
-    // Cancel any in-flight smooth scroll when the user touches the mushaf
-    _mushafTouchFn=function(){if(_mushafScrollAnim){_mushafScrollAnim.cancelled=true;_mushafScrollAnim=null;}};
+    // Cancel any in-flight smooth scroll + re-anchor interval when user touches
+    _mushafTouchFn=function(){
+      if(_mushafScrollAnim){_mushafScrollAnim.cancelled=true;_mushafScrollAnim=null;}
+      if(view._anchorTimer){clearInterval(view._anchorTimer);view._anchorTimer=null;}
+    };
     view.addEventListener('touchstart',_mushafTouchFn,{passive:true});
 
     // iPad (any orientation â‰¥768px): page-by-page horizontal navigation
@@ -6023,17 +6038,18 @@ function updateMushafProgress(view){
   var dwellTimer=null;var dwellPage=null;
   var scrollTick=null;var initTimer=null;var periodic=null;
 
-  // Goal gate: show bar for current pointer surah + completed surahs.
-  // Hide only for future surahs not yet reached in the sequence.
+  // Goal gate: hide the progress bar for future unreached surahs.
+  // But keep ALL tracking running (dwell, scroll, markVisibleAyahs) —
+  // the _canCount gate inside trackVerse blocks non-pointer surahs from
+  // advancing the goal, but we still need the scroll listeners active so
+  // multi-surah pages (e.g. end of Surah 2 + start of Surah 3 on one page)
+  // correctly track the pointer surah's ayahs as the user scrolls through.
   var _mrg=null;try{_mrg=JSON.parse(localStorage.getItem('readingGoal'));}catch(e){}
   var _mrgPS=_mrg?(_mrg.pointerSurah||0):0;
   var _mrgCS=_mrg?(_mrg.completedSurahs||[]):[];
+  var _hideBar=_mrg&&sessionSurah!==_mrgPS&&_mrgCS.indexOf(sessionSurah)<0;
   var progressEl=document.querySelector('.sticky-progress');
-  if(_mrg&&sessionSurah!==_mrgPS&&_mrgCS.indexOf(sessionSurah)<0){
-    if(progressEl)progressEl.style.display='none';
-    return;
-  }
-  if(progressEl)progressEl.style.display='';
+  if(progressEl)progressEl.style.display=_hideBar?'none':'';
 
   // ── All-Quran totals ──────────────────────────────────────────────────────
   var _totalQ=0;SURAHS.forEach(function(s){_totalQ+=s.a;});
@@ -6101,10 +6117,12 @@ function updateMushafProgress(view){
     var lbl=$('readerAyahLabel');
     if(lbl)lbl.textContent=count+'/'+total+' '+t('reader.ayah');
 
-    // Bar + % = per-surah progress (resets to 0% on each new surah)
-    var pct=total>0?Math.min(100,Math.round(count/total*100)):0;
-    var fill=$('readerProgressFill');if(fill)fill.style.width=pct+'%';
-    var pctEl=$('readerPct');if(pctEl)pctEl.textContent=pct+'%';
+    // Bar + % = per-surah progress (hidden for future surahs, skip write)
+    if(!_hideBar){
+      var pct=total>0?Math.min(100,Math.round(count/total*100)):0;
+      var fill=$('readerProgressFill');if(fill)fill.style.width=pct+'%';
+      var pctEl=$('readerPct');if(pctEl)pctEl.textContent=pct+'%';
+    }
 
     // Update lastRead
     var max=0;seen.forEach(function(n){if(n>max)max=n;});
