@@ -5833,6 +5833,15 @@ function updateProgress(list,total){
   var destroyed=false;
   var _debug=false;try{_debug=localStorage.getItem('readerProgressDebug')==='1';}catch(e){}
 
+  // Goal gate: only show the tracker bar for the current pointer surah.
+  // Hide it for completed surahs and surahs not yet reached in the sequence.
+  var _rg=null;try{_rg=JSON.parse(localStorage.getItem('readingGoal'));}catch(e){}
+  var _rgPS=_rg?(_rg.pointerSurah||0):0;
+  if(_rg&&surahId!==_rgPS){
+    // Not the active goal surah — hide bar, skip all tracking setup
+    if(progressEl)progressEl.style.display='none';
+    return;
+  }
   if(progressEl)progressEl.style.display='';
 
   // One-time migration
@@ -5843,7 +5852,13 @@ function updateProgress(list,total){
   }
 
   var _savedMax=0;
-  try{var _sv=parseInt(localStorage.getItem('surah_read_v3_'+surahId))||0;if(_sv>=1&&_sv<=total)_savedMax=_sv;}catch(e){}
+  if(_rg&&surahId===_rgPS){
+    // Use goal pointer progress — not surah_read_v3_ which may have data from
+    // random visits before the goal pointer reached this surah
+    _savedMax=Math.max(0,(_rg.pointerAyah||1)-1);
+  }else{
+    try{var _sv=parseInt(localStorage.getItem('surah_read_v3_'+surahId))||0;if(_sv>=1&&_sv<=total)_savedMax=_sv;}catch(e){}
+  }
 
   // maxSeen = highest ayah committed this session (for trackVerse + save-merge).
   // currentAyah = ayah the reading line is on right now (for display).
@@ -6004,8 +6019,14 @@ function updateMushafProgress(view){
   var dwellTimer=null;var dwellPage=null;
   var scrollTick=null;var initTimer=null;var periodic=null;
 
-  // Always show the progress bar in mushaf mode
+  // Goal gate: hide tracker bar for non-pointer surahs (same rule as list mode)
+  var _mrg=null;try{_mrg=JSON.parse(localStorage.getItem('readingGoal'));}catch(e){}
+  var _mrgPS=_mrg?(_mrg.pointerSurah||0):0;
   var progressEl=document.querySelector('.sticky-progress');
+  if(_mrg&&sessionSurah!==_mrgPS){
+    if(progressEl)progressEl.style.display='none';
+    return;
+  }
   if(progressEl)progressEl.style.display='';
 
   // ── All-Quran totals ──────────────────────────────────────────────────────
