@@ -6132,10 +6132,18 @@ function updateMushafProgress(view){
       var _scrollPct=0;
       var _pr=_MUSHAF_PAGE_RANGES[dispS-1];
       if(_pr&&total>0){
-        var _avgPh2=view.scrollHeight>0?view.scrollHeight/604:900;
-        var _surahStartPx=(_pr[0]-1)*_avgPh2;
-        var _surahSpanPx=(_pr[1]-_pr[0]+1)*_avgPh2;
-        if(_surahSpanPx>0)_scrollPct=Math.min(100,Math.max(0,Math.round((view.scrollTop-_surahStartPx)/_surahSpanPx*100)));
+        // Use real offsetTop of the surah's first/last page elements — not avgPh
+        // estimate. All 604 divs are in the DOM so offsetTop is always accurate
+        // even for unloaded pages. avgPh breaks because loaded pages (~900px) are
+        // taller than skeleton pages (~560px), making the span estimate too small.
+        var _startPEl=view.querySelector('.mushaf-text-page[data-page="'+_pr[0]+'"]');
+        var _endPEl=view.querySelector('.mushaf-text-page[data-page="'+_pr[1]+'"]');
+        if(_startPEl&&_endPEl){
+          var _surahStartPx=_startPEl.offsetTop;
+          var _surahEndPx=_endPEl.offsetTop+(_endPEl.offsetHeight||0);
+          var _surahSpanPx=_surahEndPx-_surahStartPx;
+          if(_surahSpanPx>0)_scrollPct=Math.min(100,Math.max(0,Math.round((view.scrollTop-_surahStartPx)/_surahSpanPx*100)));
+        }
       }
       var pct=Math.max(_seenPct,_scrollPct);
       var fill=$('readerProgressFill');if(fill)fill.style.width=pct+'%';
