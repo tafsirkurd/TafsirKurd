@@ -5096,7 +5096,7 @@ function loadMushafPageQCF(pageEl,pageNum){
     var _juzMap=JUZ_PAGES_V1;
     var juzIdx=_juzMap.indexOf(pageNum);
     if(juzIdx>=0){
-      var juzBanner=el('div','mushaf-juz-banner',t('reader.juz_label')+' '+toArabicNum(juzIdx+1));
+      var juzBanner=el('div','mushaf-juz-banner no-kurdish-convert','juz'+String(juzIdx+1).padStart(3,'0'));
       frag.appendChild(juzBanner);
     }
 
