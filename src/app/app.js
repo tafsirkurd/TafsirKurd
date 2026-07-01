@@ -5855,16 +5855,14 @@ function updateProgress(list,total){
   }
 
   var _savedMax=0;
-  if(_rgIsCompleted){
-    // Completed surah — always show 100%
-    _savedMax=total;
-  }else if(_rgIsPointer){
+  if(_rgIsPointer){
     // Current pointer surah — seed from goal pointer, not surah_read_v3_
     // which may hold data from random visits before the goal reached here
     _savedMax=Math.max(0,(_rg.pointerAyah||1)-1);
-  }else{
+  }else if(!_rg){
     try{var _sv=parseInt(localStorage.getItem('surah_read_v3_'+surahId))||0;if(_sv>=1&&_sv<=total)_savedMax=_sv;}catch(e){}
   }
+  // Completed surahs: bar visible but starts at 0 — tracks fresh re-read session
 
   // maxSeen = highest ayah committed this session (for trackVerse + save-merge).
   // currentAyah = ayah the reading line is on right now (for display).
