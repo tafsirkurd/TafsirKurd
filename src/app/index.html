@@ -165,7 +165,7 @@
      not the network â€” eliminates the data-loading wait on first launch -->
 <link rel="preload" href="/data/quran.json" as="fetch" crossorigin="anonymous">
 <link rel="preload" href="/i18n/kmr-bundled.js?v=20260628a" as="script">
-<link rel="preload" href="/app/app.min.js?v=1241" as="script">
+<link rel="preload" href="/app/app.min.js?v=1242" as="script">
 <link rel="preload" href="/prayer/prayer.ui.js?v=20260616d" as="script">
 <!-- platform.js inlined: eliminates one parser-blocking network request -->
 <script>window.isNativePlatform=(function(){try{return window.Capacitor&&window.Capacitor.isNativePlatform();}catch(e){return false;}})();</script>
@@ -196,17 +196,8 @@ if(window.isNativePlatform&&window.Capacitor.Plugins.StatusBar){
 /* Critical: theme bg applied before external CSS loads — prevents flash */
 html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 </style>
-<link rel="preload" href="/app/app-styles.min.css?v=27" as="style">
+<link rel="preload" href="/app/app-styles.min.css?v=28" as="style">
 <link rel="stylesheet" href="/app/app-styles.min.css?v=27">
-<style>
-/* Content backdrop — dims content below header when any header panel is open.
-   Starts at --hdr-total-h so it never covers the status bar, safe-area, or header.
-   z-index 49: below header (100) and header panels (51+), above content (0).
-   Tabbar (300) stays interactive above this. Opacity-only — GPU-composited, no layout. */
-.hdr-backdrop{position:fixed;top:var(--hdr-total-h,58px);left:0;right:0;bottom:0;z-index:49;pointer-events:none;opacity:0;background:rgba(0,0,0,.2);transition:opacity .18s ease;will-change:opacity}
-.hdr-backdrop.on{opacity:1;pointer-events:auto}
-@media(prefers-reduced-motion:reduce){.hdr-backdrop{transition:none}}
-</style>
 <script>requestAnimationFrame(function(){requestAnimationFrame(function(){document.documentElement.classList.remove('preload');});});</script>
 </head>
 <body>

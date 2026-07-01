@@ -3578,8 +3578,8 @@ var HeaderOverlayManager=(function(){
     sakina:'rgba(0,12,8,.22)'
   };
   function _bd(){if(!_bdEl)_bdEl=document.getElementById('hdrBackdrop');return _bdEl;}
-  function _hideBackdrop(){var b=_bd();if(b)b.classList.remove('on');}
-  function _showBackdrop(){var b=_bd();if(b)b.classList.add('on');}
+  function _hideBackdrop(){var b=_bd();if(b){b.classList.remove('on');b.style.top='';}}
+  function _showBackdrop(){var b=_bd();if(b){var hdr=document.querySelector('.hdr');if(hdr){var h=hdr.getBoundingClientRect().height;if(h>0)b.style.top=h+'px';}b.classList.add('on');}}
   function _runClose(id){
     var fn=_closeFns[id];
     delete _closeFns[id];
