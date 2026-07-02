@@ -2153,6 +2153,13 @@ function applyKeepAwake(){
 /* ===== TAB SWITCHING ===== */
 var _renderHash={};
 function _tabHash(name){
+  if(name==='quran'){
+    // Goal badges on surah cards + continue card both derive from these two keys
+    var _qg='',_qlr='';
+    try{_qg=localStorage.getItem('readingGoal')||'';}catch(e){}
+    try{_qlr=localStorage.getItem('lastRead')||'';}catch(e){}
+    return 'q:'+_qg+':'+_qlr;
+  }
   if(name==='bookmarks'){
     var bms=getBookmarks();
     return bms.length+':'+S.bmSort;
@@ -2342,7 +2349,18 @@ App.tab=function(name){
     // exactly one frame (16ms) before the new content replaces it atomically.
     // This eliminates all "blank container" flashes during tab switching.
     var _didRebuild=false;
-    if(name==='quran'){requestAnimationFrame(_hlRestoreAll);}
+    if(name==='quran'){
+      requestAnimationFrame(_hlRestoreAll);
+      // Refresh continue card + goal badges when goal/lastRead changed since last render
+      var _hq=_tabHash('quran');
+      if(_hq!==_renderHash.quran){
+        requestAnimationFrame(function(){
+          if(S.tab!=='quran')return;
+          try{renderContinue();_refreshSurahCompletionBadges();_renderHash.quran=_tabHash('quran');}
+          catch(e){if(window.HealthLog)HealthLog.add('render_crash','quranHome:'+(e&&e.message||e));}
+        });
+      }
+    }
     if(name==='bookmarks'){
       var _hbm=_tabHash('bookmarks');
       if(_hbm!==_renderHash.bm){
@@ -4119,6 +4137,8 @@ App.backToList=function(){
   var _isT2=window.innerWidth>=768||document.documentElement.classList.contains('is-ipad');
   if(!_isT2){$('quranHome').style.display='';}
   $('panelQuran').classList.remove('reader-open');
+  // Reflect goal/progress changes made in the reader immediately on the list
+  try{var _hq3=_tabHash('quran');if(_hq3!==_renderHash.quran){renderContinue();_refreshSurahCompletionBadges();_renderHash.quran=_hq3;}}catch(e){}
   if(al)al.scrollTop=0;
   if(S._quranListScroll!=null){
     var _scrollEl=_isT2?$('quranHome'):$('panelQuran');
@@ -5934,8 +5954,10 @@ function updateProgress(list,total){
     _savedMax=Math.max(0,(_rg.pointerAyah||1)-1);
   }else if(!_rg){
     try{var _sv=parseInt(localStorage.getItem('surah_read_v3_'+surahId))||0;if(_sv>=1&&_sv<=total)_savedMax=_sv;}catch(e){}
+  }else if(_rgIsCompleted){
+    // Completed surahs stay at 100% on reopen — done is done, never reset
+    _savedMax=total;
   }
-  // Completed surahs: bar visible but starts at 0 — tracks fresh re-read session
 
   // maxSeen = highest ayah committed this session (for trackVerse + save-merge).
   // currentAyah = ayah the reading line is on right now (for display).
