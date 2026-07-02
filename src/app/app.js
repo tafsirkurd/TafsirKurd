@@ -4085,7 +4085,7 @@ App.openSurah=function(num,scrollTo,opts){
   _startSession(num);
   S.surah=num;
   $('readerName').textContent=s.en+' - '+s.ar;
-  if(!_isT){$('quranHome').style.display='none';}
+  if(!_isT){$('quranHome').style.display='none';$('panelQuran').classList.add('reader-open');}
   $('quranReader').classList.add('on');
   renderAyahs(num,scrollTo);
   try{localStorage.setItem('lastRead',JSON.stringify({surah:num,ayah:scrollTo||1}))}catch(e){}
@@ -4118,6 +4118,7 @@ App.backToList=function(){
   $('quranReader').classList.remove('on');
   var _isT2=window.innerWidth>=768||document.documentElement.classList.contains('is-ipad');
   if(!_isT2){$('quranHome').style.display='';}
+  $('panelQuran').classList.remove('reader-open');
   if(al)al.scrollTop=0;
   if(S._quranListScroll!=null){
     var _scrollEl=_isT2?$('quranHome'):$('panelQuran');
