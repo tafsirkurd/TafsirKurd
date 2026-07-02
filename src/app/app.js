@@ -10893,7 +10893,10 @@ App.wizardNext=function(){
       goal={name:t('wizard.custom_name'),pages:v,created:Date.now()};
     }
     // If old goal or tracking data exists, ask user what to preserve
-    var hasOldData=!!getGoal()||Object.keys(getReadLog()).length>0;
+    // Ask what to keep ONLY when replacing an existing goal. Casual reading
+    // without a goal fills the read log too - that must not trigger the
+    // "your data will be reset" dialog on first goal creation.
+    var hasOldData=!!getGoal();
     if(hasOldData){
       S.wizardData._pendingGoal=goal;
       $('goalStartChoiceOverlay').classList.add('on');
