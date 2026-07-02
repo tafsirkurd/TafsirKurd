@@ -2258,6 +2258,8 @@ App.tab=function(name){
     // IV overlays
     var iso=$('ivSavedOverlay');if(iso&&iso.classList.contains('open'))App.ivCloseSaved&&App.ivCloseSaved();
     var iho=$('ivHistoryOverlay');if(iho&&iho.classList.contains('open'))App.ivCloseHistory&&App.ivCloseHistory();
+    // Speaker filter sheet (dynamically created, covers the tabbar)
+    var spk=document.querySelector('.iv-spk-overlay');if(spk&&spk.parentNode)spk.parentNode.removeChild(spk);
     // Reset any in-flight PTR so the panel doesn't stay translated after tab switch
     _ptrResets.forEach(function(fn){try{fn();}catch(e){}});
   })();
