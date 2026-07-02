@@ -4030,8 +4030,8 @@ function renderContinue(){
   var c=$('continueReading');
   clear(c);
   var goal=getGoal();
+  if(goal)try{goal=_ensureGoalPointer(goal);}catch(e){}
   if(goal&&goal.pointerSurah){
-    goal=_ensureGoalPointer(goal);
     var _ps=goal.pointerSurah;var _pa=goal.pointerAyah||1;
     // Goal card follows ONLY the goal pointer — lastRead is polluted by
     // notification deep-links and random visits, never use it here.
@@ -5930,6 +5930,9 @@ function updateProgress(list,total){
   // Goal gate: show bar for current pointer surah + completed surahs.
   // Hide only for future surahs not yet reached in the sequence.
   var _rg=null;try{_rg=JSON.parse(localStorage.getItem('readingGoal'));}catch(e){}
+  // Freshly created goals have no pointerSurah yet — derive it (Al-Fatiha:1)
+  // or the gate below hides the bar on every surah including the current one.
+  if(_rg)try{_rg=_ensureGoalPointer(_rg);}catch(e){}
   var _rgPS=_rg?(_rg.pointerSurah||0):0;
   var _rgCS=_rg?(_rg.completedSurahs||[]):[];
   var _rgIsCompleted=_rgCS.indexOf(surahId)>=0;
@@ -6126,6 +6129,7 @@ function updateMushafProgress(view){
   // multi-surah pages (e.g. end of Surah 2 + start of Surah 3 on one page)
   // correctly track the pointer surah's ayahs as the user scrolls through.
   var _mrg=null;try{_mrg=JSON.parse(localStorage.getItem('readingGoal'));}catch(e){}
+  if(_mrg)try{_mrg=_ensureGoalPointer(_mrg);}catch(e){}
   var _mrgPS=_mrg?(_mrg.pointerSurah||0):0;
   var _mrgCS=_mrg?(_mrg.completedSurahs||[]):[];
   var _hideBar=_mrg&&sessionSurah!==_mrgPS&&_mrgCS.indexOf(sessionSurah)<0;
