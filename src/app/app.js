@@ -2490,7 +2490,7 @@ function _loadGencineScripts(cb) {
   // Load dua-data.js, smart-dhikr.js, adhkar-bundle, and book-covers-map in PARALLEL (independent),
   // then load dhikr.js only after all four finish (dhikr.js depends on all four)
   var _p1 = false, _p2 = false, _p3 = false, _p4 = false;
-  function _check() { if (_p1 && _p2 && _p3 && _p4) _ls('/dhikr/dhikr.js?v=20260621', _done); }
+  function _check() { if (_p1 && _p2 && _p3 && _p4) _ls('/dhikr/dhikr.js?v=20260708', _done); }
   _ls('/dhikr/dua-data.js?v=20260326b',       function() { _p1 = true; _check(); });
   _ls('/dhikr/smart-dhikr.js?v=88',           function() { _p2 = true; _check(); });
   _ls('/data/gencine-bundle.js?v=1',           function() { _p3 = true; _check(); });

@@ -2011,50 +2011,85 @@ window.GencineUI = {
 
     wrap.appendChild(sheet);
 
-    /* ── SVG ring (bigger: 260px) ── */
-    var ringWrap = document.createElement('div');
-    ringWrap.className = 'tasbih-ring';
+    /* ── 3D Bead Track ── */
+    var beadWrap = document.createElement('div');
+    beadWrap.className = 'tasbih-bead-wrap';
 
-    var svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
-    svg.setAttribute('viewBox','0 0 260 260');
-    svg.setAttribute('width','260');
-    svg.setAttribute('height','260');
+    /* stage — clips overflow so rail slides under edges */
+    var beadStage = document.createElement('div');
+    beadStage.className = 'tasbih-bead-stage';
+    beadStage.id = 'tasbihBeadStage';
+    beadStage.onclick = function(){ self._tasbihTap(); };
 
-    var track = document.createElementNS('http://www.w3.org/2000/svg','circle');
-    track.setAttribute('class','tasbih-ring-track');
-    track.setAttribute('cx','130'); track.setAttribute('cy','130'); track.setAttribute('r', RING_R);
-    svg.appendChild(track);
+    /* metallic wire — straight SVG line through every bead center (see _drawBeadThread) */
+    var _svgNS = 'http://www.w3.org/2000/svg';
+    var threadSvg = document.createElementNS(_svgNS, 'svg');
+    threadSvg.setAttribute('class', 'tasbih-bead-thread-svg');
+    var _defs = document.createElementNS(_svgNS, 'defs');
+    var _grad = document.createElementNS(_svgNS, 'linearGradient');
+    _grad.setAttribute('id', 'tbWireGrad');
+    [['0%','#8e939c'],['50%','#e3e7ed'],['100%','#8e939c']].forEach(function(st){
+      var _s = document.createElementNS(_svgNS, 'stop');
+      _s.setAttribute('offset', st[0]);
+      _s.setAttribute('stop-color', st[1]);
+      _grad.appendChild(_s);
+    });
+    _defs.appendChild(_grad);
+    threadSvg.appendChild(_defs);
+    var threadPath = document.createElementNS(_svgNS, 'path');
+    threadPath.setAttribute('class', 'tasbih-bead-thread-path');
+    threadSvg.appendChild(threadPath);
+    beadStage.appendChild(threadSvg);
+    self._threadSvg = threadSvg;
+    self._threadPath = threadPath;
 
-    var fillEl = document.createElementNS('http://www.w3.org/2000/svg','circle');
-    fillEl.setAttribute('class','tasbih-ring-fill');
-    fillEl.setAttribute('cx','130'); fillEl.setAttribute('cy','130'); fillEl.setAttribute('r', RING_R);
-    fillEl.setAttribute('stroke-dasharray', RING_CIRC);
-    var pct = Math.min(self._tasbihCount / Math.max(self._tasbihTarget, 1), 1);
-    fillEl.setAttribute('stroke-dashoffset', RING_CIRC * (1 - pct));
-    fillEl.id = 'tasbihRingFill';
-    svg.appendChild(fillEl);
-    ringWrap.appendChild(svg);
+    /* bead layer — beads are created ONCE and never restyled per tap;
+       all motion is per-frame translate3d writes from the slide spring */
+    var beadRail = document.createElement('div');
+    beadRail.className = 'tasbih-bead-rail';
+    beadRail.id = 'tasbihBeadRail';
 
-    /* tap button */
-    var tapBtn = document.createElement('button');
-    tapBtn.className = 'tasbih-tap-btn';
+    self._beadOrder = [];
+    for(var _bi = 0; _bi < self._BEAD_N; _bi++){
+      var _bd = document.createElement('div');
+      _bd.className = 'tb-bead';
+      beadRail.appendChild(_bd);
+      self._beadOrder.push(_bd);
+    }
+    beadStage.appendChild(beadRail);
+    beadWrap.appendChild(beadStage);
+
+    /* count display below track */
+    var countArea = document.createElement('button');
+    countArea.className = 'tasbih-count-area';
+    countArea.onclick = function(){ self._tasbihTap(); };
+
     var countNum = document.createElement('div');
     countNum.className = 'tasbih-count-num';
     countNum.id = 'tasbihCountNum';
     countNum.textContent = self._tasbihCount;
-    tapBtn.appendChild(countNum);
+    countArea.appendChild(countNum);
+
     var countOf = document.createElement('div');
     countOf.className = 'tasbih-count-of';
     countOf.id = 'tasbihCountOf';
-    countOf.textContent = T('gencine.tasbih_of', 'من') + ' ' + self._tasbihTarget;
-    tapBtn.appendChild(countOf);
+    countOf.textContent = '/ ' + self._tasbihTarget;
+    countArea.appendChild(countOf);
+
     var tapHint = document.createElement('div');
     tapHint.className = 'tasbih-tap-hint';
     tapHint.textContent = T('gencine.tap_hint','بتاپینێ');
-    tapBtn.appendChild(tapHint);
-    tapBtn.onclick = function(){ self._tasbihTap(); };
-    ringWrap.appendChild(tapBtn);
-    wrap.appendChild(ringWrap);
+    countArea.appendChild(tapHint);
+    beadWrap.appendChild(countArea);
+
+    wrap.appendChild(beadWrap);
+
+    /* loop geometry needs the stage's laid-out width — draw on next frame */
+    self._loopGeo = null;
+    self._beadRotT = self._beadRotC = self._tasbihCount;
+    self._beadVel = 0;
+    self._renderBeadStates();
+    requestAnimationFrame(function(){ self._drawBeadThread(); self._renderBeadStates(); });
 
     /* ── target presets ── */
     var targetRow = document.createElement('div');
@@ -2524,9 +2559,14 @@ window.GencineUI = {
   /* ═══════════════════ TASBIH ACTIONS ═══════════════════ */
   _tasbihTap: function(){
     this._tasbihCount++;
-    // Fire only one haptic per tap — success on completion, selection otherwise
     if(this._tasbihCount >= this._tasbihTarget){ window.H&&window.H.success(); }
     else { window.H&&window.H.light(); }
+    if($('tasbihBeadRail') && this._beadOrder && this._beadOrder.length){
+      // Spring target follows the count 1:1 — rapid taps push the target further
+      // ahead and the running spring catches up smoothly from wherever it is.
+      this._beadRotT = this._tasbihCount;
+      this._beadSpring();
+    }
     this._saveState();
     this._updateRing();
   },
@@ -2538,15 +2578,120 @@ window.GencineUI = {
   },
 
   _updateRing: function(){
-    var fill = $('tasbihRingFill');
-    var num  = $('tasbihCountNum');
-    var of   = $('tasbihCountOf');
-    if(num)  num.textContent = this._tasbihCount;
-    if(of)   of.textContent  = '/ ' + this._tasbihTarget;
-    if(fill){
-      var pct = Math.min(this._tasbihCount / Math.max(this._tasbihTarget, 1), 1);
-      fill.setAttribute('stroke-dashoffset', RING_CIRC * (1 - pct));
+    var num = $('tasbihCountNum');
+    var of  = $('tasbihCountOf');
+    if(num) num.textContent = this._tasbihCount;
+    if(of)  of.textContent  = '/ ' + this._tasbihTarget;
+    this._renderBeadStates();
+  },
+
+  /* ── tasbih 3D curve geometry ──
+     Beads sit on a parabola sagging toward the center (y = vy − SAG·x'²) and
+     recede in true 3D: translateZ runs from +ZMAX at the center (closest to
+     the user) down to ZMAX−ZSPAN at the edges, under perspective:1000px on
+     the stage. The wire is drawn by sampling the same curve and applying the
+     same perspective projection the browser applies to the beads, so it hugs
+     every bead center exactly. Each count slides the chain one slot left via
+     the rAF spring — per-frame writes are translate3d/opacity only (GPU).
+     Chain is infinite: perspective compresses distant beads inward, so N·SP
+     is oversized to keep the wrap point off-screen even in landscape. */
+  _BEAD_N: 28,
+  _BEAD_SIZE: 40,
+  _BEAD_SP: 52,        // px between bead centers along the curve (pre-projection)
+  _BEAD_SAG: 7.5e-4,   // parabola: y rises by SAG·x'² toward the sides
+  _BEAD_PERSP: 1000,   // must match the CSS perspective on .tasbih-bead-stage
+  _BEAD_ZMAX: 180,     // translateZ of the center bead (pops toward the user)
+  _BEAD_ZSPAN: 630,    // z drop from center to stage edge (recedes into depth)
+
+  _beadGeometry: function(){
+    var stage = $('tasbihBeadStage');
+    if(!stage || !stage.offsetWidth) return null;
+    var W = stage.offsetWidth, H = stage.offsetHeight || 140;
+    return { w: W, h: H, cx: W/2, oy: H/2, vy: H/2 + 18 };  // vy = parabola vertex, oy = perspective origin
+  },
+
+  /* world-space point on the curve at horizontal offset xoff from center */
+  _beadPoint: function(g, xoff){
+    var t = Math.min(1, Math.abs(xoff) / g.cx);              // 0 center → 1 stage edge
+    return {
+      x: g.cx + xoff,
+      y: g.vy - this._BEAD_SAG * xoff * xoff,
+      z: this._BEAD_ZMAX - this._BEAD_ZSPAN * t,
+      t: t
+    };
+  },
+
+  _drawBeadThread: function(){
+    var svg = this._threadSvg, path = this._threadPath;
+    var g = this._loopGeo = this._beadGeometry();
+    if(!svg || !path || !g) return;
+    svg.setAttribute('viewBox', '0 0 ' + g.w + ' ' + g.h);
+    // sample the curve with the beads' perspective projection applied manually:
+    // screen = origin + (world − origin) · P/(P − z)
+    var P = this._BEAD_PERSP, d = '';
+    for(var i = 0; i <= 40; i++){
+      var xoff = (i / 40 - .5) * g.w * 1.5;                  // overscan past both edges
+      var pt = this._beadPoint(g, xoff);
+      var f = P / (P - pt.z);
+      var px = g.cx + (pt.x - g.cx) * f;
+      var py = g.oy + (pt.y - g.oy) * f;
+      d += (i ? ' L ' : 'M ') + px.toFixed(1) + ' ' + py.toFixed(1);
     }
+    path.setAttribute('d', d);
+  },
+
+  /* position every bead for slide offset `rot` (float, in slots) */
+  _beadFrame: function(rot){
+    var g = this._loopGeo || (this._loopGeo = this._beadGeometry());
+    var order = this._beadOrder;
+    if(!g || !order || !order.length) return;
+    var N = this._BEAD_N, SP = this._BEAD_SP, half = this._BEAD_SIZE / 2;
+    for(var i = 0; i < N; i++){
+      var s = (i - rot) % N; if(s < 0) s += N;   // wrapped slot 0..N — recycle happens off-screen
+      var p = this._beadPoint(g, (s - N / 2) * SP);
+      var el = order[i];
+      el.style.transform = 'translate3d(' + (p.x - half).toFixed(2) + 'px,' + (p.y - half).toFixed(2) + 'px,' + p.z.toFixed(1) + 'px)';
+      el.style.opacity = (1 - .4 * p.t).toFixed(3);          // fades to 0.6 at the edges
+      el.style.zIndex = 100 - Math.round(p.t * 50);          // center bead paints on top
+    }
+  },
+
+  /* slightly-underdamped spring easing _beadRotC toward _beadRotT.
+     Rapid taps only move the target — the spring catches up from its
+     current position/velocity, so motion is always continuous. */
+  _beadSpring: function(){
+    var self = this;
+    if(self._beadRaf) return;                  // already running — retarget only
+    var last = performance.now();
+    function step(now){
+      var dt = Math.min((now - last) / 1000, .05); last = now;
+      var k = 170, c = .78 * 2 * Math.sqrt(k);
+      self._beadVel = (self._beadVel || 0) + (k * (self._beadRotT - self._beadRotC) - c * self._beadVel) * dt;
+      self._beadRotC += self._beadVel * dt;
+      if(Math.abs(self._beadRotT - self._beadRotC) < .002 && Math.abs(self._beadVel) < .02){
+        self._beadRotC = self._beadRotT;
+        self._beadVel = 0;
+        self._beadFrame(self._beadRotC);
+        self._beadRaf = null;
+        return;
+      }
+      self._beadFrame(self._beadRotC);
+      self._beadRaf = requestAnimationFrame(step);
+    }
+    self._beadRaf = requestAnimationFrame(step);
+  },
+
+  _renderBeadStates: function(){
+    var stage = $('tasbihBeadStage');
+    if(!stage || !this._beadOrder || !this._beadOrder.length) return;
+    // completion tint (single class flip at target — beads themselves never change class per tap)
+    stage.classList.toggle('tb-loop-done', this._tasbihCount >= this._tasbihTarget);
+    if(!this._beadRaf && this._beadRotT !== this._tasbihCount){
+      // reset / target change / restored state — snap rotation to count, no animation
+      this._beadRotT = this._beadRotC = this._tasbihCount;
+      this._beadVel = 0;
+    }
+    if(!this._beadRaf) this._beadFrame(this._beadRotC);
   },
   /* =========== VOICE TASBIH =========== */
   _toggleVoice: function(){
