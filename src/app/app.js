@@ -5942,7 +5942,9 @@ function updateProgress(list,total){
     if(progressEl)progressEl.style.display='none';
     return;
   }
-  if(progressEl)progressEl.style.display='';
+  // Tracker line is a goal feature: without a goal hide the row but keep
+  // tracking running (lastRead + surah_read_v3_ still feed the continue card).
+  if(progressEl)progressEl.style.display=_rg?'':'none';
 
   // One-time migration
   if(localStorage.getItem('surah_progress_ver')!=='10'){
@@ -6132,7 +6134,7 @@ function updateMushafProgress(view){
   if(_mrg)try{_mrg=_ensureGoalPointer(_mrg);}catch(e){}
   var _mrgPS=_mrg?(_mrg.pointerSurah||0):0;
   var _mrgCS=_mrg?(_mrg.completedSurahs||[]):[];
-  var _hideBar=_mrg&&sessionSurah!==_mrgPS&&_mrgCS.indexOf(sessionSurah)<0;
+  var _hideBar=!_mrg||(sessionSurah!==_mrgPS&&_mrgCS.indexOf(sessionSurah)<0);
   var progressEl=document.querySelector('.sticky-progress');
   if(progressEl)progressEl.style.display=_hideBar?'none':'';
 
@@ -6141,13 +6143,22 @@ function updateMushafProgress(view){
 
   // ── Per-surah seen sets, loaded lazily from localStorage ─────────────────
   var _surahSeen={}; // surahNum (int) → Set<ayahNum>
+  var _pctMax={};    // surahNum (int) → highest bar % shown this session (monotonic bar)
   function _getSeen(sn){
     sn=parseInt(sn);
     if(!_surahSeen[sn]){
       var s=SURAHS[sn-1];
       var set=new Set();
-      if(s){try{JSON.parse(localStorage.getItem('surah_progress_'+sn)||'[]')
-        .forEach(function(n){if(n>=1&&n<=s.a)set.add(n);});}catch(e){}}
+      if(s){
+        try{JSON.parse(localStorage.getItem('surah_progress_'+sn)||'[]')
+          .forEach(function(n){if(n>=1&&n<=s.a)set.add(n);});}catch(e){}
+        // Merge normal-reader progress (max-ayah model: 1..max are read) so
+        // switching normal -> mushaf mid-surah carries the tracker over.
+        var _nr=0;try{_nr=parseInt(localStorage.getItem('surah_read_v3_'+sn))||0;}catch(e){}
+        if(_mrg&&Number(_mrgPS)===sn)_nr=Math.max(_nr,(_mrg.pointerAyah||1)-1);
+        if(_nr>s.a)_nr=s.a;
+        for(var _mi=1;_mi<=_nr;_mi++)set.add(_mi);
+      }
       _surahSeen[sn]=set;
     }
     return _surahSeen[sn];
@@ -6164,6 +6175,10 @@ function updateMushafProgress(view){
         var s2=SURAHS[dirtyS-1];if(!s2)return;
         var valid=[];set.forEach(function(n){if(n>=1&&n<=s2.a)valid.push(n);});
         try{localStorage.setItem('surah_progress_'+dirtyS,JSON.stringify(valid));}catch(e){}
+        // Keep the normal-reader store in sync (never lower) so switching
+        // mushaf -> normal mid-surah carries the tracker over too.
+        var _mx=0;set.forEach(function(n){if(n>_mx)_mx=n;});
+        if(_mx>0){try{var _ov=parseInt(localStorage.getItem('surah_read_v3_'+dirtyS))||0;if(_mx>_ov)localStorage.setItem('surah_read_v3_'+dirtyS,String(_mx));}catch(e){}}
       });
       _dirty.clear();
       debouncedSync();
@@ -6233,6 +6248,10 @@ function updateMushafProgress(view){
         }
       }
       var pct=Math.max(_seenPct,_scrollPct);
+      // Tracker never moves backwards — like a bookmark in a real book.
+      // (Only creating a new goal with "start fresh" resets it.)
+      if(!_pctMax[dispS])_pctMax[dispS]=0;
+      if(pct<_pctMax[dispS])pct=_pctMax[dispS];else _pctMax[dispS]=pct;
       var fill=$('readerProgressFill');if(fill)fill.style.width=pct+'%';
       var pctEl=$('readerPct');if(pctEl)pctEl.textContent=pct+'%';
     }
