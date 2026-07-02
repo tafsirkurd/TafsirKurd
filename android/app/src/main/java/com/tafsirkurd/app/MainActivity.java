@@ -55,6 +55,13 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(AthanAlarmPlugin.class);
         super.onCreate(savedInstanceState);
 
+        // Phones are always portrait, regardless of the system auto-rotate setting.
+        // Tablets (smallest width >= 600dp — the standard sw600dp threshold) rotate freely.
+        // smallestScreenWidthDp never changes with rotation, so a one-time check is safe.
+        if (getResources().getConfiguration().smallestScreenWidthDp < 600) {
+            setRequestedOrientation(android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        }
+
         // ── WebView renderer death recovery ──────────────────────────────────
         // When the renderer dies (OOM, GPU driver crash, OEM kill):
         //   1. Log the event.
