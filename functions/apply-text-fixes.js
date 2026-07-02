@@ -5,10 +5,12 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Bump this string whenever new corrections are added.
-const FIXES_VERSION = '20260612a';
+const FIXES_VERSION = '20260702a';
 
 // Keys whose DB values drifted from the intended Kurdish text.
 const CORRECTIONS = [
+    // v20260702a — delete-goal dialog wording (single delete option now)
+    { key_id: 'goals.confirm.text',     kurdish_text: 'دێ ئارمانجا خۆ ژێبەی؟' },
     { key_id: 'dl.manage',              kurdish_text: 'دابەزاندن' },
     { key_id: 'dl.nothing_downloaded',  kurdish_text: 'چ دابەزاندن نینن' },
     { key_id: 'dl.nothing_hint',        kurdish_text: 'پەرتووک و دەنگان دابەزینە بۆ خواندنا بێ ئینتەرنێت' },

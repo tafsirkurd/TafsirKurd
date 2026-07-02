@@ -164,7 +164,7 @@
 <!-- Preload quran.json (1.5MB) so the fetch in app.js hits browser cache,
      not the network â€” eliminates the data-loading wait on first launch -->
 <link rel="preload" href="/data/quran.json" as="fetch" crossorigin="anonymous">
-<link rel="preload" href="/i18n/kmr-bundled.js?v=20260628a" as="script">
+<link rel="preload" href="/i18n/kmr-bundled.js?v=20260702a" as="script">
 <link rel="preload" href="/app/app.min.js?v=1250" as="script">
 <link rel="preload" href="/prayer/prayer.ui.js?v=20260616d" as="script">
 <!-- platform.js inlined: eliminates one parser-blocking network request -->
@@ -734,7 +734,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
   <div class="goal-confirm-box">
     <span class="goal-confirm-icon"><i class="fas fa-trash-can"></i></span>
     <div class="goal-confirm-title" data-i18n="goals.confirm.title">ئارمانج بسڕیتەوە؟</div>
-    <div class="goal-confirm-text" data-i18n="goals.confirm.text">چۆن دەتەوێت بکرێت؟</div>
+    <div class="goal-confirm-text" data-i18n="goals.confirm.text">دێ ئارمانجا خۆ ژێبەی؟</div>
     <div class="goal-choice-list">
       <button class="goal-choice-btn goal-choice-danger" onclick="App.confirmDeleteGoalFull()">
         <i class="fas fa-rotate-left"></i>
@@ -782,8 +782,8 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 <script>/* compat shim: old iOS builds set window.__kmrBundle; forward to KMR_TRANSLATIONS */
 (function(){Object.defineProperty(window,'__kmrBundle',{set:function(v){window.KMR_TRANSLATIONS=v;},get:function(){return window.KMR_TRANSLATIONS;},configurable:true});})();
 </script>
-<script src="/i18n/kmr-bundled.js?v=20260628a"></script>
-<script src="/i18n/i18n.min.js?v=20260619a"></script>
+<script src="/i18n/kmr-bundled.js?v=20260702a"></script>
+<script src="/i18n/i18n.min.js?v=20260702a"></script>
 <!-- Script loading strategy:
      Prayer scripts: short fixed delay (300ms) â€” critical for main tab,
        must be ready before user can tap Prayer. Loaded in dependency order.

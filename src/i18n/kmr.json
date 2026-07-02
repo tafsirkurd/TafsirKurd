@@ -762,7 +762,7 @@
   "toast.widget_error": "خەلەتی د ووجێتی دا",
   "toast.widget_no_data": "چ داتا نینن",
   "goals.confirm.title": "ئارمانج بسڕیتەوە؟",
-  "goals.confirm.text": "چۆن دەتەوێت بکرێت؟",
+  "goals.confirm.text": "دێ ئارمانجا خۆ ژێبەی؟",
   "goals.confirm.cancel": "پاشگەز",
   "goals.choice.delete_full_label": "سڕینەوە و ریستی هەموو",
   "goals.choice.delete_full_desc": "ئامانج و هەموو ریکۆردەکانی خوێندنەوە دەسڕێنەوە",

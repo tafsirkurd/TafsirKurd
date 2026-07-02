@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v1319';
+const CACHE_NAME = 'tafsir-kurd-v1320';
 
 // All files required to run the app fully offline.
 // IMPORTANT: version strings here must match the ?v= params in index.html exactly.
@@ -22,8 +22,8 @@ const PRECACHE = [
   '/dhikr/dua-data.js?v=20260326b',
   '/dhikr/smart-dhikr.js?v=89',
   // i18n
-  '/i18n/i18n.min.js?v=20260619a',
-  '/i18n/kmr-bundled.js?v=20260620b',
+  '/i18n/i18n.min.js?v=20260702a',
+  '/i18n/kmr-bundled.js?v=20260702a',
   '/i18n/kmr.json',
   // Data
   '/data/quran.json',

@@ -1766,7 +1766,7 @@
     { key_id: "goals.choice.keep_desc", kurdish_text: "ئامانجی نوێ بکە، شوێنی خوێندنەوەم لە قورئاندا بمێنێتەوە", category: "goals", page: "android" },
     { key_id: "goals.choice.keep_label", kurdish_text: "شوێنم بمێنێتەوە", category: "goals", page: "android" },
     { key_id: "goals.confirm.cancel", kurdish_text: "پاشگەز", category: "goals", page: "android" },
-    { key_id: "goals.confirm.text", kurdish_text: "چۆن دەتەوێت بکرێت؟", category: "goals", page: "android" },
+    { key_id: "goals.confirm.text", kurdish_text: "دێ ئارمانجا خۆ ژێبەی؟", category: "goals", page: "android" },
     { key_id: "goals.confirm.title", kurdish_text: "ئارمانج بسڕیتەوە؟", category: "goals", page: "android" },
     { key_id: "goals.start_choice.text", kurdish_text: "ئامانجی نوێ چۆن دەستت پێ بکات؟", category: "goals", page: "android" },
     { key_id: "goals.start_choice.title", kurdish_text: "ئامانجی کۆن هەیە", category: "goals", page: "android" },
