@@ -4033,7 +4033,8 @@ function renderContinue(){
   if(goal&&goal.pointerSurah){
     goal=_ensureGoalPointer(goal);
     var _ps=goal.pointerSurah;var _pa=goal.pointerAyah||1;
-    try{var _lr=JSON.parse(localStorage.getItem('lastRead'));if(_lr&&_lr.surah===_ps&&_lr.ayah>_pa)_pa=_lr.ayah;}catch(e){}
+    // Goal card follows ONLY the goal pointer — lastRead is polluted by
+    // notification deep-links and random visits, never use it here.
     var ps=SURAHS[_ps-1];
     if(ps){
       var card=el('div','continue-card');
@@ -6196,6 +6197,8 @@ function updateMushafProgress(view){
     var total=sData?sData.a:0;
     var seen=_getSeen(dispS);
     var count=Math.min(seen.size,total);
+    // Same rule as the normal reader: completed surahs stay at 100%
+    if(_mrgCS.indexOf(dispS)>=0)count=total;
 
     // Header surah name — fades in smoothly when switching surahs
     if(sData){var nm=$('readerName');if(nm){var _nn=sData.en+' - '+sData.ar;if(nm.textContent!==_nn){nm.style.opacity='0';(function(_t){setTimeout(function(){nm.textContent=_t;nm.style.opacity='1';},140);}(_nn));}else if(!nm.textContent){nm.textContent=_nn;}}}
