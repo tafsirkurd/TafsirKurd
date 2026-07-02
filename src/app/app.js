@@ -14218,7 +14218,7 @@ function _ptrInHorizScroll(node){
        cn.indexOf('qs-reciter-list')>=0||cn.indexOf('as2-city-scroll')>=0||
        cn.indexOf('as2-reciter-scroll')>=0||cn.indexOf('dua-tabs')>=0||
        cn.indexOf('book-cat-row')>=0||cn.indexOf('mushaf-view')>=0||
-       cn.indexOf('perf-chips-row')>=0||cn.indexOf('theme-grid')>=0||
+       cn.indexOf('perf-chips-row')>=0||
        // book-feat: featured-books carousel swipes horizontally but uses
        // overflow:hidden + transform, so the computed-style fallback below
        // never catches it — without this, a swipe on a featured card also
