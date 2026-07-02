@@ -196,8 +196,8 @@ if(window.isNativePlatform&&window.Capacitor.Plugins.StatusBar){
 /* Critical: theme bg applied before external CSS loads — prevents flash */
 html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 </style>
-<link rel="preload" href="/app/app-styles.min.css?v=30" as="style">
-<link rel="stylesheet" href="/app/app-styles.min.css?v=30">
+<link rel="preload" href="/app/app-styles.min.css?v=31" as="style">
+<link rel="stylesheet" href="/app/app-styles.min.css?v=31">
 <script>requestAnimationFrame(function(){requestAnimationFrame(function(){document.documentElement.classList.remove('preload');});});</script>
 </head>
 <body>
@@ -1113,7 +1113,7 @@ setTimeout(function(){
   <div style="position:absolute;bottom:0;left:0;right:0;max-height:80vh;background:var(--bg);border-radius:18px 18px 0 0;overflow:hidden;display:flex;flex-direction:column;padding-bottom:0">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid var(--border-light);padding-top:max(16px,env(safe-area-inset-top,16px))">
       <span style="font-size:16px;font-weight:700;color:var(--text-primary)" data-i18n="inbox.title">ئاگەهدارکرن</span>
-      <button onclick="App.closeInbox()" style="background:none;border:none;cursor:pointer;color:var(--text-secondary);font-size:18px;padding:4px;-webkit-tap-highlight-color:transparent"><i class="fas fa-times"></i></button>
+      <button onclick="App.closeInbox()" style="background:none;border:none;cursor:pointer;color:var(--text-secondary);font-size:18px;padding:13px;margin:-9px;-webkit-tap-highlight-color:transparent"><i class="fas fa-times"></i></button>
     </div>
     <div id="inbox-list" style="overflow-y:auto;flex:1;padding:12px 0;-webkit-overflow-scrolling:touch"></div>
   </div>
